@@ -31,35 +31,21 @@ jobs:
             source .venv/bin/activate
             pip install -e .
 
-            # Stop old process
-            pkill -f "main:app" || true
-            sleep 2
-
-            # Start application using python daemon mode
-            cd ~/FastAPiPromotion/wb_promotion_app
-            ../.venv/bin/python -c "
-import subprocess
-import os
-subprocess.Popen(
-    ['../.venv/bin/python', '-m', 'uvicorn', 'main:app', '--host', '0.0.0.0', '--port', '8001'],
-    stdout=open('../app.log', 'w'),
-    stderr=subprocess.STDOUT,
-    start_new_session=True,
-    cwd=os.getcwd()
-)
-"
+            # Restart application via systemd (botuser can restart own services)
+            systemctl --user daemon-reload
+            systemctl --user restart wb-promotion-app
 
             # Wait and verify
-            sleep 10
+            sleep 5
             # Check by port 8001
             if ss -tlnp | grep ':8001 ' > /dev/null; then
               echo "✅ Application started successfully on port 8001"
               curl -s http://localhost:8001/ | head -3
             else
               echo "❌ Application failed to start"
-              echo "=== App log ==="
-              cat ~/FastAPiPromotion/app.log | tail -30
-              echo "=== Process list ==="
-              ps aux | grep -E "uvicorn|python" | grep -v grep
+              echo "=== User systemd status ==="
+              systemctl --user status wb-promotion-app --no-pager | tail -20
+              echo "=== Journal logs ==="
+              journalctl --user -u wb-promotion-app --no-pager -n 30
               exit 1
             fi
