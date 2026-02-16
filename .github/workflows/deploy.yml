@@ -35,9 +35,9 @@ jobs:
             pkill -f "uvicorn main:app" || true
             sleep 2
 
-            # Start application using nohup
-            cd wb_promotion_app
-            nohup ../.venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8001 > ../app.log 2>&1 &
+            # Start application using setsid (creates new session)
+            cd ~/FastAPiPromotion/wb_promotion_app
+            setsid ../.venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8001 > ../app.log 2>&1 &
 
             # Wait and verify
             sleep 5
