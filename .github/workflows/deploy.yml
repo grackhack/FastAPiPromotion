@@ -35,12 +35,12 @@ jobs:
             pkill -f "uvicorn main:app" || true
             sleep 2
 
-            # Start application using setsid (creates new session)
+            # Start application using setsid (without &)
             cd ~/FastAPiPromotion/wb_promotion_app
-            setsid ../.venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8001 > ../app.log 2>&1 &
+            setsid ../.venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8001 > ../app.log 2>&1 </dev/null &
 
             # Wait and verify
-            sleep 5
+            sleep 8
             if pgrep -f "uvicorn main:app" > /dev/null; then
               echo "✅ Application started successfully on port 8001"
               curl -s http://localhost:8001/ | head -3
