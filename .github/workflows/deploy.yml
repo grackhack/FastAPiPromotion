@@ -35,22 +35,19 @@ jobs:
             pkill -f "uvicorn main:app" || true
             sleep 2
             
-            # Start new process in background with nohup and disown
-            cd wb_promotion_app
-            export PYTHONPATH=.
-            nohup .venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8001 > ../app.log 2>&1 &
-            BPID=$!
-            disown -h $BPID
+            # Start new process via bash -c
+            cd ~/FastAPiPromotion
+            bash -c 'source .venv/bin/activate && cd wb_promotion_app && exec python -m uvicorn main:app --host 0.0.0.0 --port 8001 >> ../app.log 2>&1 &'
             
             # Wait and verify
-            sleep 5
+            sleep 8
             if pgrep -f "uvicorn main:app" > /dev/null; then
               echo "✅ Application started successfully on port 8001"
               curl -s http://localhost:8001/ | head -3
             else
               echo "❌ Application failed to start"
               echo "=== App log ==="
-              cat ../app.log
+              cat ../app.log | tail -30
               echo "=== Process list ==="
               ps aux | grep -E "uvicorn|python" | grep -v grep
               exit 1
