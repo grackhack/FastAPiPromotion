@@ -35,9 +35,12 @@ jobs:
             pkill -f "uvicorn main:app" || true
             sleep 2
             
-            # Start new process using setsid for proper background execution
+            # Start new process in background with nohup and disown
             cd wb_promotion_app
-            setsid python -m uvicorn main:app --host 0.0.0.0 --port 8001 > ../app.log 2>&1 &
+            export PYTHONPATH=.
+            nohup .venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8001 > ../app.log 2>&1 &
+            BPID=$!
+            disown -h $BPID
             
             # Wait and verify
             sleep 5
