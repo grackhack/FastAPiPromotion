@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -22,25 +22,25 @@ jobs:
           port: 22
           script: |
             cd ~/FastAPiPromotion
-            
+
             # Pull latest changes
             git fetch origin
             git reset --hard origin/master
-            
+
             # Install dependencies
             source .venv/bin/activate
             pip install -e .
-            
+
             # Stop old process
             pkill -f "uvicorn main:app" || true
             sleep 2
-            
-            # Start new process via bash -c
-            cd ~/FastAPiPromotion
-            bash -c 'source .venv/bin/activate && cd wb_promotion_app && exec python -m uvicorn main:app --host 0.0.0.0 --port 8001 >> ../app.log 2>&1 &'
-            
+
+            # Start application using nohup
+            cd wb_promotion_app
+            nohup ../.venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8001 > ../app.log 2>&1 &
+
             # Wait and verify
-            sleep 8
+            sleep 5
             if pgrep -f "uvicorn main:app" > /dev/null; then
               echo "✅ Application started successfully on port 8001"
               curl -s http://localhost:8001/ | head -3
