@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Главная - Wildberries Promotion Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="jumbotron bg-primary text-white rounded p-5 mb-4">
+            <h1 class="display-4">Wildberries Promotion Manager</h1>
+            <p class="lead">Инструмент для управления рекламными кампаниями и поисковыми кластерами на платформе Wildberries</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-chat-square-text text-primary"></i> Управление минус-фразами</h5>
+                <p class="card-text">Добавляйте и удаляйте минус-фразы для ваших рекламных кампаний, чтобы улучшить таргетинг.</p>
+                <a href="/phrases" class="btn btn-primary">Перейти к минус-фразам</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-bar-chart-line text-success"></i> Управление ставками</h5>
+                <p class="card-text">Настройте ставки для поисковых кластеров ваших товаров и отслеживайте эффективность.</p>
+                <a href="#" class="btn btn-success disabled">В разработке</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-graph-up-arrow text-info"></i> Статистика кампаний</h5>
+                <p class="card-text">Просматривайте аналитику по рекламным кампаниям и принимайте обоснованные решения.</p>
+                <a href="#" class="btn btn-info disabled">В разработке</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-info-circle"></i> Информация</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    Этот инструмент предоставляет удобный веб-интерфейс для управления рекламными кампаниями на Wildberries.
+                    Вы можете управлять минус-фразами, настраивать ставки и анализировать эффективность рекламы.
+                </p>
+                <p class="card-text">
+                    Для начала работы перейдите в раздел <strong>"Управление минус-фразами"</strong>.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
