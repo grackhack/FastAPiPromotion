@@ -32,25 +32,27 @@ jobs:
             pip install -e .
 
             # Stop old process
-            pkill -f "uvicorn main:app" || true
+            pkill -f "main:app" || true
             sleep 2
 
-            # Create start script
-            cat > ~/FastAPiPromotion/start_app.sh << 'SCRIPT'
-            #!/bin/bash
+            # Start application using python daemon mode
             cd ~/FastAPiPromotion/wb_promotion_app
-            exec ../.venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8001
-            SCRIPT
-            chmod +x ~/FastAPiPromotion/start_app.sh
-
-            # Run in background using nohup with proper detachment
-            nohup bash ~/FastAPiPromotion/start_app.sh > ~/FastAPiPromotion/app.log 2>&1 &
-            disown -a
+            ../.venv/bin/python -c "
+import subprocess
+import os
+subprocess.Popen(
+    ['../.venv/bin/python', '-m', 'uvicorn', 'main:app', '--host', '0.0.0.0', '--port', '8001'],
+    stdout=open('../app.log', 'w'),
+    stderr=subprocess.STDOUT,
+    start_new_session=True,
+    cwd=os.getcwd()
+)
+"
 
             # Wait and verify
-            sleep 8
-            # Check by port 8001 instead of command line
-            if ss -tlnp | grep ':8001 ' > /dev/null || pgrep -f "port 8001" > /dev/null || pgrep -f "main:app" > /dev/null; then
+            sleep 10
+            # Check by port 8001
+            if ss -tlnp | grep ':8001 ' > /dev/null; then
               echo "✅ Application started successfully on port 8001"
               curl -s http://localhost:8001/ | head -3
             else
