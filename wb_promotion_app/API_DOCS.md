@@ -43,15 +43,23 @@ wb_promotion_app/
 Главная страница приложения
 
 **Ответ:**
-```json
-{
-  "message": "Wildberries Promotion API Manager"
-}
+```html
+<!DOCTYPE html>
+<html>
+<head><title>Wildberries Promotion - Выбор кампаний</title></head>
+<body>...</body>
+</html>
 ```
 
 ### GET /campaigns
 
-Получить список рекламных кампаний
+Страница веб-интерфейса для просмотра всех рекламных кампаний
+
+**Ответ:** HTML-страница с таблицами кампаний продвижения и медиакампаний
+
+### GET /api/campaigns/list
+
+Получить список рекламных кампаний (API)
 
 **Ответ:**
 ```json
@@ -59,12 +67,162 @@ wb_promotion_app/
   {
     "id": 123456,
     "name": "Название кампании",
-    "status": "active",
-    "type": "search",
-    "daily_budget": 1000.0,
-    "total_budget": 10000.0
+    "status": 9,
+    "bid_type": "manual",
+    "payment_type": "cpm",
+    "created": "2024-02-01T09:57:38.500606+03:00",
+    "started": "2024-02-05T12:38:10.212086+03:00",
+    "nm_count": 5
   }
 ]
+```
+
+### GET /campaigns/count
+
+Получить список всех рекламных кампаний продавца с их ID. Кампании сгруппированы по типу и статусу.
+
+**Эндпоинт API Wildberries:** `GET /adv/v1/promotion/count`
+
+**Ответ:**
+```json
+{
+  "adverts": [
+    {
+      "type": 9,
+      "status": 8,
+      "count": 3,
+      "advert_list": [
+        {
+          "advertId": 6485174,
+          "changeTime": "2023-05-10T12:12:52.676254+03:00"
+        }
+      ]
+    }
+  ],
+  "all": 3
+}
+```
+
+### GET /campaigns/adverts
+
+Получить подробную информацию о рекламных кампаниях с единой или ручной ставкой.
+
+**Эндпоинт API Wildberries:** `GET /api/advert/v2/adverts`
+
+**Параметры запроса:**
+- `ids` (string, optional) - ID кампаний через запятую (максимум 50). Пример: `ids=12345,23456,34567`
+- `statuses` (string, optional) - Статусы кампаний через запятую. Возможные значения: `-1, 4, 7, 8, 9, 11`
+- `payment_type` (string, optional) - Тип оплаты: `cpm` или `cpc`
+
+**Статусы кампаний:**
+| Код | Описание |
+|-----|----------|
+| `-1` | Удалена (процесс удаления до 10 минут) |
+| `4` | Готова к запуску |
+| `7` | Завершена |
+| `8` | Отменена |
+| `9` | Активна |
+| `11` | На паузе |
+
+**Ответ:**
+```json
+[
+  {
+    "bid_type": "manual",
+    "id": 567456457,
+    "nm_settings": [
+      {
+        "bids_kopecks": {
+          "recommendations": 0,
+          "search": 0
+        },
+        "nm_id": 123456789,
+        "subject": {
+          "id": 52,
+          "name": "кошельки"
+        }
+      }
+    ],
+    "settings": {
+      "name": "Кампания от 01.02.2024",
+      "payment_type": "cpm",
+      "placements": {
+        "recommendations": false,
+        "search": true
+      }
+    },
+    "status": 7,
+    "timestamps": {
+      "created": "2024-02-01T09:57:38.500606+03:00",
+      "deleted": null,
+      "started": "2024-02-05T12:38:10.212086+03:00",
+      "updated": "2024-02-05T14:29:32.633968+03:00"
+    }
+  }
+]
+```
+
+### GET /campaigns/media
+
+Получить список всех медиакампаний продавца по типам и статусам.
+
+**Эндпоинт API Wildberries:** `GET /adv/v1/adverts`
+
+**Параметры запроса:**
+- `status` (integer, optional) - Статус медиакампании (1-11)
+- `type` (integer, optional) - Тип медиакампании: `1` — размещение по дням, `2` — по просмотрам
+- `limit` (integer, optional) - Количество кампаний в ответе
+- `offset` (integer, optional) - Смещение относительно первой кампании
+- `order` (string, optional) - Порядок сортировки: `create` или `id`
+- `direction` (string, optional) - Направление: `desc` или `asc`
+
+**Статусы медиакампаний:**
+| Код | Описание |
+|-----|----------|
+| `1` | Черновик |
+| `2` | Модерация |
+| `3` | Отклонена |
+| `4` | Готова к запуску |
+| `5` | Запланирована |
+| `6` | На показах |
+| `7` | Завершена |
+| `8` | Отменена |
+| `9` | Приостановлена продавцом |
+| `10` | Пауза по дневному лимиту |
+| `11` | Пауза |
+
+**Ответ:**
+```json
+[
+  {
+    "advertId": 123456,
+    "name": "тост",
+    "brand": "brand",
+    "type": 2,
+    "status": 8,
+    "createTime": "2023-03-25T20:35:57.116943+03:00"
+  }
+]
+```
+
+### GET /campaigns/media/count
+
+Получить количество медиакампаний продавца с группировкой по статусам.
+
+**Эндпоинт API Wildberries:** `GET /adv/v1/count`
+
+**Ответ:**
+```json
+{
+  "all": 6,
+  "adverts": [
+    {
+      "type": 2,
+      "status": 7,
+      "count": 2
+    }
+  ]
+}
 ```
 
 ### POST /search-clusters/bids
