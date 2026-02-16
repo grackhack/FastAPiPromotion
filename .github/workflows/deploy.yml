@@ -35,9 +35,17 @@ jobs:
             pkill -f "uvicorn main:app" || true
             sleep 2
 
-            # Start application using setsid (without &)
+            # Create start script
+            cat > ~/FastAPiPromotion/start_app.sh << 'SCRIPT'
+            #!/bin/bash
             cd ~/FastAPiPromotion/wb_promotion_app
-            setsid ../.venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8001 > ../app.log 2>&1 </dev/null &
+            exec ../.venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8001
+            SCRIPT
+            chmod +x ~/FastAPiPromotion/start_app.sh
+
+            # Run in background using nohup with proper detachment
+            nohup bash ~/FastAPiPromotion/start_app.sh > ~/FastAPiPromotion/app.log 2>&1 &
+            disown -a
 
             # Wait and verify
             sleep 8
@@ -47,7 +55,7 @@ jobs:
             else
               echo "❌ Application failed to start"
               echo "=== App log ==="
-              cat ../app.log | tail -30
+              cat ~/FastAPiPromotion/app.log | tail -30
               echo "=== Process list ==="
               ps aux | grep -E "uvicorn|python" | grep -v grep
               exit 1
