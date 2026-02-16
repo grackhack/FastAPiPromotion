@@ -107,3 +107,4 @@ FastAPiPromotion/
 ├── deploy.sh             # Скрипт деплоя
 └── wb-promotion.service  # Systemd сервис
 ```
+"# Auto-deploy test"  
