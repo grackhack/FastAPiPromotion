@@ -261,14 +261,14 @@ async def get_normquery_stats(request: StatsRequest):
             to_date=request.to_date.isoformat(),
             items=items
         )
-        
+
         print(f"API Response: {data}")  # Логирование для отладки
 
         # Преобразуем ответ API в нашу схему
         # API возвращает: {"stats": [{"advert_id": X, "nm_id": Y, "stats": [...]}]}
         result_items = []
         stats_list = data.get("stats") or []
-        
+
         if stats_list:
             for item in stats_list:
                 phrases = []
@@ -289,7 +289,7 @@ async def get_normquery_stats(request: StatsRequest):
                             revenue=nq.get("revenue", 0),
                             spend=nq.get("spend", 0)
                         ))
-                
+
                 result_items.append(StatsItemResponse(
                     advert_id=item.get("advert_id", 0),
                     nm_id=item.get("nm_id", 0),

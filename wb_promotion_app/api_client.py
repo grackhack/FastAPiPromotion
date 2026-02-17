@@ -81,13 +81,21 @@ class WBPromotionClient:
             # Преобразуем данные в модели
             advert_groups = []
             for group in data.get("adverts", []):
-                advert_list = [
-                    AdvertListItem(
-                        advertId=item["advertId"],
-                        changeTime=datetime.fromisoformat(item["changeTime"].replace("Z", "+00:00"))
-                    )
-                    for item in group.get("advert_list", [])
-                ]
+                advert_list = []
+                for item in group.get("advert_list", []):
+                    change_time_str = item["changeTime"].replace("Z", "+00:00")
+                    # Fix for Python 3.9: handle various ISO formats
+                    try:
+                        change_time = datetime.fromisoformat(change_time_str)
+                    except ValueError:
+                        import re
+                        match = re.match(r'(.+T\d+:\d+:\d+)\.(\d+)([+-]\d+:\d+)', change_time_str)
+                        if match:
+                            base, micro, tz = match.groups()
+                            micro = micro.ljust(6, '0')[:6]
+                            change_time_str = f"{base}.{micro}{tz}"
+                        change_time = datetime.fromisoformat(change_time_str)
+                    advert_list.append(AdvertListItem(advertId=item["advertId"], changeTime=change_time))
                 advert_groups.append(
                     CampaignGroup(
                         type=group["type"],
@@ -160,11 +168,24 @@ class WBPromotionClient:
                 placements_data = settings_data.get("placements", {})
                 
                 timestamps_data = camp.get("timestamps", {})
-                
+
                 def parse_timestamp(ts_str: Optional[str]) -> Optional[datetime]:
                     if not ts_str:
                         return None
-                    return datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+                    # Fix for Python 3.9: handle various ISO formats
+                    ts_str = ts_str.replace("Z", "+00:00")
+                    # Handle format like '2024-10-28T22:49:16.38403+03:00' (5 digit microseconds)
+                    try:
+                        return datetime.fromisoformat(ts_str)
+                    except ValueError:
+                        # Try to fix microseconds format (pad to 6 digits)
+                        import re
+                        match = re.match(r'(.+T\d+:\d+:\d+)\.(\d+)([+-]\d+:\d+)', ts_str)
+                        if match:
+                            base, micro, tz = match.groups()
+                            micro = micro.ljust(6, '0')[:6]  # Pad or truncate to 6 digits
+                            ts_str = f"{base}.{micro}{tz}"
+                        return datetime.fromisoformat(ts_str)
                 
                 adverts.append(
                     PromotionCampaign(
@@ -243,6 +264,18 @@ class WBPromotionClient:
             # Преобразуем данные в модели
             campaigns = []
             for camp in data:
+                create_time_str = camp["createTime"].replace("Z", "+00:00")
+                # Fix for Python 3.9: handle various ISO formats
+                try:
+                    create_time = datetime.fromisoformat(create_time_str)
+                except ValueError:
+                    import re
+                    match = re.match(r'(.+T\d+:\d+:\d+)\.(\d+)([+-]\d+:\d+)', create_time_str)
+                    if match:
+                        base, micro, tz = match.groups()
+                        micro = micro.ljust(6, '0')[:6]
+                        create_time_str = f"{base}.{micro}{tz}"
+                    create_time = datetime.fromisoformat(create_time_str)
                 campaigns.append(
                     MediaCampaign(
                         advertId=camp["advertId"],
@@ -250,7 +283,7 @@ class WBPromotionClient:
                         brand=camp["brand"],
                         type=camp["type"],
                         status=camp["status"],
-                        createTime=datetime.fromisoformat(camp["createTime"].replace("Z", "+00:00"))
+                        createTime=create_time
                     )
                 )
             
