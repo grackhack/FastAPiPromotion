@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wildberries Promotion - Выбор кампаний</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>📊 Wildberries Promotion Manager</h1>
+            <nav class="nav">
+                <a href="/" class="nav-link active">Выбор кампаний</a>
+            </nav>
+        </header>
+
+        <main class="main">
+            <section class="section">
+                <h2>Выберите рекламные кампании</h2>
+                <p class="description">Выберите одну или несколько кампаний для работы</p>
+
+                <div class="controls">
+                    <button id="refreshBtn" class="btn btn-secondary">🔄 Обновить список</button>
+                </div>
+
+                <!-- Вкладки статусов -->
+                <div class="status-tabs">
+                    <button class="status-tab" data-status="all">Все</button>
+                    <button class="status-tab active" data-status="active">Активные</button>
+                    <button class="status-tab" data-status="paused">На паузе</button>
+                    <button class="status-tab" data-status="draft">Черновики</button>
+                    <button class="status-tab" data-status="stopped">Остановлены</button>
+                </div>
+
+                <!-- Статистика по статусам -->
+                <div class="status-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Всего:</span>
+                        <span class="stat-value" id="totalCount">0</span>
+                    </div>
+                    <div class="stat-item stat-active">
+                        <span class="stat-label">Активные:</span>
+                        <span class="stat-value" id="activeCount">0</span>
+                    </div>
+                    <div class="stat-item stat-paused">
+                        <span class="stat-label">На паузе:</span>
+                        <span class="stat-value" id="pausedCount">0</span>
+                    </div>
+                    <div class="stat-item stat-stopped">
+                        <span class="stat-label">Остановлены:</span>
+                        <span class="stat-value" id="stoppedCount">0</span>
+                    </div>
+                </div>
+
+                <div id="loadingIndicator" class="loading hidden">
+                    <div class="spinner"></div>
+                    <span>Загрузка кампаний...</span>
+                </div>
+
+                <div id="errorContainer" class="error-message hidden"></div>
+
+                <div id="campaignsContainer" class="campaigns-grid">
+                    <!-- Кампании будут загружены сюда -->
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2026 Wildberries Promotion Manager</p>
+        </footer>
+    </div>
+
+    <script src="/static/js/campaigns-list.js?v=3"></script>
+</body>
+</html>

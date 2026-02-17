@@ -1,0 +1,19 @@
+[Unit]
+Description=FastAPI Wildberries Promotion App
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/botuser/FastAPiPromotion/wb_promotion_app
+Environment="PATH=/home/botuser/FastAPiPromotion/.venv/bin"
+ExecStart=/home/botuser/FastAPiPromotion/.venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8001
+Restart=always
+RestartSec=10
+
+# Логирование
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=wb-promotion-app
+
+[Install]
+WantedBy=default.target

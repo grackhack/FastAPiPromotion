@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кампания #{{ campaign_id }} - Wildberries Promotion Manager</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>📊 Wildberries Promotion Manager</h1>
+            <nav class="nav">
+                <a href="/" class="nav-link">Выбор кампаний</a>
+            </nav>
+        </header>
+
+        <main class="main">
+            <section class="section">
+                <div class="campaign-header">
+                    <a href="/" class="btn btn-secondary btn-back">← Назад к списку</a>
+                    <h2>Кампания #<span id="campaignId">{{ campaign_id }}</span></h2>
+                    <button class="btn btn-primary btn-stats" onclick="openStatsModal()">📈 Статистика</button>
+                </div>
+
+                <div id="campaignInfo" class="campaign-info-block">
+                    <!-- Информация о кампании -->
+                </div>
+
+                <div class="nm-section">
+                    <div class="nm-section-header">
+                        <h3>Товары в кампании</h3>
+                        <button class="btn btn-secondary btn-clusters" onclick="openClustersModal()">🔍 Кластеры</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="nm-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 80px;">ID</th>
+                                    <th>Предмет</th>
+                                    <th style="width: 120px;">Ставка</th>
+                                    <th style="width: 120px;">Минус-фраз</th>
+                                    <th style="width: 200px;">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="nmTableBody">
+                                <!-- Товары будут загружены сюда -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="loadingIndicator" class="loading hidden">
+                    <div class="spinner"></div>
+                    <span>Загрузка...</span>
+                </div>
+
+                <div id="errorContainer" class="error-message hidden"></div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2026 Wildberries Promotion Manager</p>
+        </footer>
+    </div>
+
+    <!-- Modal для статистики -->
+    <div id="statsModal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>📈 Статистика ключевых фраз</h3>
+                <button class="modal-close" onclick="closeStatsModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="stats-filters">
+                    <div class="date-range">
+                        <label>Период:</label>
+                        <input type="date" id="statsFromDate" class="date-input">
+                        <span>—</span>
+                        <input type="date" id="statsToDate" class="date-input">
+                        <button class="btn btn-primary" onclick="loadStats()">📊 Загрузить</button>
+                    </div>
+                </div>
+                
+                <div id="statsLoading" class="load-status hidden">
+                    <span class="spinner-small"></span> Загрузка статистики...
+                </div>
+                
+                <div id="statsError" class="error-message hidden"></div>
+                
+                <div id="statsContent" class="stats-content hidden">
+                    <div class="stats-summary">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalViews">0</div>
+                            <div class="stat-label">Просмотры</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalClicks">0</div>
+                            <div class="stat-label">Клики</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalOrders">0</div>
+                            <div class="stat-label">Заказы</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalSpend">0 ₽</div>
+                            <div class="stat-label">Затраты</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalCtr">0%</div>
+                            <div class="stat-label">CTR</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-filters-row">
+                        <div class="filter-group">
+                            <label>Сортировка:</label>
+                            <select id="statsSort" class="filter-select" onchange="renderStatsTable()">
+                                <option value="views">По просмотрам</option>
+                                <option value="clicks">По кликам</option>
+                                <option value="spend">По затратам</option>
+                                <option value="ctr">По CTR</option>
+                                <option value="efficiency">По эффективности</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Фильтр:</label>
+                            <select id="statsFilter" class="filter-select" onchange="renderStatsTable()">
+                                <option value="all">Все фразы</option>
+                                <option value="good">Эффективные</option>
+                                <option value="bad">Неэффективные</option>
+                                <option value="no-clicks">Без кликов</option>
+                                <option value="expensive">Дорогие клики</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-legend">
+                        <div class="legend-item">
+                            <span class="efficiency-badge eff-excellent">Отлично</span>
+                            <span>CTR > 10% или есть заказы</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="efficiency-badge eff-good">Хорошо</span>
+                            <span>CTR 5-10%</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="efficiency-badge eff-average">Нормально</span>
+                            <span>CTR 2-5%</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="efficiency-badge eff-bad">Плохо</span>
+                            <span>CTR < 2%, нет заказов</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="efficiency-badge eff-terrible">Ужасно</span>
+                            <span>Просмотры без кликов</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-table-container">
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th>Фраза</th>
+                                    <th>Просмотры</th>
+                                    <th>Клики</th>
+                                    <th>CTR</th>
+                                    <th>Заказы</th>
+                                    <th>Затраты</th>
+                                    <th>CPC</th>
+                                    <th>Эффект.</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="statsTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal для выбора товара -->
+    <div id="productSelectModal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Выберите товар для минус-фразы</h3>
+                <button class="modal-close" onclick="closeProductSelectModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <p class="select-product-hint">Фраза: <strong id="phraseToAdd"></strong></p>
+                <div id="productList" class="product-list">
+                    <!-- Товары будут загружены сюда -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal для кластеров -->
+    <div id="clustersModal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>🔍 Поисковые кластеры</h3>
+                <button class="modal-close" onclick="closeClustersModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="clusters-filters">
+                    <div class="filter-group">
+                        <label>Товар:</label>
+                        <select id="clusterNmSelect" class="filter-select" onchange="loadClusters()">
+                            <option value="">Выберите товар</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Показать:</label>
+                        <select id="clusterTypeFilter" class="filter-select" onchange="renderClusters()">
+                            <option value="all">Все кластеры</option>
+                            <option value="active">Активные</option>
+                            <option value="excluded">Исключённые</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="clustersLoading" class="load-status hidden">
+                    <span class="spinner-small"></span> Загрузка кластеров...
+                </div>
+                
+                <div id="clustersError" class="error-message hidden"></div>
+                
+                <div id="clustersContent" class="clusters-content hidden">
+                    <div class="clusters-summary">
+                        <div class="cluster-stat">
+                            <div class="stat-value" id="activeCount">0</div>
+                            <div class="stat-label">Активных</div>
+                        </div>
+                        <div class="cluster-stat">
+                            <div class="stat-value" id="excludedCount">0</div>
+                            <div class="stat-label">Исключено</div>
+                        </div>
+                    </div>
+                    
+                    <div class="clusters-actions">
+                        <button class="btn btn-primary" onclick="addSelectedToMinus()">🚫 Добавить в минус-фразы</button>
+                        <button class="btn btn-secondary" onclick="toggleSelectAll()">☑️ Выбрать все</button>
+                    </div>
+                    
+                    <div class="clusters-list" id="clustersList">
+                        <!-- Кластеры будут загружены сюда -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/campaign-detail.js?v=11"></script>
+</body>
+</html>

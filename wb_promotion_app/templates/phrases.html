@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Минус-фразы - Wildberries Promotion</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>📊 Wildberries Promotion Manager</h1>
+            <nav class="nav">
+                <a href="/" class="nav-link">Выбор кампаний</a>
+                <a href="/phrases" class="nav-link active">Минус-фразы</a>
+            </nav>
+        </header>
+
+        <main class="main">
+            <section class="section">
+                <h2>Управление минус-фразами</h2>
+                <p class="description">Просмотр и управление минус-фразами для выбранных кампаний</p>
+
+                <div id="noCampaignSelected" class="warning-message hidden">
+                    <p>⚠️ Сначала выберите рекламные кампании на главной странице</p>
+                    <a href="/" class="btn btn-primary">Перейти к выбору кампаний</a>
+                </div>
+
+                <div id="phrasesContent" class="hidden">
+                    <div class="controls">
+                        <button id="loadPhrasesBtn" class="btn btn-secondary">📥 Загрузить минус-фразы</button>
+                    </div>
+
+                    <div id="loadingIndicator" class="loading hidden">
+                        <div class="spinner"></div>
+                        <span>Загрузка минус-фраз...</span>
+                    </div>
+
+                    <div id="errorContainer" class="error-message hidden"></div>
+
+                    <div id="phrasesContainer" class="phrases-container">
+                        <!-- Минус-фразы будут загружены сюда -->
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2026 Wildberries Promotion Manager</p>
+        </footer>
+    </div>
+
+    <script src="/static/js/phrases.js"></script>
+</body>
+</html>
