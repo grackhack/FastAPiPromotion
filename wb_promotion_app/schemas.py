@@ -268,30 +268,76 @@ class FullStatsRequest(BaseModel):
     to_date: date = Field(..., description="Дата окончания периода")
 
 
+class FullStatsNM(BaseModel):
+    """
+    Статистика по номенклатуре (товару)
+    """
+    nm_id: int
+    name: str = ""
+    atbs: int = 0
+    canceled: int = 0
+    clicks: int = 0
+    cpc: float = 0
+    cr: float = 0
+    ctr: float = 0
+    orders: int = 0
+    shks: int = 0
+    sum: float = 0
+    sum_price: float = 0
+    views: int = 0
+
+
+class FullStatsApp(BaseModel):
+    """
+    Статистика по приложению (платформе)
+    """
+    app_type: int = 0
+    atbs: int = 0
+    canceled: int = 0
+    clicks: int = 0
+    cpc: float = 0
+    cr: float = 0
+    ctr: float = 0
+    orders: int = 0
+    shks: int = 0
+    sum: float = 0
+    sum_price: float = 0
+    views: int = 0
+    nms: List[FullStatsNM] = Field(default_factory=list)
+
+
 class FullStatsDay(BaseModel):
     """
     Статистика за день
     """
-    date: date
-    views: int = 0
+    date: datetime
+    atbs: int = 0
+    canceled: int = 0
     clicks: int = 0
-    orders: int = 0
-    revenue: float = 0
-    ctr: float = 0
     cpc: float = 0
+    cr: float = 0
+    ctr: float = 0
+    orders: int = 0
+    shks: int = 0
+    sum: float = 0
+    sum_price: float = 0
+    views: int = 0
+    apps: List[FullStatsApp] = Field(default_factory=list)
 
 
 class FullStatsItem(BaseModel):
     """
-    Статистика по товару в кампании
+    Статистика по товару в кампании (агрегированная)
     """
     nm_id: int
     subject: str = ""
-    days: List[FullStatsDay] = Field(default_factory=list)
     total_views: int = 0
     total_clicks: int = 0
     total_orders: int = 0
     total_revenue: float = 0
+    total_cpc: float = 0
+    total_cr: float = 0
+    total_ctr: float = 0
 
 
 class FullStatsCampaign(BaseModel):
@@ -301,10 +347,18 @@ class FullStatsCampaign(BaseModel):
     id: int
     name: str
     items: List[FullStatsItem] = Field(default_factory=list)
+    days: List[FullStatsDay] = Field(default_factory=list)
     total_views: int = 0
     total_clicks: int = 0
     total_orders: int = 0
     total_revenue: float = 0
+    total_atbs: int = 0
+    total_canceled: int = 0
+    total_shks: int = 0
+    total_sum_price: float = 0
+    avg_cpc: float = 0
+    avg_cr: float = 0
+    avg_ctr: float = 0
 
 
 class FullStatsResponse(BaseModel):

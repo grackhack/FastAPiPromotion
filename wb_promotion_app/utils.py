@@ -2,6 +2,13 @@ from typing import Dict, Any, List
 import logging
 
 
+class RateLimitError(Exception):
+    """
+    Исключение при превышении лимита запросов к API
+    """
+    pass
+
+
 def setup_logging(level: str = "INFO"):
     """
     Настройка логирования для приложения

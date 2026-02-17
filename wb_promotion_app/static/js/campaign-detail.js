@@ -591,6 +591,315 @@ function closeStatsModal() {
     document.getElementById('statsContent').classList.add('hidden');
 }
 
+// ==================== Полная статистика ====================
+
+// Открытие модального окна полной статистики
+function openFullStatsModal() {
+    document.getElementById('fullStatsModal').classList.remove('hidden');
+    initFullStatsDates();
+}
+
+// Закрытие модального окна полной статистики
+function closeFullStatsModal() {
+    document.getElementById('fullStatsModal').classList.add('hidden');
+    document.getElementById('fullStatsContent').classList.add('hidden');
+}
+
+// Инициализация дат (последние 7 дней)
+function initFullStatsDates() {
+    const today = new Date();
+    const weekAgo = new Date(today);
+    weekAgo.setDate(weekAgo.getDate() - 7);
+
+    document.getElementById('fullStatsFromDate').value = weekAgo.toISOString().split('T')[0];
+    document.getElementById('fullStatsToDate').value = today.toISOString().split('T')[0];
+}
+
+// Загрузка полной статистики
+async function loadFullStats() {
+    const fromDate = document.getElementById('fullStatsFromDate').value;
+    const toDate = document.getElementById('fullStatsToDate').value;
+
+    if (!fromDate || !toDate) {
+        alert('Выберите даты периода');
+        return;
+    }
+
+    const loading = document.getElementById('fullStatsLoading');
+    const content = document.getElementById('fullStatsContent');
+    const error = document.getElementById('fullStatsError');
+
+    loading.classList.remove('hidden');
+    content.classList.add('hidden');
+    error.classList.add('hidden');
+
+    try {
+        const ids = campaignData.nm_settings.map(nm => nm.nm_id);
+
+        const response = await fetch('/stats/full', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                ids: [currentCampaignId],
+                from_date: fromDate,
+                to_date: toDate
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Ошибка: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Full stats response:', data);
+
+        renderFullStats(data);
+
+        loading.classList.add('hidden');
+        content.classList.remove('hidden');
+
+    } catch (error) {
+        console.error('Ошибка загрузки полной статистики:', error);
+        error.textContent = 'Ошибка: ' + error.message;
+        error.classList.remove('hidden');
+        loading.classList.add('hidden');
+    }
+}
+
+// Отображение полной статистики с детализацией по дням
+function renderFullStats(data) {
+    const campaigns = data.campaigns || [];
+
+    let totalViews = 0;
+    let totalClicks = 0;
+    let totalOrders = 0;
+    let totalRevenue = 0;
+    let totalSpend = 0;
+    let totalCpc = 0;
+
+    const campaignsHtml = campaigns.map(camp => {
+        const campViews = camp.total_views || 0;
+        const campClicks = camp.total_clicks || 0;
+        const campOrders = camp.total_orders || 0;
+        const campRevenue = camp.total_revenue || 0;
+        const campSpend = camp.total_sum_price || 0;
+        const campCpc = camp.avg_cpc || 0;
+
+        totalViews += campViews;
+        totalClicks += campClicks;
+        totalOrders += campOrders;
+        totalRevenue += campRevenue;
+        totalSpend += campSpend;
+        totalCpc += campCpc;
+
+        // Сводка по кампании
+        const campCtr = campViews > 0 ? (campClicks / campViews * 100) : 0;
+        const campCr = campClicks > 0 ? (campOrders / campClicks * 100) : 0;
+
+        // Детализация по дням
+        const daysHtml = (camp.days || []).map(day => {
+            const dayDate = new Date(day.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+            const dayCtr = day.views > 0 ? (day.clicks / day.views * 100) : 0;
+            const dayCr = day.clicks > 0 ? (day.orders / day.clicks * 100) : 0;
+
+            // Детализация по приложениям внутри дня
+            const appsHtml = (day.apps || []).map(app => {
+                const appTypeName = getAppTypeName(app.app_type);
+                const appCtr = app.views > 0 ? (app.clicks / app.views * 100) : 0;
+                const appCr = app.clicks > 0 ? (app.orders / app.clicks * 100) : 0;
+
+                // Детализация по товарам внутри приложения
+                const nmsHtml = (app.nms || []).map(nm => {
+                    const nmCtr = nm.views > 0 ? (nm.clicks / nm.views * 100) : 0;
+                    const nmCr = nm.clicks > 0 ? (nm.orders / nm.clicks * 100) : 0;
+
+                    return `
+                        <div class="stat-row stat-nm">
+                            <td class="nm-name" title="${escapeHtml(nm.name)}">${escapeHtml(nm.name)}</td>
+                            <td>${nm.views.toLocaleString()}</td>
+                            <td>${nm.clicks.toLocaleString()}</td>
+                            <td>${nmCtr.toFixed(2)}%</td>
+                            <td>${nm.orders.toLocaleString()}</td>
+                            <td>${nmCr.toFixed(2)}%</td>
+                            <td>${nm.sum.toFixed(2)} ₽</td>
+                            <td>${nm.cpc.toFixed(2)} ₽</td>
+                            <td>${nm.atbs.toLocaleString()}</td>
+                            <td>${nm.canceled.toLocaleString()}</td>
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="stat-block app-block">
+                        <div class="stat-header">
+                            <strong>📱 ${appTypeName}</strong>
+                            <span class="stat-metrics">
+                                Просмотры: ${app.views.toLocaleString()} | 
+                                Клики: ${app.clicks.toLocaleString()} | 
+                                CTR: ${appCtr.toFixed(2)}% | 
+                                Заказы: ${app.orders.toLocaleString()} | 
+                                CR: ${appCr.toFixed(2)}% | 
+                                Выручка: ${app.sum.toFixed(2)} ₽ | 
+                                CPC: ${app.cpc.toFixed(2)} ₽
+                            </span>
+                        </div>
+                        ${app.nms && app.nms.length > 0 ? `
+                            <table class="stats-detail-table">
+                                <thead>
+                                    <tr>
+                                        <th>Товар</th>
+                                        <th>Просмотры</th>
+                                        <th>Клики</th>
+                                        <th>CTR</th>
+                                        <th>Заказы</th>
+                                        <th>CR</th>
+                                        <th>Выручка</th>
+                                        <th>CPC</th>
+                                        <th>ATBs</th>
+                                        <th>Отмены</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${nmsHtml}
+                                </tbody>
+                            </table>
+                        ` : '<p class="no-data">Нет данных по товарам</p>'}
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="stat-block day-block">
+                    <div class="stat-header day-header">
+                        <strong>📅 ${dayDate}</strong>
+                        <span class="stat-metrics">
+                            Просмотры: ${day.views.toLocaleString()} | 
+                            Клики: ${day.clicks.toLocaleString()} | 
+                            CTR: ${dayCtr.toFixed(2)}% | 
+                            Заказы: ${day.orders.toLocaleString()} | 
+                            CR: ${dayCr.toFixed(2)}% | 
+                            Выручка: ${day.sum.toFixed(2)} ₽ | 
+                            Затраты: ${day.sum_price.toFixed(2)} ₽
+                        </span>
+                    </div>
+                    ${day.apps && day.apps.length > 0 ? appsHtml : '<p class="no-data">Нет данных по приложениям</p>'}
+                </div>
+            `;
+        }).join('');
+
+        // Агрегированные товары
+        const itemsHtml = (camp.items || []).map(item => {
+            return `
+                <div class="full-stat-nm">
+                    <div class="nm-header">
+                        <span class="nm-id">Товар #${item.nm_id}</span>
+                        <span class="nm-name">${escapeHtml(item.subject)}</span>
+                    </div>
+                    <div class="nm-stats-grid">
+                        <div class="nm-stat"><span class="nm-label">Просмотры:</span> <span class="nm-value">${item.total_views.toLocaleString()}</span></div>
+                        <div class="nm-stat"><span class="nm-label">Клики:</span> <span class="nm-value">${item.total_clicks.toLocaleString()}</span></div>
+                        <div class="nm-stat"><span class="nm-label">CTR:</span> <span class="nm-value">${item.total_ctr.toFixed(2)}%</span></div>
+                        <div class="nm-stat"><span class="nm-label">Заказы:</span> <span class="nm-value">${item.total_orders.toLocaleString()}</span></div>
+                        <div class="nm-stat"><span class="nm-label">CR:</span> <span class="nm-value">${item.total_cr.toFixed(2)}%</span></div>
+                        <div class="nm-stat"><span class="nm-label">Выручка:</span> <span class="nm-value">${item.total_revenue.toFixed(2)} ₽</span></div>
+                        <div class="nm-stat"><span class="nm-label">CPC:</span> <span class="nm-value">${item.total_cpc.toFixed(2)} ₽</span></div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="full-stat-campaign">
+                <h3>📊 ${escapeHtml(camp.name || 'Кампания #' + camp.id)}</h3>
+                <div class="campaign-summary-card">
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <div class="summary-label">Просмотры</div>
+                            <div class="summary-value">${campViews.toLocaleString()}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Клики</div>
+                            <div class="summary-value">${campClicks.toLocaleString()}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">CTR</div>
+                            <div class="summary-value">${campCtr.toFixed(2)}%</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Заказы</div>
+                            <div class="summary-value">${campOrders.toLocaleString()}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">CR</div>
+                            <div class="summary-value">${campCr.toFixed(2)}%</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Выручка</div>
+                            <div class="summary-value">${campRevenue.toFixed(2)} ₽</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Затраты</div>
+                            <div class="summary-value">${campSpend.toFixed(2)} ₽</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">CPC</div>
+                            <div class="summary-value">${campCpc.toFixed(2)} ₽</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">ATBs</div>
+                            <div class="summary-value">${camp.total_atbs.toLocaleString()}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Отмены</div>
+                            <div class="summary-value">${camp.total_canceled.toLocaleString()}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <details class="detail-section" open>
+                    <summary>📅 Статистика по дням</summary>
+                    <div class="days-container">
+                        ${daysHtml}
+                    </div>
+                </details>
+
+                <details class="detail-section">
+                    <summary>📦 Товары (агрегировано)</summary>
+                    <div class="items-container">
+                        ${itemsHtml}
+                    </div>
+                </details>
+            </div>
+        `;
+    }).join('');
+
+    const avgCpc = campaigns.length > 0 ? (totalCpc / campaigns.length) : 0;
+    const totalCtr = totalViews > 0 ? (totalClicks / totalViews * 100) : 0;
+    const totalCr = totalClicks > 0 ? (totalOrders / totalClicks * 100) : 0;
+
+    document.getElementById('fullTotalViews').textContent = totalViews.toLocaleString();
+    document.getElementById('fullTotalClicks').textContent = totalClicks.toLocaleString();
+    document.getElementById('fullTotalOrders').textContent = totalOrders.toLocaleString();
+    document.getElementById('fullTotalRevenue').textContent = totalRevenue.toFixed(2) + ' ₽';
+    document.getElementById('fullTotalSpend').textContent = totalSpend.toFixed(2) + ' ₽';
+    document.getElementById('fullTotalCtr').textContent = totalCtr.toFixed(2) + '%';
+
+    document.getElementById('fullStatsCampaigns').innerHTML = campaignsHtml || '<p class="no-phrases">Нет данных</p>';
+}
+
+// Получение названия типа приложения
+function getAppTypeName(appType) {
+    const typeMap = {
+        1: 'Веб-сайт',
+        32: 'iOS',
+        64: 'Android',
+        128: 'WAP'
+    };
+    return typeMap[appType] || `Тип ${appType}`;
+}
+
 // Загрузка статистики
 async function loadStats() {
     const fromDate = document.getElementById('statsFromDate').value;

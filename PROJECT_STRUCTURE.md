@@ -203,15 +203,10 @@ uvicorn wb_promotion_app.main:app --reload --host 0.0.0.0 --port 8000
 ./deploy.sh
 ```
 
-### Настройка сервиса (требует root)
-```bash
-ssh root@195.133.49.121
-bash /home/botuser/FastAPiPromotion/setup-service-root.sh
-```
 
 ### Управление сервисом
 ```bash
-ssh botuser@195.133.49.121
+
 systemctl --user status wb-promotion-app
 systemctl --user restart wb-promotion-app
 journalctl --user -u wb-promotion-app -f

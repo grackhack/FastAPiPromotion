@@ -4,10 +4,11 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List, Optional
 import os
+from datetime import datetime
 from dotenv import load_dotenv
 from jinja2 import Environment, FileSystemLoader
 
-from .api_client import WBPromotionClient
+from .api_client import WBPromotionClient, RateLimitError
 from .schemas import (
     CampaignInfo,
     SearchClusterBid,
@@ -27,6 +28,11 @@ from .schemas import (
     StatsPhrase,
     FullStatsRequest,
     FullStatsResponse,
+    FullStatsItem,
+    FullStatsCampaign,
+    FullStatsDay,
+    FullStatsApp,
+    FullStatsNM,
 )
 from .utils import setup_logging
 
@@ -313,48 +319,135 @@ async def get_full_stats(request: FullStatsRequest):
             from_date=request.from_date.isoformat(),
             to_date=request.to_date.isoformat()
         )
-        
+
         # Преобразуем ответ API в нашу схему
+        # API возвращает массив кампаний напрямую
         campaigns = []
-        if "advert" in data:
-            for camp in data["advert"]:
-                items = []
-                total_views = 0
-                total_clicks = 0
-                total_orders = 0
-                total_revenue = 0
-                
-                if "nmStats" in camp:
-                    for nm in camp["nmStats"]:
-                        nm_total_views = sum(d.get("views", 0) for d in nm.get("stats", []))
-                        nm_total_clicks = sum(d.get("clicks", 0) for d in nm.get("stats", []))
-                        nm_total_orders = sum(d.get("orders", 0) for d in nm.get("stats", []))
-                        nm_total_revenue = sum(d.get("revenue", 0) for d in nm.get("stats", []))
-                        
-                        items.append(FullStatsItem(
-                            nm_id=nm.get("nmId", 0),
-                            subject=nm.get("subjectName", ""),
-                            total_views=nm_total_views,
-                            total_clicks=nm_total_clicks,
-                            total_orders=nm_total_orders,
-                            total_revenue=nm_total_revenue
-                        ))
-                        total_views += nm_total_views
-                        total_clicks += nm_total_clicks
-                        total_orders += nm_total_orders
-                        total_revenue += nm_total_revenue
-                
-                campaigns.append(FullStatsCampaign(
-                    id=camp.get("advertId", 0),
-                    name=camp.get("name", ""),
-                    items=items,
-                    total_views=total_views,
-                    total_clicks=total_clicks,
-                    total_orders=total_orders,
-                    total_revenue=total_revenue
+
+        for camp in data:
+            # Собираем уникальные nmId из всех дней и приложений для агрегации
+            nm_stats = {}
+            
+            # Преобразуем дни
+            days_parsed = []
+            if "days" in camp:
+                for day in camp["days"]:
+                    apps_parsed = []
+                    if "apps" in day:
+                        for app in day["apps"]:
+                            nms_parsed = []
+                            if "nms" in app:
+                                for nm in app["nms"]:
+                                    nm_obj = FullStatsNM(
+                                        nm_id=nm.get("nmId", 0),
+                                        name=nm.get("name", ""),
+                                        atbs=nm.get("atbs", 0),
+                                        canceled=nm.get("canceled", 0),
+                                        clicks=nm.get("clicks", 0),
+                                        cpc=nm.get("cpc", 0),
+                                        cr=nm.get("cr", 0),
+                                        ctr=nm.get("ctr", 0),
+                                        orders=nm.get("orders", 0),
+                                        shks=nm.get("shks", 0),
+                                        sum=nm.get("sum", 0),
+                                        sum_price=nm.get("sum_price", 0),
+                                        views=nm.get("views", 0)
+                                    )
+                                    nms_parsed.append(nm_obj)
+                                    
+                                    # Агрегация по nmId
+                                    nm_id = nm.get("nmId", 0)
+                                    if nm_id not in nm_stats:
+                                        nm_stats[nm_id] = {
+                                            "views": 0,
+                                            "clicks": 0,
+                                            "orders": 0,
+                                            "revenue": 0,
+                                            "cpc": 0,
+                                            "cr": 0,
+                                            "ctr": 0,
+                                            "name": nm.get("name", "")
+                                        }
+                                    nm_stats[nm_id]["views"] += nm.get("views", 0)
+                                    nm_stats[nm_id]["clicks"] += nm.get("clicks", 0)
+                                    nm_stats[nm_id]["orders"] += nm.get("orders", 0)
+                                    nm_stats[nm_id]["revenue"] += nm.get("sum", 0)
+                                    nm_stats[nm_id]["cpc"] += nm.get("cpc", 0)
+                                    nm_stats[nm_id]["cr"] += nm.get("cr", 0)
+                                    nm_stats[nm_id]["ctr"] += nm.get("ctr", 0)
+                            
+                            app_obj = FullStatsApp(
+                                app_type=app.get("appType", 0),
+                                atbs=app.get("atbs", 0),
+                                canceled=app.get("canceled", 0),
+                                clicks=app.get("clicks", 0),
+                                cpc=app.get("cpc", 0),
+                                cr=app.get("cr", 0),
+                                ctr=app.get("ctr", 0),
+                                orders=app.get("orders", 0),
+                                shks=app.get("shks", 0),
+                                sum=app.get("sum", 0),
+                                sum_price=app.get("sum_price", 0),
+                                views=app.get("views", 0),
+                                nms=nms_parsed
+                            )
+                            apps_parsed.append(app_obj)
+                    
+                    day_obj = FullStatsDay(
+                        date=datetime.fromisoformat(day["date"].replace("Z", "+00:00")) if day.get("date") else datetime.now(),
+                        atbs=day.get("atbs", 0),
+                        canceled=day.get("canceled", 0),
+                        clicks=day.get("clicks", 0),
+                        cpc=day.get("cpc", 0),
+                        cr=day.get("cr", 0),
+                        ctr=day.get("ctr", 0),
+                        orders=day.get("orders", 0),
+                        shks=day.get("shks", 0),
+                        sum=day.get("sum", 0),
+                        sum_price=day.get("sum_price", 0),
+                        views=day.get("views", 0),
+                        apps=apps_parsed
+                    )
+                    days_parsed.append(day_obj)
+            
+            # Преобразуем агрегированные данные по товарам в список items
+            items = []
+            for nm_id, stats in nm_stats.items():
+                items.append(FullStatsItem(
+                    nm_id=nm_id,
+                    subject=stats["name"],
+                    total_views=stats["views"],
+                    total_clicks=stats["clicks"],
+                    total_orders=stats["orders"],
+                    total_revenue=stats["revenue"],
+                    total_cpc=round(stats["cpc"] / max(stats["views"], 1), 2) if stats["views"] > 0 else 0,
+                    total_cr=round(stats["orders"] / max(stats["clicks"], 1) * 100, 2) if stats["clicks"] > 0 else 0,
+                    total_ctr=round(stats["clicks"] / max(stats["views"], 1) * 100, 2) if stats["views"] > 0 else 0
                 ))
-        
+
+            # Создаём объект кампании
+            campaign = FullStatsCampaign(
+                id=camp.get("advertId", 0),
+                name=f"Кампания {camp.get('advertId', 0)}",
+                items=items,
+                days=days_parsed,
+                total_views=camp.get("views", 0),
+                total_clicks=camp.get("clicks", 0),
+                total_orders=camp.get("orders", 0),
+                total_revenue=camp.get("sum", 0),
+                total_atbs=camp.get("atbs", 0),
+                total_canceled=camp.get("canceled", 0),
+                total_shks=camp.get("shks", 0),
+                total_sum_price=camp.get("sum_price", 0),
+                avg_cpc=camp.get("cpc", 0),
+                avg_cr=camp.get("cr", 0),
+                avg_ctr=camp.get("ctr", 0)
+            )
+            campaigns.append(campaign)
+
         return FullStatsResponse(campaigns=campaigns)
+    except RateLimitError as e:
+        raise HTTPException(status_code=429, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

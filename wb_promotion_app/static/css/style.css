@@ -611,6 +611,22 @@ body {
     flex-wrap: wrap;
 }
 
+.campaign-actions {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+    flex-wrap: wrap;
+}
+
+.btn-full-stats {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-full-stats:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
 .btn-back {
     padding: 8px 16px;
     font-size: 14px;
@@ -1230,6 +1246,362 @@ body {
 
 .stats-content {
     margin-top: 20px;
+}
+
+/* Полная статистика - обновлённые стили */
+.full-stats-summary {
+    margin-bottom: 30px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 15px;
+}
+
+.full-stats-campaigns {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.full-stat-campaign {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 12px;
+    padding: 25px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.full-stat-campaign h3 {
+    color: #cb11ab;
+    margin-bottom: 20px;
+    font-size: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #cb11ab;
+}
+
+.full-stat-campaign h4 {
+    color: #cb11ab;
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+/* Сводная карточка кампании */
+.campaign-summary-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 15px;
+}
+
+.summary-item {
+    text-align: center;
+    padding: 12px 8px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+    transition: transform 0.2s;
+}
+
+.summary-item:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.summary-label {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.summary-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+/* Детализация по дням и приложениям */
+.detail-section {
+    background: white;
+    border-radius: 10px;
+    margin-top: 20px;
+    border: 1px solid #e0e0e0;
+    overflow: hidden;
+}
+
+.detail-section summary {
+    padding: 15px 20px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #333;
+    background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+    border: none;
+    user-select: none;
+    transition: all 0.2s;
+    font-size: 15px;
+}
+
+.detail-section summary:hover {
+    background: linear-gradient(90deg, #e9ecef 0%, #dee2e6 100%);
+    color: #cb11ab;
+}
+
+.detail-section summary::-webkit-details-marker {
+    display: none;
+}
+
+.detail-section summary::after {
+    content: '▼';
+    float: right;
+    transition: transform 0.3s;
+}
+
+.detail-section[open] summary::after {
+    transform: rotate(180deg);
+}
+
+.days-container,
+.items-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Блоки дней */
+.stat-block {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 0;
+    border: 2px solid #e0e0e0;
+    overflow: hidden;
+}
+
+.stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: linear-gradient(90deg, #cb11ab 0%, #a80e8f 100%);
+    color: white;
+}
+
+.stat-header strong {
+    color: white;
+    font-size: 15px;
+}
+
+.stat-metrics {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 500;
+}
+
+.day-header {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.day-header .stat-metrics {
+    color: rgba(255, 255, 255, 0.95);
+}
+
+/* Блоки приложений */
+.app-block {
+    margin: 15px 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.app-block .stat-header {
+    background: linear-gradient(90deg, #119dcb 0%, #0e8ba8 100%);
+    border-radius: 6px;
+    margin: -15px -15px 15px -15px;
+}
+
+/* Таблица детализации */
+.stats-detail-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 12px;
+    margin-top: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.stats-detail-table th,
+.stats-detail-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.stats-detail-table th {
+    background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+    font-weight: 600;
+    color: #333;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.stats-detail-table tbody tr {
+    transition: background 0.2s;
+}
+
+.stats-detail-table tbody tr:hover {
+    background: linear-gradient(90deg, #f0f4ff 0%, #e8f0fe 100%);
+}
+
+.stats-detail-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.stat-nm .nm-name {
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #333;
+    font-weight: 500;
+}
+
+/* Чередование строк */
+.stats-detail-table tbody tr:nth-child(odd) {
+    background: #fafbfc;
+}
+
+.stats-detail-table tbody tr:nth-child(even) {
+    background: #ffffff;
+}
+
+/* Агрегированные товары */
+.full-stat-nm {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 0;
+    border: 2px solid #e0e0e0;
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+
+.full-stat-nm .nm-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+    background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.full-stat-nm .nm-id {
+    font-weight: 700;
+    color: #cb11ab;
+    font-size: 15px;
+    background: #cb11ab;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+.full-stat-nm .nm-name {
+    color: #666;
+    font-size: 14px;
+    flex: 1;
+}
+
+.nm-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 10px;
+    padding: 20px;
+}
+
+.nm-stat {
+    text-align: center;
+    padding: 12px 8px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    transition: all 0.2s;
+}
+
+.nm-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-color: #cb11ab;
+}
+
+.nm-stat .nm-label {
+    font-size: 10px;
+    color: #666;
+    display: block;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.nm-stat .nm-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: #333;
+}
+
+.no-data {
+    text-align: center;
+    color: #999;
+    font-size: 13px;
+    padding: 30px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin: 10px;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 768px) {
+    .full-stat-campaign {
+        padding: 15px;
+    }
+    
+    .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .stat-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .stat-metrics {
+        font-size: 11px;
+    }
+    
+    .stats-detail-table {
+        font-size: 11px;
+    }
+    
+    .stats-detail-table th,
+    .stats-detail-table td {
+        padding: 6px 8px;
+    }
+    
+    .nm-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 .stats-table-container {

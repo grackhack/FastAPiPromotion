@@ -20,7 +20,10 @@
                 <div class="campaign-header">
                     <a href="/" class="btn btn-secondary btn-back">← Назад к списку</a>
                     <h2>Кампания #<span id="campaignId">{{ campaign_id }}</span></h2>
-                    <button class="btn btn-primary btn-stats" onclick="openStatsModal()">📈 Статистика</button>
+                    <div class="campaign-actions">
+                        <button class="btn btn-primary btn-stats" onclick="openStatsModal()">📈 Статистика фраз</button>
+                        <button class="btn btn-secondary btn-full-stats" onclick="openFullStatsModal()">📊 Полная статистика</button>
+                    </div>
                 </div>
 
                 <div id="campaignInfo" class="campaign-info-block">
@@ -257,6 +260,67 @@
         </div>
     </div>
 
-    <script src="/static/js/campaign-detail.js?v=11"></script>
+    <!-- Modal для полной статистики -->
+    <div id="fullStatsModal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>📊 Полная статистика кампании</h3>
+                <button class="modal-close" onclick="closeFullStatsModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="stats-filters">
+                    <div class="date-range">
+                        <label>Период:</label>
+                        <input type="date" id="fullStatsFromDate" class="date-input">
+                        <span>—</span>
+                        <input type="date" id="fullStatsToDate" class="date-input">
+                        <button class="btn btn-primary" onclick="loadFullStats()">📊 Загрузить</button>
+                    </div>
+                </div>
+
+                <div id="fullStatsLoading" class="load-status hidden">
+                    <span class="spinner-small"></span> Загрузка статистики...
+                </div>
+
+                <div id="fullStatsError" class="error-message hidden"></div>
+
+                <div id="fullStatsContent" class="stats-content hidden">
+                    <div class="full-stats-summary">
+                        <div class="stat-card primary">
+                            <div class="stat-value" id="fullTotalViews">0</div>
+                            <div class="stat-label">Просмотры</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="fullTotalClicks">0</div>
+                            <div class="stat-label">Клики</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="fullTotalOrders">0</div>
+                            <div class="stat-label">Заказы</div>
+                        </div>
+                        <div class="stat-card success">
+                            <div class="stat-value" id="fullTotalRevenue">0 ₽</div>
+                            <div class="stat-label">Выручка</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="fullTotalSpend">0 ₽</div>
+                            <div class="stat-label">Затраты</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="fullTotalCtr">0%</div>
+                            <div class="stat-label">CTR</div>
+                        </div>
+                    </div>
+
+                    <div class="full-stats-campaigns" id="fullStatsCampaigns">
+                        <!-- Кампании будут загружены сюда -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/campaign-detail.js?v=15"></script>
 </body>
 </html>

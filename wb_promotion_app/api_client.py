@@ -1,7 +1,7 @@
 import requests
 from typing import List, Dict, Any, Optional
 import logging
-from .utils import handle_api_error
+from .utils import handle_api_error, RateLimitError
 from .models import (
     Campaign,
     SearchClusterBidItem,
@@ -592,7 +592,7 @@ class WBPromotionClient:
     def get_full_stats(self, ids: List[int], from_date: str, to_date: str) -> Dict[str, Any]:
         """
         Получить полную статистику по кампаниям
-        
+
         Args:
             ids: Список ID кампаний
             from_date: Дата начала периода (YYYY-MM-DD)
@@ -606,16 +606,23 @@ class WBPromotionClient:
                 "endDate": to_date
             }
             response = requests.get(url, headers=self.headers, params=params)
-            
+
             if response.status_code != 200:
                 try:
                     error_data = response.json()
                     error_msg = error_data.get('detail', str(error_data))
                 except:
                     error_msg = response.text or f"HTTP {response.status_code}"
+                
+                # Проверка на лимитирование запросов
+                if "Limited by global limiter" in error_msg or "per seller" in error_msg:
+                    raise RateLimitError(f"Превышен лимит запросов к API: {error_msg}")
+                
                 raise Exception(f"Ошибка API: {error_msg}")
-            
+
             return response.json()
+        except RateLimitError:
+            raise
         except Exception as e:
             error_context = "get_full_stats"
             self.logger.error(f"Error in {error_context}: {str(e)}")
