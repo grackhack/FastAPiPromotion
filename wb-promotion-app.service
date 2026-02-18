@@ -4,9 +4,9 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/botuser/FastAPiPromotion/wb_promotion_app
+WorkingDirectory=/home/botuser/FastAPiPromotion
 Environment="PATH=/home/botuser/FastAPiPromotion/.venv/bin"
-ExecStart=/home/botuser/FastAPiPromotion/.venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8001
+ExecStart=/home/botuser/FastAPiPromotion/.venv/bin/python -m uvicorn wb_promotion_app.main:app --host 0.0.0.0 --port 8001
 Restart=always
 RestartSec=10
 
