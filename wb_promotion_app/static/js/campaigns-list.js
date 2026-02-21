@@ -47,10 +47,11 @@ const MEDIA_TYPE_MAP = {
 };
 
 // Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', function() {
-    // Проверка аутентификации пользователя
-    checkAuth();
+document.addEventListener('DOMContentLoaded', async function() {
+    // Проверка аутентификации и загрузка токена
+    await checkAuth();
     
+    // Теперь загружаем кампании (токен уже должен быть)
     initTabs();
     initFilters();
     initStatusTabs();
@@ -407,7 +408,7 @@ async function checkAuth() {
             document.getElementById('userGreeting').classList.remove('hidden');
             document.getElementById('userName').textContent = user.username;
             
-            // Получаем токен пользователя
+            // Получаем токен пользователя и ждём завершения
             await loadApiToken();
         } else {
             // Пользователь не авторизован

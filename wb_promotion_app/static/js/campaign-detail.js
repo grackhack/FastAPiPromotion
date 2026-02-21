@@ -14,7 +14,9 @@ let currentApiToken = null; // Токен текущего пользовате�
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', async function() {
     currentCampaignId = parseInt(document.getElementById('campaignId').textContent);
-    await loadApiToken(); // Загружаем токен перед использованием
+    // Сначала загружаем токен
+    await loadApiToken();
+    // Теперь загружаем кампанию с токеном
     loadCampaignData();
     initStatsDates();
 });

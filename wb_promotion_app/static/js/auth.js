@@ -19,17 +19,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ username })
+                    body: JSON.stringify({ username }),
+                    redirect: 'manual'  // Не следовать редиректу автоматически
                 });
 
-                const data = await response.json();
-
-                if (response.ok) {
+                // Сервер возвращает 303 редирект с cookie
+                if (response.status === 303 || response.ok) {
                     showSuccess('Вход выполнен успешно! Перенаправление...');
                     setTimeout(() => {
-                        window.location.href = '/profile';
+                        window.location.href = '/';
                     }, 1000);
                 } else {
+                    const data = await response.json().catch(() => ({}));
                     showError(data.detail || 'Ошибка входа');
                 }
             } catch (error) {
