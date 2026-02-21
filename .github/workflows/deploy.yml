@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - main
 
 jobs:
   deploy:
@@ -23,29 +24,40 @@ jobs:
           script: |
             cd ~/FastAPiPromotion
 
-            # Pull latest changes
+            echo "🔄 Pulling latest changes..."
             git fetch origin
             git reset --hard origin/master
 
-            # Install dependencies
+            echo "📦 Installing dependencies..."
             source .venv/bin/activate
             pip install -e .
+            pip install -r wb_promotion_app/requirements.txt
 
-            # Restart application via systemd (botuser can restart own services)
+            echo "🗄️ Running database migrations..."
+            cd wb_promotion_app
+            alembic upgrade head
+            cd ..
+
+            echo "🔄 Restarting application..."
             systemctl --user daemon-reload
             systemctl --user restart wb-promotion-app
 
-            # Wait and verify
+            echo "⏳ Waiting for application to start..."
             sleep 5
-            # Check by port 8001
+
+            echo "✅ Checking application status..."
             if ss -tlnp | grep ':8001 ' > /dev/null; then
               echo "✅ Application started successfully on port 8001"
               curl -s http://localhost:8001/ | head -3
+              echo ""
+              echo "✅ Deployment completed successfully!"
             else
               echo "❌ Application failed to start"
-              echo "=== User systemd status ==="
+              echo ""
+              echo "=== Service status ==="
               systemctl --user status wb-promotion-app --no-pager | tail -20
-              echo "=== Journal logs ==="
+              echo ""
+              echo "=== Recent logs ==="
               journalctl --user -u wb-promotion-app --no-pager -n 30
               exit 1
             fi

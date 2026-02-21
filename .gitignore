@@ -33,3 +33,10 @@ uv.lock
 # OS
 .DS_Store
 Thumbs.db
+
+# Database (но не миграции)
+*.db
+
+# Alembic (но миграции нужны в git)
+# !wb_promotion_app/alembic.ini
+# !wb_promotion_app/migrations/
