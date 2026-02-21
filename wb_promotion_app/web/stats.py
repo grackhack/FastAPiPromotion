@@ -53,16 +53,23 @@ async def campaign_stats_page(
     stats_service = StatsService(wb_client)
 
     try:
-        stats = stats_service.get_campaign_stats(campaign_id, from_date, to_date)
-        norm_stats = stats_service.get_norm_query_stats(
-            campaign_id, nm_id=0, from_date=from_date, to_date=to_date
-        )
+        # Получаем кампанию и первый nm_id для статистики
         campaigns = wb_client.get_campaigns()
-        # campaigns - это список dict, а не объектов
         campaign = next((c for c in campaigns if c.get('id') == campaign_id), None)
-
+        
         if not campaign:
             raise HTTPException(status_code=404, detail="Кампания не найдена")
+        
+        # Получаем nm_id из кампании (берём первый товар)
+        nm_id = 0
+        if campaign.get('nm_settings'):
+            nm_id = campaign['nm_settings'][0].get('nm_id', 0)
+        
+        # Получаем статистику
+        stats = stats_service.get_campaign_stats(campaign_id, from_date, to_date, nm_id=nm_id)
+        norm_stats = stats_service.get_norm_query_stats(
+            campaign_id, nm_id=nm_id, from_date=from_date, to_date=to_date
+        )
 
     except Exception as e:
         return HTMLResponse(f"Ошибка: {str(e)}", status_code=500)
@@ -88,27 +95,34 @@ async def minus_phrases_page(
     from ..main import templates
 
     try:
-        campaigns = wb_client.get_campaigns()
-        # campaigns - это список dict, а не объектов
-        campaign = next((c for c in campaigns if c.get('id') == campaign_id), None)
-
-        if not campaign:
-            raise HTTPException(status_code=404, detail="Кампания не найдена")
-
+        # Получаем данные о кампании напрямую из API
         adverts = wb_client.get_adverts(ids=str(campaign_id))
-
+        
         nm_list = []
         if adverts and hasattr(adverts, 'adverts') and adverts.adverts:
-            for advert in adverts.adverts:
-                nm_id = getattr(advert, 'nm_id', None)
-                if nm_id:
-                    minus_request = [{"advert_id": campaign_id, "nm_id": nm_id}]
-                    minus_data = wb_client.get_minus_phrases(minus_request)
-
-                    nm_list.append({
-                        "nm_id": nm_id,
-                        "minus_phrases": minus_data.items if hasattr(minus_data, 'items') else []
-                    })
+            advert = adverts.adverts[0]
+            # Получаем все nm_id из кампании
+            for nm_setting in advert.nm_settings:
+                nm_id = nm_setting.nm_id
+                
+                # Получаем минус-фразы для этого nm_id
+                minus_data = wb_client.get_minus_phrases([{
+                    "advert_id": campaign_id,
+                    "nm_id": nm_id
+                }])
+                
+                # Извлекаем фразы из ответа API
+                phrases = []
+                if hasattr(minus_data, 'items') and minus_data.items:
+                    for item in minus_data.items:
+                        if item.get('advert_id') == campaign_id and item.get('nm_id') == nm_id:
+                            phrases = item.get('norm_queries', []) or item.get('excluded', [])
+                            break
+                
+                nm_list.append({
+                    "nm_id": nm_id,
+                    "minus_phrases": phrases
+                })
 
     except Exception as e:
         return HTMLResponse(f"Ошибка: {str(e)}", status_code=500)
@@ -116,6 +130,6 @@ async def minus_phrases_page(
     template = templates.get_template("minus-phrases.html")
     return HTMLResponse(template.render(
         request=request,
-        campaign=campaign,
+        campaign={"id": campaign_id},
         nm_list=nm_list
     ))
