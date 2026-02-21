@@ -9,12 +9,13 @@ let statsPhrases = []; // Текущая статистика фраз
 let currentPhraseToAdd = null; // Фраза для добавления в минус-фразы
 let clustersData = { active: [], excluded: [] }; // Текущие кластеры
 let selectedClusters = []; // Выбранные кластеры для добавления в минус
+let currentApiToken = null; // Кэш для API токена
 
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
     // Проверяем есть ли данные кампании в шаблоне (SSR)
     const campaignDataEl = document.getElementById('campaign-data');
-    
+
     if (campaignDataEl && campaignDataEl.textContent.trim()) {
         // Данные уже загружены на бэкенде через SSR
         try {
@@ -33,15 +34,37 @@ document.addEventListener('DOMContentLoaded', function() {
         currentCampaignId = parseInt(document.getElementById('campaignId').textContent);
         loadCampaignData();
     }
-    
+
     initStatsDates();
+    loadApiToken(); // Загружаем токен при старте
 });
 
-// Вспомогательная функция для API запросов (токен берётся из сессии на бэкенде)
+// Загрузка API токена из сессии
+async function loadApiToken() {
+    try {
+        const response = await fetch('/auth/token');
+        const data = await response.json();
+        if (data.has_token && data.token) {
+            currentApiToken = data.token;
+            console.log('API токен загружен');
+        } else {
+            console.warn('API токен не найден, некоторые функции могут не работать');
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки токена:', error);
+    }
+}
+
+// Вспомогательная функция для API запросов (добавляет X-API-Token если есть)
 async function apiFetch(url, options = {}) {
     const headers = options.headers || {};
     headers['Content-Type'] = 'application/json';
     
+    // Добавляем токен если он есть и это API запрос
+    if (currentApiToken && (url.startsWith('/api/') || url.startsWith('/search-clusters/') || url.startsWith('/campaigns/'))) {
+        headers['X-API-Token'] = currentApiToken;
+    }
+
     return fetch(url, {
         ...options,
         headers
