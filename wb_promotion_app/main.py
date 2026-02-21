@@ -35,6 +35,9 @@ from .schemas import (
     FullStatsNM,
 )
 from .utils import setup_logging
+from .dependencies import CurrentUser, get_token_from_header
+from .config import get_db
+from .users import router as users_router
 
 # Загрузка переменных окружения
 load_dotenv()
@@ -60,20 +63,24 @@ templates = Environment(
     autoescape=True
 )
 
-# Инициализация клиента API
-token = os.getenv("WB_API_TOKEN")
-if not token:
-    raise ValueError("Необходимо указать WB_API_TOKEN в переменных окружения")
+# Подключение роутера пользователей
+app.include_router(users_router, prefix="/api")
 
-wb_client = WBPromotionClient(token)
+
+def get_wb_client(token: str) -> WBPromotionClient:
+    """Создать клиент API для токена пользователя"""
+    return WBPromotionClient(token)
 
 
 @app.get("/api/campaigns/list", response_model=List[CampaignInfo])
-async def get_campaigns():
+async def get_campaigns(token: str = Depends(get_token_from_header)):
     """
     Получить список рекламных кампаний (API)
     """
+    if not token:
+        raise HTTPException(status_code=401, detail="Требуется X-API-Token заголовок")
     try:
+        wb_client = get_wb_client(token)
         campaigns = wb_client.get_campaigns()
         return campaigns
     except Exception as e:
@@ -81,14 +88,17 @@ async def get_campaigns():
 
 
 @app.get("/campaigns/count", response_model=CampaignCountResponseSchema)
-async def get_campaigns_count():
+async def get_campaigns_count(token: str = Depends(get_token_from_header)):
     """
     Получить список всех рекламных кампаний продавца с их ID.
     Кампании сгруппированы по типу и статусу.
-    
+
     Эндпоинт: GET /adv/v1/promotion/count
     """
+    if not token:
+        raise HTTPException(status_code=401, detail="Требуется X-API-Token заголовок")
     try:
+        wb_client = get_wb_client(token)
         result = wb_client.get_campaigns_count()
         return result
     except Exception as e:
@@ -97,21 +107,25 @@ async def get_campaigns_count():
 
 @app.get("/campaigns/adverts", response_model=List[PromotionCampaignSchema])
 async def get_adverts(
+    token: str = Depends(get_token_from_header),
     ids: Optional[str] = None,
     statuses: Optional[str] = None,
     payment_type: Optional[str] = None
 ):
     """
     Получить подробную информацию о рекламных кампаниях с единой или ручной ставкой.
-    
+
     Эндпоинт: GET /api/advert/v2/adverts
-    
+
     Параметры:
         ids - ID кампаний через запятую (максимум 50)
         statuses - Статусы кампаний через запятую (-1, 4, 7, 8, 9, 11)
         payment_type - Тип оплаты: cpm или cpc
     """
+    if not token:
+        raise HTTPException(status_code=401, detail="Требуется X-API-Token заголовок")
     try:
+        wb_client = get_wb_client(token)
         result = wb_client.get_adverts(ids=ids, statuses=statuses, payment_type=payment_type)
         return result.adverts
     except Exception as e:
@@ -120,6 +134,7 @@ async def get_adverts(
 
 @app.get("/campaigns/media", response_model=List[MediaCampaignSchema])
 async def get_media_campaigns(
+    token: str = Depends(get_token_from_header),
     status: Optional[int] = None,
     type: Optional[int] = None,
     limit: Optional[int] = None,
@@ -129,9 +144,9 @@ async def get_media_campaigns(
 ):
     """
     Получить список всех медиакампаний продавца по типам и статусам.
-    
+
     Эндпоинт: GET /adv/v1/adverts
-    
+
     Параметры:
         status - Статус медиакампании (1-11)
         type - Тип медиакампании: 1 — размещение по дням, 2 — по просмотрам
@@ -140,7 +155,10 @@ async def get_media_campaigns(
         order - Порядок сортировки: create или id
         direction - Направление: desc или asc
     """
+    if not token:
+        raise HTTPException(status_code=401, detail="Требуется X-API-Token заголовок")
     try:
+        wb_client = get_wb_client(token)
         result = wb_client.get_media_campaigns(
             status=status,
             type=type,
@@ -155,60 +173,75 @@ async def get_media_campaigns(
 
 
 @app.get("/campaigns/media/count", response_model=MediaCampaignCountResponseSchema)
-async def get_media_campaigns_count():
+async def get_media_campaigns_count(token: str = Depends(get_token_from_header)):
     """
     Получить количество медиакампаний продавца с группировкой по статусам.
-    
+
     Эндпоинт: GET /adv/v1/count
     """
+    if not token:
+        raise HTTPException(status_code=401, detail="Требуется X-API-Token заголовок")
     try:
+        wb_client = get_wb_client(token)
         result = wb_client.get_media_campaigns_count()
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/search-clusters/bids")
-async def get_search_cluster_bids(request: List[SearchClusterBid]):
+async def get_search_cluster_bids(request: List[SearchClusterBid], token: str = Depends(get_token_from_header)):
     """
     Получить ставки поисковых кластеров для указанных товаров в кампаниях
     """
+    if not token:
+        raise HTTPException(status_code=401, detail="Требуется X-API-Token заголовок")
     try:
+        wb_client = get_wb_client(token)
         bids = wb_client.get_search_cluster_bids(request)
         return bids
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/search-clusters/set-bids")
-async def set_search_cluster_bids(request: List[SearchClusterBid]):
+async def set_search_cluster_bids(request: List[SearchClusterBid], token: str = Depends(get_token_from_header)):
     """
     Установить ставки для поисковых кластеров
     """
+    if not token:
+        raise HTTPException(status_code=401, detail="Требуется X-API-Token заголовок")
     try:
+        wb_client = get_wb_client(token)
         result = wb_client.set_search_cluster_bids(request)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.delete("/search-clusters/remove-bids")
-async def remove_search_cluster_bids(request: List[SearchClusterBid]):
+async def remove_search_cluster_bids(request: List[SearchClusterBid], token: str = Depends(get_token_from_header)):
     """
     Удалить ставки с поисковых кластеров
     """
+    if not token:
+        raise HTTPException(status_code=401, detail="Требуется X-API-Token заголовок")
     try:
+        wb_client = get_wb_client(token)
         result = wb_client.remove_search_cluster_bids(request)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/search-clusters/stats")
-async def get_search_cluster_stats(request: SearchClusterStats):
+async def get_search_cluster_stats(request: SearchClusterStats, token: str = Depends(get_token_from_header)):
     """
     Получить статистику по поисковым кластерам за указанный период
     """
+    if not token:
+        raise HTTPException(status_code=401, detail="Требуется X-API-Token заголовок")
     try:
+        wb_client = get_wb_client(token)
         stats = wb_client.get_search_cluster_stats(
-            request.from_date, 
-            request.to_date, 
+            request.from_date,
+            request.to_date,
             request.items
         )
         return stats
@@ -216,24 +249,30 @@ async def get_search_cluster_stats(request: SearchClusterStats):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/search-clusters/minus-phrases")
-async def get_minus_phrases(request: List[MinusPhraseSchema]):
+async def get_minus_phrases(request: List[MinusPhraseSchema], token: str = Depends(get_token_from_header)):
     """
     Получить список минус-фраз для товаров в кампаниях
     """
+    if not token:
+        raise HTTPException(status_code=401, detail="Требуется X-API-Token заголовок")
     try:
+        wb_client = get_wb_client(token)
         minus_phrases = wb_client.get_minus_phrases(request)
         return minus_phrases
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/search-clusters/set-minus-phrases")
-async def set_minus_phrases(request: MinusPhraseSchema):
+async def set_minus_phrases(request: MinusPhraseSchema, token: str = Depends(get_token_from_header)):
     """
     Установить минус-фразы для товара в кампании
     """
+    if not token:
+        raise HTTPException(status_code=401, detail="Требуется X-API-Token заголовок")
     try:
         # Используем norm_queries или minus_phrases
         phrases = request.norm_queries or request.minus_phrases or []
+        wb_client = get_wb_client(token)
         result = wb_client.set_minus_phrases(
             request.advert_id,
             request.nm_id,
@@ -244,11 +283,14 @@ async def set_minus_phrases(request: MinusPhraseSchema):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/search-clusters/list")
-async def get_search_cluster_list(request: List[MinusPhraseSchema]):
+async def get_search_cluster_list(request: List[MinusPhraseSchema], token: str = Depends(get_token_from_header)):
     """
     Получить списки активных и неактивных поисковых кластеров
     """
+    if not token:
+        raise HTTPException(status_code=401, detail="Требуется X-API-Token заголовок")
     try:
+        wb_client = get_wb_client(token)
         cluster_list = wb_client.get_search_cluster_list(request)
         return cluster_list
     except Exception as e:
@@ -256,11 +298,14 @@ async def get_search_cluster_list(request: List[MinusPhraseSchema]):
 
 
 @app.post("/stats/normquery", response_model=StatsResponse)
-async def get_normquery_stats(request: StatsRequest):
+async def get_normquery_stats(request: StatsRequest, token: str = Depends(get_token_from_header)):
     """
     Получить статистику поисковых кластеров (ключевых фраз) за период
     """
+    if not token:
+        raise HTTPException(status_code=401, detail="Требуется X-API-Token заголовок")
     try:
+        wb_client = get_wb_client(token)
         items = [{"advert_id": item.advert_id, "nm_id": item.nm_id} for item in request.items]
         data = wb_client.get_normquery_stats(
             from_date=request.from_date.isoformat(),
@@ -309,11 +354,14 @@ async def get_normquery_stats(request: StatsRequest):
 
 
 @app.post("/stats/full", response_model=FullStatsResponse)
-async def get_full_stats(request: FullStatsRequest):
+async def get_full_stats(request: FullStatsRequest, token: str = Depends(get_token_from_header)):
     """
     Получить полную статистику по кампаниям за период
     """
+    if not token:
+        raise HTTPException(status_code=401, detail="Требуется X-API-Token заголовок")
     try:
+        wb_client = get_wb_client(token)
         data = wb_client.get_full_stats(
             ids=request.ids,
             from_date=request.from_date.isoformat(),

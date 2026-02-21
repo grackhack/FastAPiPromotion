@@ -1,6 +1,45 @@
 from dataclasses import dataclass
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Text
+from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy.sql import func
+
+Base = declarative_base()
+
+
+class User(Base):
+    """
+    Модель пользователя системы
+    """
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(100), unique=True, index=True, nullable=False)
+    email = Column(String(255), unique=True, index=True, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    is_active = Column(Boolean, default=True)
+
+    # Связь с токенами
+    api_tokens = relationship("UserApiToken", back_populates="user", cascade="all, delete-orphan")
+
+
+class UserApiToken(Base):
+    """
+    Модель API токена пользователя для Wildberries
+    """
+    __tablename__ = "user_api_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    token = Column(Text, nullable=False)
+    description = Column(String(255), nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Связь с пользователем
+    user = relationship("User", back_populates="api_tokens")
 
 
 @dataclass

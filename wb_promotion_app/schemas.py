@@ -366,3 +366,94 @@ class FullStatsResponse(BaseModel):
     Ответ с полной статистикой
     """
     campaigns: List[FullStatsCampaign] = Field(default_factory=list)
+
+
+# ==================== Схемы для пользователей и токенов ====================
+
+class UserBase(BaseModel):
+    """
+    Базовая схема пользователя
+    """
+    username: str = Field(..., min_length=3, max_length=100, description="Имя пользователя")
+    email: Optional[str] = Field(None, max_length=255, description="Email пользователя")
+
+
+class UserCreate(UserBase):
+    """
+    Схема для создания пользователя
+    """
+    pass
+
+
+class UserUpdate(BaseModel):
+    """
+    Схема для обновления пользователя
+    """
+    username: Optional[str] = Field(None, min_length=3, max_length=100)
+    email: Optional[str] = Field(None, max_length=255)
+    is_active: Optional[bool] = None
+
+
+class UserResponse(UserBase):
+    """
+    Схема ответа с данными пользователя
+    """
+    id: int
+    is_active: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class UserApiTokenBase(BaseModel):
+    """
+    Базовая схема API токена пользователя
+    """
+    description: Optional[str] = Field(None, max_length=255, description="Описание токена")
+    token: str = Field(..., description="WB API токен")
+
+
+class UserApiTokenCreate(UserApiTokenBase):
+    """
+    Схема для создания токена
+    """
+    pass
+
+
+class UserApiTokenUpdate(BaseModel):
+    """
+    Схема для обновления токена
+    """
+    description: Optional[str] = Field(None, max_length=255)
+    is_active: Optional[bool] = None
+    token: Optional[str] = None
+
+
+class UserApiTokenResponse(BaseModel):
+    """
+    Схема ответа с данными токена (без значения токена)
+    """
+    id: int
+    user_id: int
+    description: Optional[str]
+    is_active: bool
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class UserApiTokenFullResponse(UserApiTokenResponse):
+    """
+    Схема ответа с данными токена и токеном (только при создании)
+    """
+    token: str
+
+
+class UserWithTokensResponse(UserResponse):
+    """
+    Схема ответа с пользователем и его токенами
+    """
+    api_tokens: List[UserApiTokenResponse] = Field(default_factory=list)
