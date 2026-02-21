@@ -111,6 +111,14 @@ class StatsService:
         stats = self.client.get_stats(request)
         return self._process_norm_stats(stats)
 
+    def _get_safe_value(self, obj, attr, default=0):
+        """Безопасное получение значения с обработкой Undefined"""
+        val = getattr(obj, attr, default)
+        # Проверяем на Undefined (pydantic)
+        if val is None or (hasattr(val, '__class__') and val.__class__.__name__ == 'UndefinedType'):
+            return default
+        return val
+
     def _process_stats(self, stats: Any, campaign_id: int) -> Dict[str, Any]:
         """Обработать статистику"""
         if not stats or not hasattr(stats, 'items') or not stats.items:
@@ -136,13 +144,13 @@ class StatsService:
             if hasattr(item, 'stats') and item.stats:
                 for stat in item.stats:
                     day_data = {
-                        "date": getattr(stat, 'date', 'N/A'),
-                        "views": getattr(stat, 'views', 0),
-                        "clicks": getattr(stat, 'clicks', 0),
-                        "orders": getattr(stat, 'orders', 0),
-                        "revenue": getattr(stat, 'revenue', 0),
-                        "ctr": getattr(stat, 'ctr', 0),
-                        "cpc": getattr(stat, 'cpc', 0),
+                        "date": self._get_safe_value(stat, 'date', 'N/A'),
+                        "views": self._get_safe_value(stat, 'views', 0),
+                        "clicks": self._get_safe_value(stat, 'clicks', 0),
+                        "orders": self._get_safe_value(stat, 'orders', 0),
+                        "revenue": self._get_safe_value(stat, 'revenue', 0),
+                        "ctr": self._get_safe_value(stat, 'ctr', 0),
+                        "cpc": self._get_safe_value(stat, 'cpc', 0),
                     }
                     days_data.append(day_data)
                     total_views += day_data["views"]
@@ -180,11 +188,11 @@ class StatsService:
             if hasattr(item, 'stats') and item.stats:
                 for stat in item.stats:
                     query_data = {
-                        "query": getattr(stat, 'norm_query', 'N/A'),
-                        "views": getattr(stat, 'views', 0),
-                        "clicks": getattr(stat, 'clicks', 0),
-                        "orders": getattr(stat, 'orders', 0),
-                        "ctr": getattr(stat, 'ctr', 0),
+                        "query": self._get_safe_value(stat, 'norm_query', 'N/A'),
+                        "views": self._get_safe_value(stat, 'views', 0),
+                        "clicks": self._get_safe_value(stat, 'clicks', 0),
+                        "orders": self._get_safe_value(stat, 'orders', 0),
+                        "ctr": self._get_safe_value(stat, 'ctr', 0),
                     }
                     queries.append(query_data)
         
