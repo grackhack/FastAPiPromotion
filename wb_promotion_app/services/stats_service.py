@@ -28,24 +28,25 @@ class StatsService:
     ) -> Dict[str, Any]:
         """
         Получить статистику по кампании
-        
+
         Args:
             campaign_id: ID кампании
             from_date: Дата начала (YYYY-MM-DD)
             to_date: Дата окончания (YYYY-MM-DD)
             nm_id: ID товара (опционально)
-            
+
         Returns:
             Словарь со статистикой
         """
         # Формируем запрос к API
+        # nm_id=0 означает все товары в кампании
         request = StatsRequest(
             from_date=from_date,
             to_date=to_date,
             items=[{
                 "advert_id": campaign_id,
-                "nm_id": nm_id
-            }] if nm_id else [{"advert_id": campaign_id}]
+                "nm_id": nm_id or 0
+            }]
         )
         
         # Получаем статистику
