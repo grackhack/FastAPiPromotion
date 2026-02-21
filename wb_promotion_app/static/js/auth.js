@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const username = document.getElementById('username').value.trim();
-            
+
             try {
                 const response = await fetch('/auth/login', {
                     method: 'POST',
@@ -20,22 +20,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ username }),
-                    redirect: 'manual'  // Не следовать редиректу автоматически
+                    credentials: 'same-origin'  // Важно для отправки/получения cookie
                 });
 
+                console.log('Login response status:', response.status);
+
                 // Сервер возвращает 303 редирект с cookie
-                // Тело ответа пустое, поэтому не пытаемся читать JSON
-                if (response.status === 303) {
+                if (response.status === 303 || response.ok) {
                     showSuccess('Вход выполнен успешно! Перенаправление...');
+                    // Перенаправляем явно, т.к. fetch не следует редиректу для CORS
                     setTimeout(() => {
-                        window.location.href = '/';
-                    }, 1000);
-                } else if (response.ok) {
-                    // Если вдруг вернул 200 OK
-                    showSuccess('Вход выполнен успешно! Перенаправление...');
-                    setTimeout(() => {
-                        window.location.href = '/';
-                    }, 1000);
+                        window.location.href = '/profile';
+                    }, 500);
                 } else {
                     // Ошибка - пытаемся прочитать JSON
                     try {
