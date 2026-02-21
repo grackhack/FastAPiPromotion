@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, Session
 
 # Загрузка переменных окружения из файла .env
@@ -37,6 +37,14 @@ engine = create_engine(
     pool_pre_ping=True,
     echo=False  # Отключаем логирование SQL запросов
 )
+
+# Для PostgreSQL устанавливаем UTF8 кодировку при каждом подключении
+if DATABASE_URL.startswith("postgresql://"):
+    @event.listens_for(engine, "connect")
+    def set_client_encoding(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("SET client_encoding TO 'UTF8'")
+        cursor.close()
 
 # Session factory для использования в приложении
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
