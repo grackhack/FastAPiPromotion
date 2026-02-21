@@ -670,11 +670,8 @@ async function loadFullStats() {
     try {
         const ids = campaignData.nm_settings.map(nm => nm.nm_id);
 
-        const response = await fetch('/stats/full', {
+        const response = await apiFetch('/stats/full', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
             body: JSON.stringify({
                 ids: [currentCampaignId],
                 from_date: fromDate,
@@ -959,11 +956,8 @@ async function loadStats() {
             nm_id: nm.nm_id
         }));
         
-        const response = await fetch('/stats/normquery', {
+        const response = await apiFetch('/stats/normquery', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
             body: JSON.stringify({
                 from_date: fromDate,
                 to_date: toDate,
