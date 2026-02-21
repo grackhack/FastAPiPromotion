@@ -52,12 +52,19 @@ async function loadCampaignData() {
     showLoading(true);
     hideError();
 
+    // Ждём пока токен загрузится если ещё не загружен
+    if (!currentApiToken) {
+        await loadApiToken();
+    }
+
     try {
         const headers = {};
         if (currentApiToken) {
             headers['X-API-Token'] = currentApiToken;
+        } else {
+            throw new Error('API токен не найден. Добавьте токен в личном кабинете.');
         }
-        
+
         const response = await fetch(`/campaigns/adverts?ids=${currentCampaignId}`, { headers });
         if (!response.ok) {
             throw new Error(`Ошибка HTTP: ${response.status}`);

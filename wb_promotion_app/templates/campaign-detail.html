@@ -328,22 +328,27 @@
         </div>
     </div>
 
-    <script src="/static/js/campaign-detail.js?v=15"></script>
+    <script src="/static/js/campaign-detail.js?v=16"></script>
     <script>
-        // Проверка аутентификации при загрузке страницы
+        // Проверка аутентификации ПЕРЕД загрузкой страницы
         document.addEventListener('DOMContentLoaded', async function() {
             try {
                 const response = await fetch('/auth/me');
-                if (response.ok) {
-                    const user = await response.json();
-                    document.getElementById('loginLink').style.display = 'none';
-                    document.getElementById('profileLink').style.display = '';
-                    document.getElementById('logoutLink').style.display = '';
-                    document.getElementById('userGreeting').classList.remove('hidden');
-                    document.getElementById('userName').textContent = user.username;
-                } else {
+                if (!response.ok) {
+                    // Не авторизован - перенаправляем на login
                     window.location.href = '/login';
+                    return;
                 }
+                
+                const user = await response.json();
+                document.getElementById('loginLink').style.display = 'none';
+                document.getElementById('profileLink').style.display = '';
+                document.getElementById('logoutLink').style.display = '';
+                document.getElementById('userGreeting').classList.remove('hidden');
+                document.getElementById('userName').textContent = user.username;
+                
+                // Авторизован - продолжаем загрузку страницы
+                console.log('User authenticated:', user.username);
             } catch (error) {
                 console.error('Error checking auth:', error);
                 window.location.href = '/login';
