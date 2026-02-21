@@ -28,9 +28,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Сервер возвращает 303 редирект с cookie
                 if (response.status === 303 || response.ok) {
                     showSuccess('Вход выполнен успешно! Перенаправление...');
-                    // Перенаправляем явно, т.к. fetch не следует редиректу для CORS
+                    // Перенаправляем явно на страницу кампаний
                     setTimeout(() => {
-                        window.location.href = '/profile';
+                        window.location.href = '/';
                     }, 500);
                 } else {
                     // Ошибка - пытаемся прочитать JSON
@@ -105,8 +105,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (loginResponse.ok) {
                     showSuccess('Регистрация успешна! Перенаправление...');
                     setTimeout(() => {
-                        window.location.href = '/profile';
-                    }, 1000);
+                        window.location.href = '/';
+                    }, 500);
                 }
             } catch (error) {
                 showError(error.message || 'Ошибка регистрации');
@@ -123,8 +123,8 @@ async function checkExistingSession() {
     try {
         const response = await fetch('/auth/me');
         if (response.ok) {
-            // Уже авторизован
-            window.location.href = '/profile';
+            // Уже авторизован - перенаправляем на страницу кампаний
+            window.location.href = '/';
         }
     } catch (error) {
         console.error('Auth check error:', error);

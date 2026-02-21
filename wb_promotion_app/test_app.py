@@ -4,8 +4,8 @@
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
-from main import app
-from api_client import WBPromotionClient
+from wb_promotion_app.main import app
+from wb_promotion_app.api_client import WBPromotionClient
 
 client = TestClient(app)
 
@@ -60,12 +60,32 @@ def test_root_endpoint():
     assert response.json() == {"message": "Wildberries Promotion API Manager"}
 
 
+def test_campaigns_list_requires_token():
+    """Тест что /api/campaigns/list требует токен"""
+    response = client.get("/api/campaigns/list")
+    assert response.status_code == 401
+    assert "X-API-Token" in response.json()["detail"]
+
+
+@patch.object(WBPromotionClient, 'get_campaigns')
+def test_campaigns_list_with_token(mock_get_campaigns):
+    """Тест получения списка кампаний с токеном"""
+    mock_get_campaigns.return_value = mock_campaigns_response
+
+    response = client.get(
+        "/api/campaigns/list",
+        headers={"X-API-Token": "test_token"}
+    )
+    assert response.status_code == 200
+    assert response.json() == mock_campaigns_response
+
+
 @patch.object(WBPromotionClient, 'get_campaigns')
 def test_get_campaigns(mock_get_campaigns):
     """Тест получения списка кампаний"""
     mock_get_campaigns.return_value = mock_campaigns_response
-    
-    response = client.get("/campaigns")
+
+    response = client.get("/api/campaigns/list")
     assert response.status_code == 200
     assert response.json() == mock_campaigns_response
 

@@ -52,8 +52,18 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
         session_id = create_session(user.id, user.username)
         logger.info(f"Сессия создана для пользователя {user.id}: {session_id[:8]}...")
 
+        # Проверяем наличие токена и сохраняем в сессию
+        token = get_user_api_token(db, user.id)
+        if token:
+            # Сохраняем токен в сессию для быстрого доступа
+            from . import auth
+            session_data = auth.get_session(session_id)
+            if session_data:
+                session_data['api_token'] = token
+                logger.info(f"API токен сохранён в сессию для {user.username}")
+
         # Устанавливаем cookie
-        redirect_response = RedirectResponse(url="/profile", status_code=303)
+        redirect_response = RedirectResponse(url="/", status_code=303)  # Редирект на страницу кампаний
         redirect_response.set_cookie(
             key="session_id",
             value=session_id,
@@ -62,7 +72,7 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
             samesite="lax"
         )
 
-        logger.info(f"Вход выполнен успешно для {user.username}, редирект на /profile")
+        logger.info(f"Вход выполнен успешно для {user.username}, редирект на /")
         return redirect_response
     except Exception as e:
         logger.exception(f"Ошибка входа для {request.username}: {str(e)}")
@@ -124,10 +134,20 @@ async def get_current_token(request: Request, db: Session = Depends(get_db)):
     if not session:
         return {"has_token": False}
 
-    # Проверяем токен
+    # Сначала пробуем получить токен из сессии (быстрый путь)
+    if 'api_token' in session:
+        return {
+            "has_token": True,
+            "token": session['api_token']
+        }
+
+    # Проверяем токен в БД
     token = get_user_api_token(db, session["user_id"])
 
     if token:
+        # Сохраняем в сессию для будущих запросов
+        session['api_token'] = token
+        
         # Получаем ID токена для редактирования
         stmt = select(UserApiToken).where(
             UserApiToken.user_id == session["user_id"],
