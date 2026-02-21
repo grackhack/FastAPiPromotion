@@ -11,6 +11,7 @@ from sqlalchemy import select
 from ..config import get_db
 from ..models import User, UserApiToken
 from ..auth import get_current_user_from_session, get_session, delete_session
+from ..services.wb_service import WBService
 
 
 async def get_current_user(
