@@ -59,9 +59,9 @@ async function loadApiToken() {
 async function apiFetch(url, options = {}) {
     const headers = options.headers || {};
     headers['Content-Type'] = 'application/json';
-    
+
     // Добавляем токен если он есть и это API запрос
-    if (currentApiToken && (url.startsWith('/api/') || url.startsWith('/search-clusters/') || url.startsWith('/campaigns/'))) {
+    if (currentApiToken && (url.startsWith('/api/') || url.startsWith('/search-clusters/') || url.startsWith('/campaigns/') || url.startsWith('/stats/'))) {
         headers['X-API-Token'] = currentApiToken;
     }
 
