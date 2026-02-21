@@ -86,7 +86,10 @@ def get_wb_client(
     token: str = Depends(require_token)
 ):
     """
-    Создать WB API клиент для текущего пользователя.
+    Создать WB API сервис для текущего пользователя.
     """
+    from ..services.wb_service import WBService
     from ..api_client import WBPromotionClient
-    return WBPromotionClient(token)
+    
+    client = WBPromotionClient(token)
+    return WBService(client)
