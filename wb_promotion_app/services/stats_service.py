@@ -99,17 +99,17 @@ class StatsService:
         Returns:
             Статистика по запросам
         """
-        # Используем get_stats для получения детальной статистики
-        request = StatsRequest(
+        # Используем get_normquery_stats для получения детальной статистики
+        items = [{
+            "advert_id": campaign_id,
+            "nm_id": nm_id
+        }]
+        
+        stats = self.client.get_normquery_stats(
             from_date=from_date,
             to_date=to_date,
-            items=[{
-                "advert_id": campaign_id,
-                "nm_id": nm_id
-            }]
+            items=items
         )
-        
-        stats = self.client.get_stats(request)
         return self._process_norm_stats(stats)
 
     def _get_safe_value(self, obj, attr, default=0):
