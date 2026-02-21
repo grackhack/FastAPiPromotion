@@ -58,7 +58,8 @@ async def campaign_stats_page(
             campaign_id, nm_id=0, from_date=from_date, to_date=to_date
         )
         campaigns = wb_client.get_campaigns()
-        campaign = next((c for c in campaigns if c.id == campaign_id), None)
+        # campaigns - это список dict, а не объектов
+        campaign = next((c for c in campaigns if c.get('id') == campaign_id), None)
 
         if not campaign:
             raise HTTPException(status_code=404, detail="Кампания не найдена")
