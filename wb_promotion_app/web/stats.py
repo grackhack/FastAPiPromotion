@@ -40,7 +40,7 @@ async def campaign_stats_page(
     wb_client: Any = Depends(get_wb_client_for_user)
 ):
     """Страница статистики рекламной кампании"""
-    from . import main
+    from ..main import templates
 
     from_date = request.query_params.get("from_date")
     to_date = request.query_params.get("to_date")
@@ -66,7 +66,7 @@ async def campaign_stats_page(
     except Exception as e:
         return HTMLResponse(f"Ошибка: {str(e)}", status_code=500)
 
-    template = main.templates.get_template("stats-campaign.html")
+    template = templates.get_template("stats-campaign.html")
     return HTMLResponse(template.render(
         request=request,
         campaign=campaign,
@@ -84,7 +84,7 @@ async def minus_phrases_page(
     wb_client: Any = Depends(get_wb_client_for_user)
 ):
     """Страница управления минус-фразами кампании"""
-    from . import main
+    from ..main import templates
 
     try:
         campaigns = wb_client.get_campaigns()
@@ -111,7 +111,7 @@ async def minus_phrases_page(
     except Exception as e:
         return HTMLResponse(f"Ошибка: {str(e)}", status_code=500)
 
-    template = main.templates.get_template("minus-phrases.html")
+    template = templates.get_template("minus-phrases.html")
     return HTMLResponse(template.render(
         request=request,
         campaign=campaign,
