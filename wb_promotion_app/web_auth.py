@@ -106,19 +106,19 @@ async def get_current_user(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/auth/token")
 async def get_current_token(request: Request, db: Session = Depends(get_db)):
-    """Проверить наличие API токена у текущего пользователя"""
+    """Проверить наличие API токена у текущего пользователя и вернуть его"""
     session_id = request.cookies.get("session_id")
     if not session_id:
         return {"has_token": False}
-    
+
     from .auth import get_session
     session = get_session(session_id)
     if not session:
         return {"has_token": False}
-    
+
     # Проверяем токен
     token = get_user_api_token(db, session["user_id"])
-    
+
     if token:
         # Получаем ID токена для редактирования
         stmt = select(UserApiToken).where(
@@ -126,12 +126,13 @@ async def get_current_token(request: Request, db: Session = Depends(get_db)):
             UserApiToken.is_active == True
         ).limit(1)
         user_token = db.execute(stmt).scalar_one_or_none()
-        
+
         return {
             "has_token": True,
-            "token_id": user_token.id if user_token else None
+            "token_id": user_token.id if user_token else None,
+            "token": token  # Возвращаем сам токен для использования в API
         }
-    
+
     return {"has_token": False}
 
 

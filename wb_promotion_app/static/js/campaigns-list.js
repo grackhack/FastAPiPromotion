@@ -5,6 +5,7 @@ let promotionCampaigns = [];
 let mediaCampaigns = [];
 let currentTab = 'promotion';
 let currentStatusFilter = 'active'; // 'all', 'active', 'paused', 'draft', 'stopped'
+let currentApiToken = null; // Токен текущего пользователя
 
 // Статусы кампаний продвижения
 const PROMOTION_STATUS_MAP = {
@@ -153,13 +154,18 @@ function initFilters() {
 async function loadPromotionCampaigns() {
     showLoading(true);
     hideError();
-    
+
     try {
-        const response = await fetch('/campaigns/adverts');
+        const headers = {};
+        if (currentApiToken) {
+            headers['X-API-Token'] = currentApiToken;
+        }
+        
+        const response = await fetch('/campaigns/adverts', { headers });
         if (!response.ok) {
             throw new Error(`Ошибка HTTP: ${response.status}`);
         }
-        
+
         promotionCampaigns = await response.json();
         updatePromotionStats();
         filterPromotionCampaigns();
@@ -174,20 +180,25 @@ async function loadPromotionCampaigns() {
 async function loadMediaCampaigns() {
     showLoading(true);
     hideError();
-    
+
     try {
         const status = document.getElementById('mediaStatusFilter').value;
         const type = document.getElementById('mediaTypeFilter').value;
-        
+
         let url = '/campaigns/media?';
         if (status) url += `status=${status}&`;
         if (type) url += `type=${type}&`;
-        
-        const response = await fetch(url);
+
+        const headers = {};
+        if (currentApiToken) {
+            headers['X-API-Token'] = currentApiToken;
+        }
+
+        const response = await fetch(url, { headers });
         if (!response.ok) {
             throw new Error(`Ошибка HTTP: ${response.status}`);
         }
-        
+
         mediaCampaigns = await response.json();
         updateMediaStats();
         renderMediaCampaigns(mediaCampaigns);
@@ -395,6 +406,9 @@ async function checkAuth() {
             document.getElementById('logoutLink').style.display = '';
             document.getElementById('userGreeting').classList.remove('hidden');
             document.getElementById('userName').textContent = user.username;
+            
+            // Получаем токен пользователя
+            await loadApiToken();
         } else {
             // Пользователь не авторизован
             document.getElementById('loginLink').style.display = '';
@@ -404,5 +418,22 @@ async function checkAuth() {
         }
     } catch (error) {
         console.error('Error checking auth:', error);
+    }
+}
+
+// Загрузка API токена пользователя
+async function loadApiToken() {
+    try {
+        const response = await fetch('/auth/token');
+        const data = await response.json();
+        if (response.ok && data.has_token) {
+            currentApiToken = data.token;
+            console.log('API токен загружен');
+        } else {
+            console.warn('API токен не найден. Кампании не будут загружены.');
+            showError('Для просмотра кампаний необходимо добавить WB API токен в личном кабинете');
+        }
+    } catch (error) {
+        console.error('Error loading API token:', error);
     }
 }
