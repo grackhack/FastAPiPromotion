@@ -2,39 +2,71 @@
 
 let currentUser = null;
 let userTokens = [];
+let currentApiToken = null; // Кэш для API токена
 
 document.addEventListener('DOMContentLoaded', function() {
     loadUserProfile();
     loadUserTokens();
-    
+    loadApiToken(); // Загружаем токен для API запросов
+
     // Обработчики кнопок
     const addTokenBtn = document.getElementById('addTokenBtn');
     const editTokenBtn = document.getElementById('editTokenBtn');
     const deleteTokenBtn = document.getElementById('deleteTokenBtn');
     const tokenForm = document.getElementById('tokenForm');
-    
+
     if (addTokenBtn) {
         addTokenBtn.addEventListener('click', function() {
             document.getElementById('tokenFormContainer').classList.remove('hidden');
             document.getElementById('tokenErrorContainer').classList.add('hidden');
         });
     }
-    
+
     if (editTokenBtn) {
         editTokenBtn.addEventListener('click', function() {
             document.getElementById('tokenFormContainer').classList.remove('hidden');
             document.getElementById('tokenSavedContainer').classList.add('hidden');
         });
     }
-    
+
     if (deleteTokenBtn) {
         deleteTokenBtn.addEventListener('click', deleteToken);
     }
-    
+
     if (tokenForm) {
         tokenForm.addEventListener('submit', saveToken);
     }
 });
+
+// Загрузка API токена из сессии
+async function loadApiToken() {
+    try {
+        const response = await fetch('/auth/token');
+        const data = await response.json();
+        if (data.has_token && data.token) {
+            currentApiToken = data.token;
+            console.log('API токен загружен в profile.js');
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки токена:', error);
+    }
+}
+
+// Вспомогательная функция для API запросов с токеном
+async function apiFetch(url, options = {}) {
+    const headers = options.headers || {};
+    headers['Content-Type'] = 'application/json';
+    
+    // Добавляем токен если он есть
+    if (currentApiToken && url.startsWith('/api/')) {
+        headers['X-API-Token'] = currentApiToken;
+    }
+
+    return fetch(url, {
+        ...options,
+        headers
+    });
+}
 
 async function loadUserProfile() {
     try {
@@ -123,22 +155,16 @@ async function saveToken(e) {
         
         if (checkResponse.ok && checkData.has_token && checkData.token_id) {
             // Обновляем существующий
-            response = await fetch(`/api/users/${currentUser.id}/tokens/${checkData.token_id}`, {
+            response = await apiFetch(`/api/users/${currentUser.id}/tokens/${checkData.token_id}`, {
                 method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
                 body: JSON.stringify({ token })
             });
             data = await response.json();
         } else {
             // Создаём новый
-            response = await fetch(`/api/users/${currentUser.id}/tokens`, {
+            response = await apiFetch(`/api/users/${currentUser.id}/tokens`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     token,
                     description: 'Saved from profile'
                 })
@@ -177,7 +203,7 @@ async function deleteToken() {
             return;
         }
         
-        const response = await fetch(`/api/users/${currentUser.id}/tokens/${checkData.token_id}`, {
+        const response = await apiFetch(`/api/users/${currentUser.id}/tokens/${checkData.token_id}`, {
             method: 'DELETE'
         });
         
@@ -199,9 +225,9 @@ async function deleteToken() {
 
 async function loadUserTokens() {
     const tokensList = document.getElementById('tokensList');
-    
+
     try {
-        const response = await fetch(`/api/users/${currentUser.id}/tokens`);
+        const response = await apiFetch(`/api/users/${currentUser.id}/tokens`);
         const tokens = await response.json();
         
         if (response.ok && tokens.length > 0) {
@@ -239,11 +265,8 @@ async function loadUserTokens() {
 
 async function deactivateToken(tokenId) {
     try {
-        const response = await fetch(`/api/users/${currentUser.id}/tokens/${tokenId}`, {
+        const response = await apiFetch(`/api/users/${currentUser.id}/tokens/${tokenId}`, {
             method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json'
-            },
             body: JSON.stringify({ is_active: false })
         });
         
@@ -265,7 +288,7 @@ async function deleteTokenById(tokenId) {
     }
     
     try {
-        const response = await fetch(`/api/users/${currentUser.id}/tokens/${tokenId}`, {
+        const response = await apiFetch(`/api/users/${currentUser.id}/tokens/${tokenId}`, {
             method: 'DELETE'
         });
         

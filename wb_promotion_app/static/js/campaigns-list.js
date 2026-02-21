@@ -3,8 +3,9 @@
 // Глобальное состояние
 let promotionCampaigns = [];
 let mediaCampaigns = [];
-let currentTab = 'promotion';
+let currentTab = 'active'; // 'all', 'active', 'paused', 'draft', 'stopped'
 let currentStatusFilter = 'active'; // 'all', 'active', 'paused', 'draft', 'stopped'
+let currentApiToken = null; // Кэш для API токена
 
 // Статусы кампаний продвижения
 const PROMOTION_STATUS_MAP = {
@@ -45,12 +46,47 @@ const MEDIA_TYPE_MAP = {
     '2': 'По просмотрам'
 };
 
+// Загрузка API токена из сессии
+async function loadApiToken() {
+    try {
+        const response = await fetch('/auth/token');
+        const data = await response.json();
+        if (data.has_token && data.token) {
+            currentApiToken = data.token;
+            console.log('API токен загружен в campaigns-list.js');
+        } else {
+            console.warn('API токен не найден');
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки токена:', error);
+    }
+}
+
+// Вспомогательная функция для API запросов с токеном
+async function apiFetch(url, options = {}) {
+    const headers = options.headers || {};
+    headers['Content-Type'] = 'application/json';
+    
+    // Добавляем токен если он есть
+    if (currentApiToken && url.startsWith('/api/')) {
+        headers['X-API-Token'] = currentApiToken;
+    }
+
+    return fetch(url, {
+        ...options,
+        headers
+    });
+}
+
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', async function() {
     // Проверяем есть ли данные в шаблоне (SSR)
     const campaignsDataEl = document.getElementById('campaigns-data');
     const mediaCampaignsDataEl = document.getElementById('media-campaigns-data');
-    
+
+    // Загружаем API токен
+    await loadApiToken();
+
     if (campaignsDataEl && campaignsDataEl.textContent.trim()) {
         // Данные уже загружены на бэкенде через SSR
         try {
@@ -63,14 +99,14 @@ document.addEventListener('DOMContentLoaded', async function() {
             console.error('Ошибка парсинга JSON кампаний:', e);
         }
     }
-    
+
     // Проверка аутентификации (для навигации)
     await checkAuth();
-    
+
     initTabs();
     initFilters();
     initStatusTabs();
-    
+
     // Кнопка обновления - загружаем через API если нужно
     const refreshBtn = document.getElementById('refreshBtn');
     if (refreshBtn) {
@@ -172,8 +208,8 @@ async function loadPromotionCampaigns() {
     hideError();
 
     try {
-        // Загружаем через API endpoint (без токена - берётся из сессии)
-        const response = await fetch('/api/campaigns');
+        // Загружаем через API endpoint
+        const response = await apiFetch('/api/campaigns');
         
         if (!response.ok) {
             if (response.status === 401) {
@@ -208,8 +244,8 @@ async function loadMediaCampaigns() {
         if (status) url += `status=${status}&`;
         if (type) url += `type=${type}&`;
 
-        // Загружаем через API endpoint (без токена - берётся из сессии)
-        const response = await fetch(url);
+        // Загружаем через API endpoint
+        const response = await apiFetch(url);
         
         if (!response.ok) {
             if (response.status === 401) {
