@@ -29,6 +29,22 @@
 
         <main class="main">
             <section class="section">
+                <!-- Debug информация -->
+                {% if error %}
+                <div class="error-message" style="background: #ffebee; border: 1px solid #f44336; padding: 15px; margin-bottom: 20px; border-radius: 8px;">
+                    <h3 style="color: #f44336; margin: 0 0 10px 0;">❌ Ошибка</h3>
+                    <p style="margin: 0; color: #c62828;">{{ error }}</p>
+                </div>
+                {% endif %}
+                
+                <!-- Debug: информация о кампании -->
+                {% if debug_info %}
+                <div class="debug-info" style="background: #e3f2fd; border: 1px solid #2196f3; padding: 15px; margin-bottom: 20px; border-radius: 8px; font-family: monospace; font-size: 12px;">
+                    <h4 style="color: #1976d2; margin: 0 0 10px 0;">🔍 Debug Info</h4>
+                    <pre style="margin: 0; overflow-x: auto;">{{ debug_info | tojson(indent=2) }}</pre>
+                </div>
+                {% endif %}
+                
                 <div class="campaign-header">
                     <a href="/" class="btn btn-secondary btn-back">← Назад к списку</a>
                     <h2>Кампания #<span id="campaignId">{{ campaign_id }}</span></h2>
@@ -340,6 +356,30 @@
     </script>
     {% endif %}
 
-    <script src="/static/js/campaign-detail.js?v=17"></script>
+    <!-- Debug: вывод в консоль -->
+    <script>
+        console.log('=== Campaign Debug ===');
+        console.log('Campaign ID: {{ campaign_id }}');
+        console.log('Error: {{ error if error else "None" }}');
+        {% if debug_info %}
+        console.log('Debug Info:', {{ debug_info | tojson }});
+        {% endif %}
+        
+        // Проверка данных кампании
+        const campaignDataEl = document.getElementById('campaign-data');
+        if (campaignDataEl) {
+            try {
+                const data = JSON.parse(campaignDataEl.textContent);
+                console.log('Campaign data loaded:', Object.keys(data).length, 'fields');
+                console.log('Campaign ID from data:', data.id);
+            } catch (e) {
+                console.error('Error parsing campaign data:', e);
+            }
+        } else {
+            console.warn('No campaign data found in template');
+        }
+    </script>
+
+    <script src="/static/js/campaign-detail.js?v=18"></script>
 </body>
 </html>
