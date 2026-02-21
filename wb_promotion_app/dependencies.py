@@ -41,6 +41,9 @@ def get_token_from_header(
 ) -> Optional[str]:
     """
     Получить токен из заголовка X-API-Token
+    
+    В FastAPI заголовки автоматически конвертируются: 
+    X-API-Token -> x_api_token (underscore вместо дефисов)
     """
     return x_api_token
 
