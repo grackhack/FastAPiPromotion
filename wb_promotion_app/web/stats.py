@@ -6,6 +6,7 @@ from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import select
+from datetime import datetime, timedelta
 
 from ..config import get_db
 from ..models import User, UserApiToken
@@ -33,7 +34,7 @@ async def get_wb_client_for_user(request: Request, db: Session) -> WBPromotionCl
     return WBPromotionClient(token)
 
 
-@router.get("/stats/campaign/{campaign_id}", response_class=HTMLResponse)
+@router.get("/stats/campaign/{campaign_id}", response_class=HTMLResponse, response_model=None)
 async def campaign_stats_page(
     request: Request,
     campaign_id: int,
@@ -51,7 +52,6 @@ async def campaign_stats_page(
     
     # Даты по умолчанию - последние 7 дней
     if not from_date or not to_date:
-        from datetime import datetime, timedelta
         to = datetime.now()
         from_date = (to - timedelta(days=7)).strftime("%Y-%m-%d")
         to_date = to.strftime("%Y-%m-%d")
@@ -94,7 +94,7 @@ async def campaign_stats_page(
     )
 
 
-@router.get("/stats/campaign/{campaign_id}/nm/{nm_id}", response_class=HTMLResponse)
+@router.get("/stats/campaign/{campaign_id}/nm/{nm_id}", response_class=HTMLResponse, response_model=None)
 async def nm_stats_page(
     request: Request,
     campaign_id: int,
@@ -111,7 +111,6 @@ async def nm_stats_page(
     to_date = request.query_params.get("to_date")
     
     if not from_date or not to_date:
-        from datetime import datetime, timedelta
         to = datetime.now()
         from_date = (to - timedelta(days=7)).strftime("%Y-%m-%d")
         to_date = to.strftime("%Y-%m-%d")
@@ -147,7 +146,7 @@ async def nm_stats_page(
     )
 
 
-@router.get("/campaigns/{campaign_id}/minus-phrases", response_class=HTMLResponse)
+@router.get("/campaigns/{campaign_id}/minus-phrases", response_class=HTMLResponse, response_model=None)
 async def minus_phrases_page(
     request: Request,
     campaign_id: int,
