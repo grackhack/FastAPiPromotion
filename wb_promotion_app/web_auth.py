@@ -31,37 +31,45 @@ async def login_page(request: Request):
 @router.post("/auth/login")
 async def login(request: LoginRequest, db: Session = Depends(get_db)):
     """Вход пользователя по имени пользователя"""
-    # Ищем пользователя
-    stmt = select(User).where(User.username == request.username, User.is_active == True)
-    user = db.execute(stmt).scalar_one_or_none()
+    import logging
+    logger = logging.getLogger(__name__)
     
-    if not user:
-        # Если пользователь не найден, создаём нового
-        user = User(username=request.username, is_active=True)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-    
-    # Создаём сессию
-    session_id = create_session(user.id, user.username)
-    
-    response = {
-        "id": user.id,
-        "username": user.username,
-        "session_id": session_id
-    }
-    
-    # Устанавливаем cookie
-    redirect_response = RedirectResponse(url="/profile", status_code=303)
-    redirect_response.set_cookie(
-        key="session_id",
-        value=session_id,
-        httponly=True,
-        max_age=604800,  # 7 дней
-        samesite="lax"
-    )
-    
-    return redirect_response
+    try:
+        # Ищем пользователя
+        stmt = select(User).where(User.username == request.username, User.is_active == True)
+        user = db.execute(stmt).scalar_one_or_none()
+
+        if not user:
+            # Если пользователь не найден, создаём нового
+            logger.info(f"Создание нового пользователя: {request.username}")
+            user = User(username=request.username, is_active=True)
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            logger.info(f"Пользователь создан с ID: {user.id}")
+
+        # Создаём сессию
+        session_id = create_session(user.id, user.username)
+        logger.info(f"Сессия создана для пользователя {user.id}: {session_id[:8]}...")
+
+        # Устанавливаем cookie
+        redirect_response = RedirectResponse(url="/profile", status_code=303)
+        redirect_response.set_cookie(
+            key="session_id",
+            value=session_id,
+            httponly=True,
+            max_age=604800,  # 7 дней
+            samesite="lax"
+        )
+
+        logger.info(f"Вход выполнен успешно для {user.username}, редирект на /profile")
+        return redirect_response
+    except Exception as e:
+        logger.exception(f"Ошибка входа для {request.username}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка входа: {str(e)}"
+        )
 
 
 @router.get("/logout")
