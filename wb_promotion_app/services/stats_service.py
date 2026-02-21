@@ -40,17 +40,17 @@ class StatsService:
         """
         # Формируем запрос к API
         # nm_id=0 означает все товары в кампании
-        request = StatsRequest(
+        items = [{
+            "advert_id": campaign_id,
+            "nm_id": nm_id or 0
+        }]
+        
+        # Получаем статистику через get_normquery_stats
+        stats = self.client.get_normquery_stats(
             from_date=from_date,
             to_date=to_date,
-            items=[{
-                "advert_id": campaign_id,
-                "nm_id": nm_id or 0
-            }]
+            items=items
         )
-        
-        # Получаем статистику
-        stats = self.client.get_stats(request)
         
         return self._process_stats(stats, campaign_id)
 
@@ -122,7 +122,10 @@ class StatsService:
 
     def _process_stats(self, stats: Any, campaign_id: int) -> Dict[str, Any]:
         """Обработать статистику"""
-        if not stats or not hasattr(stats, 'items') or not stats.items:
+        # API возвращает dict: {"stats": [{"advert_id": X, "nm_id": Y, "stats": [...]}]}
+        stats_list = stats.get("stats") if isinstance(stats, dict) else None
+        
+        if not stats_list:
             return {
                 "campaign_id": campaign_id,
                 "total_views": 0,
@@ -133,36 +136,48 @@ class StatsService:
                 "cpc": 0,
                 "days": []
             }
-        
+
         # Агрегируем данные по дням
         days_data = []
         total_views = 0
         total_clicks = 0
         total_orders = 0
         total_revenue = 0
-        
-        for item in stats.items:
-            if hasattr(item, 'stats') and item.stats:
-                for stat in item.stats:
-                    day_data = {
-                        "date": self._get_safe_value(stat, 'date', 'N/A'),
-                        "views": self._get_safe_value(stat, 'views', 0),
-                        "clicks": self._get_safe_value(stat, 'clicks', 0),
-                        "orders": self._get_safe_value(stat, 'orders', 0),
-                        "revenue": self._get_safe_value(stat, 'revenue', 0),
-                        "ctr": self._get_safe_value(stat, 'ctr', 0),
-                        "cpc": self._get_safe_value(stat, 'cpc', 0),
-                    }
+
+        for item in stats_list:
+            item_stats = item.get("stats") if isinstance(item, dict) else getattr(item, 'stats', [])
+            if item_stats:
+                for stat in item_stats:
+                    if isinstance(stat, dict):
+                        day_data = {
+                            "date": stat.get('date', 'N/A'),
+                            "views": stat.get('views', 0),
+                            "clicks": stat.get('clicks', 0),
+                            "orders": stat.get('orders', 0),
+                            "revenue": stat.get('revenue', 0),
+                            "ctr": stat.get('ctr', 0),
+                            "cpc": stat.get('cpc', 0),
+                        }
+                    else:
+                        day_data = {
+                            "date": self._get_safe_value(stat, 'date', 'N/A'),
+                            "views": self._get_safe_value(stat, 'views', 0),
+                            "clicks": self._get_safe_value(stat, 'clicks', 0),
+                            "orders": self._get_safe_value(stat, 'orders', 0),
+                            "revenue": self._get_safe_value(stat, 'revenue', 0),
+                            "ctr": self._get_safe_value(stat, 'ctr', 0),
+                            "cpc": self._get_safe_value(stat, 'cpc', 0),
+                        }
                     days_data.append(day_data)
                     total_views += day_data["views"]
                     total_clicks += day_data["clicks"]
                     total_orders += day_data["orders"]
                     total_revenue += day_data["revenue"]
-        
+
         # Считаем средние значения
         ctr = round((total_clicks / total_views * 100) if total_views > 0 else 0, 2)
         cpc = round(total_revenue / total_clicks if total_clicks > 0 else 0, 2)
-        
+
         return {
             "campaign_id": campaign_id,
             "total_views": total_views,
@@ -181,23 +196,36 @@ class StatsService:
 
     def _process_norm_stats(self, stats: Any) -> Dict[str, Any]:
         """Обработать статистику по запросам"""
-        if not stats or not hasattr(stats, 'items') or not stats.items:
+        # API возвращает dict: {"stats": [{"advert_id": X, "nm_id": Y, "stats": [...]}]}
+        stats_list = stats.get("stats") if isinstance(stats, dict) else None
+        
+        if not stats_list:
             return {"queries": []}
-        
+
         queries = []
-        for item in stats.items:
-            if hasattr(item, 'stats') and item.stats:
-                for stat in item.stats:
-                    query_data = {
-                        "query": self._get_safe_value(stat, 'norm_query', 'N/A'),
-                        "views": self._get_safe_value(stat, 'views', 0),
-                        "clicks": self._get_safe_value(stat, 'clicks', 0),
-                        "orders": self._get_safe_value(stat, 'orders', 0),
-                        "ctr": self._get_safe_value(stat, 'ctr', 0),
-                    }
+        for item in stats_list:
+            item_stats = item.get("stats") if isinstance(item, dict) else getattr(item, 'stats', [])
+            if item_stats:
+                for stat in item_stats:
+                    if isinstance(stat, dict):
+                        query_data = {
+                            "query": stat.get('norm_query', 'N/A'),
+                            "views": stat.get('views', 0),
+                            "clicks": stat.get('clicks', 0),
+                            "orders": stat.get('orders', 0),
+                            "ctr": stat.get('ctr', 0),
+                        }
+                    else:
+                        query_data = {
+                            "query": self._get_safe_value(stat, 'norm_query', 'N/A'),
+                            "views": self._get_safe_value(stat, 'views', 0),
+                            "clicks": self._get_safe_value(stat, 'clicks', 0),
+                            "orders": self._get_safe_value(stat, 'orders', 0),
+                            "ctr": self._get_safe_value(stat, 'ctr', 0),
+                        }
                     queries.append(query_data)
-        
+
         # Сортируем по просмотрам
         queries.sort(key=lambda x: x["views"], reverse=True)
-        
+
         return {"queries": queries}
