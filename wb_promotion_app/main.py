@@ -69,9 +69,9 @@ __all__ = ["app", "templates"]
 # Подключение роутера пользователей
 app.include_router(users_router, prefix="/api")
 
-# Подключение веб-роутов аутентификации
+# Подключение веб-роутов аутентификации (страницы и API)
 from .web_auth import router as web_auth_router
-app.include_router(web_auth_router)
+app.include_router(web_auth_router)  # Без префикса для веб-страниц
 
 
 def get_wb_client(token: str) -> WBPromotionClient:

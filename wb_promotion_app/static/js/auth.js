@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const username = document.getElementById('username').value.trim();
             
             try {
-                const response = await fetch('/api/auth/login', {
+                const response = await fetch('/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 // Теперь автоматически входим
-                const loginResponse = await fetch('/api/auth/login', {
+                const loginResponse = await fetch('/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function checkExistingSession() {
     try {
-        const response = await fetch('/api/auth/me');
+        const response = await fetch('/auth/me');
         if (response.ok) {
             // Уже авторизован
             window.location.href = '/profile';

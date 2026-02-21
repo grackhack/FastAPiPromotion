@@ -386,7 +386,7 @@ function escapeHtml(text) {
 // Проверка аутентификации пользователя
 async function checkAuth() {
     try {
-        const response = await fetch('/api/auth/me');
+        const response = await fetch('/auth/me');
         if (response.ok) {
             const user = await response.json();
             // Пользователь авторизован

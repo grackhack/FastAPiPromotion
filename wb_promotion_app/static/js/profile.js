@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function loadUserProfile() {
     try {
-        const response = await fetch('/api/auth/me');
+        const response = await fetch('/auth/me');
         if (!response.ok) {
             window.location.href = '/login';
             return;
@@ -77,7 +77,7 @@ async function checkTokenStatus() {
     statusContainer.innerHTML = '<div class="loading">Проверка токена...</div>';
     
     try {
-        const response = await fetch('/api/auth/token');
+        const response = await fetch('/auth/token');
         const data = await response.json();
         
         if (response.ok && data.has_token) {
@@ -115,7 +115,7 @@ async function saveToken(e) {
     
     try {
         // Проверяем есть ли уже токен
-        const checkResponse = await fetch('/api/auth/token');
+        const checkResponse = await fetch('/auth/token');
         const checkData = await checkResponse.json();
         
         let response;
@@ -169,7 +169,7 @@ async function deleteToken() {
     
     try {
         // Сначала получаем ID токена
-        const checkResponse = await fetch('/api/auth/token');
+        const checkResponse = await fetch('/auth/token');
         const checkData = await checkResponse.json();
         
         if (!checkData.token_id) {
