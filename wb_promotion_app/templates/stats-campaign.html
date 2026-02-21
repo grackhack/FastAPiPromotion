@@ -221,13 +221,13 @@
                 </div>
             </div>
 
-            <!-- Статистика по дням -->
+            <!-- Статистика по запросам -->
             <div class="stats-section">
-                <h2>📊 Статистика по дням</h2>
+                <h2>🔍 Поисковые запросы</h2>
                 <table class="stats-table">
                     <thead>
                         <tr>
-                            <th>Дата</th>
+                            <th>Запрос</th>
                             <th class="number">Просмотры</th>
                             <th class="number">Клики</th>
                             <th class="number">Заказы</th>
@@ -237,42 +237,15 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for day in stats.days %}
+                        {% for item in stats.days %}
                         <tr>
-                            <td>{{ day.date }}</td>
-                            <td class="number">{{ "{:,}".format(day.views) if day.views else '—' }}</td>
-                            <td class="number">{{ "{:,}".format(day.clicks) if day.clicks else '—' }}</td>
-                            <td class="number">{{ "{:,}".format(day.orders) if day.orders else '—' }}</td>
-                            <td class="number">{{ "{:,.0f}".format(day.revenue) if day.revenue else '—' }} ₽</td>
-                            <td class="number">{{ day.ctr if day.ctr else '—' }}</td>
-                            <td class="number">{{ day.cpc if day.cpc else '—' }} ₽</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Топ запросов -->
-            <div class="stats-section">
-                <h2>🔍 Топ поисковых запросов</h2>
-                <table class="stats-table">
-                    <thead>
-                        <tr>
-                            <th>Запрос</th>
-                            <th class="number">Просмотры</th>
-                            <th class="number">Клики</th>
-                            <th class="number">Заказы</th>
-                            <th class="number">CTR, %</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for query in queries %}
-                        <tr>
-                            <td>{{ query.query }}</td>
-                            <td class="number">{{ "{:,}".format(query.views) if query.views else '—' }}</td>
-                            <td class="number">{{ "{:,}".format(query.clicks) if query.clicks else '—' }}</td>
-                            <td class="number">{{ "{:,}".format(query.orders) if query.orders else '—' }}</td>
-                            <td class="number">{{ query.ctr if query.ctr else '—' }}</td>
+                            <td>{{ item.query }}</td>
+                            <td class="number">{{ "{:,}".format(item.views) if item.views else '—' }}</td>
+                            <td class="number">{{ "{:,}".format(item.clicks) if item.clicks else '—' }}</td>
+                            <td class="number">{{ "{:,}".format(item.orders) if item.orders else '—' }}</td>
+                            <td class="number">{{ "{:,.0f}".format(item.revenue) if item.revenue else '—' }} ₽</td>
+                            <td class="number">{{ item.ctr if item.ctr else '—' }}</td>
+                            <td class="number">{{ item.cpc if item.cpc else '—' }} ₽</td>
                         </tr>
                         {% endfor %}
                     </tbody>

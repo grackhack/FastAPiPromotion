@@ -121,10 +121,12 @@ class StatsService:
         return val
 
     def _process_stats(self, stats: Any, campaign_id: int) -> Dict[str, Any]:
-        """Обработать статистику"""
-        # API возвращает dict: {"stats": [{"advert_id": X, "nm_id": Y, "stats": [...]}]}
+        """
+        Обработать статистику по поисковым запросам (normquery stats).
+        API возвращает: {"stats": [{"advert_id": X, "nm_id": Y, "stats": [norm_query_stats...]}]}
+        """
         stats_list = stats.get("stats") if isinstance(stats, dict) else None
-        
+
         if not stats_list:
             return {
                 "campaign_id": campaign_id,
@@ -137,42 +139,60 @@ class StatsService:
                 "days": []
             }
 
-        # Агрегируем данные по дням
-        days_data = []
+        # Агрегируем данные по всем поисковым запросам
         total_views = 0
         total_clicks = 0
         total_orders = 0
         total_revenue = 0
+        days_data = []  # Для normquery stats это будут запросы
 
         for item in stats_list:
             item_stats = item.get("stats") if isinstance(item, dict) else getattr(item, 'stats', [])
             if item_stats:
                 for stat in item_stats:
                     if isinstance(stat, dict):
-                        day_data = {
-                            "date": stat.get('date', 'N/A'),
-                            "views": stat.get('views', 0),
-                            "clicks": stat.get('clicks', 0),
-                            "orders": stat.get('orders', 0),
-                            "revenue": stat.get('revenue', 0),
+                        # Это статистика по поисковому запросу
+                        views = stat.get('views', 0)
+                        clicks = stat.get('clicks', 0)
+                        orders = stat.get('orders', 0)
+                        revenue = stat.get('sum', 0) or stat.get('revenue', 0)
+                        
+                        total_views += views
+                        total_clicks += clicks
+                        total_orders += orders
+                        total_revenue += revenue
+                        
+                        # Добавляем запрос в days_data (для совместимости с шаблоном)
+                        days_data.append({
+                            "query": stat.get('norm_query', 'N/A'),
+                            "views": views,
+                            "clicks": clicks,
+                            "orders": orders,
+                            "revenue": revenue,
                             "ctr": stat.get('ctr', 0),
                             "cpc": stat.get('cpc', 0),
-                        }
+                        })
                     else:
-                        day_data = {
-                            "date": self._get_safe_value(stat, 'date', 'N/A'),
-                            "views": self._get_safe_value(stat, 'views', 0),
-                            "clicks": self._get_safe_value(stat, 'clicks', 0),
-                            "orders": self._get_safe_value(stat, 'orders', 0),
-                            "revenue": self._get_safe_value(stat, 'revenue', 0),
+                        # Pydantic модель
+                        views = self._get_safe_value(stat, 'views', 0)
+                        clicks = self._get_safe_value(stat, 'clicks', 0)
+                        orders = self._get_safe_value(stat, 'orders', 0)
+                        revenue = self._get_safe_value(stat, 'sum', 0) or self._get_safe_value(stat, 'revenue', 0)
+                        
+                        total_views += views
+                        total_clicks += clicks
+                        total_orders += orders
+                        total_revenue += revenue
+                        
+                        days_data.append({
+                            "query": self._get_safe_value(stat, 'norm_query', 'N/A'),
+                            "views": views,
+                            "clicks": clicks,
+                            "orders": orders,
+                            "revenue": revenue,
                             "ctr": self._get_safe_value(stat, 'ctr', 0),
                             "cpc": self._get_safe_value(stat, 'cpc', 0),
-                        }
-                    days_data.append(day_data)
-                    total_views += day_data["views"]
-                    total_clicks += day_data["clicks"]
-                    total_orders += day_data["orders"]
-                    total_revenue += day_data["revenue"]
+                        })
 
         # Считаем средние значения
         ctr = round((total_clicks / total_views * 100) if total_views > 0 else 0, 2)
