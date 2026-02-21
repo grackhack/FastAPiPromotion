@@ -24,12 +24,11 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 # Добавляем client_encoding=utf8 для поддержки кириллицы
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./wb_promotion.db")
 
-# Для PostgreSQL добавляем параметры кодировки
+# Для PostgreSQL добавляем параметры кодировки через options
 if DATABASE_URL.startswith("postgresql://"):
-    if "?" not in DATABASE_URL:
-        DATABASE_URL += "?client_encoding=utf8"
-    else:
-        DATABASE_URL += "&client_encoding=utf8"
+    # Используем options для установки client_encoding
+    if "?options=" not in DATABASE_URL:
+        DATABASE_URL += "?options=-c%20client_encoding%3DUTF8"
 
 # Создание движка SQLAlchemy
 # Отключаем echo (логирование SQL) чтобы избежать проблем с кодировкой
