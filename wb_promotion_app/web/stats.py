@@ -88,7 +88,8 @@ async def minus_phrases_page(
 
     try:
         campaigns = wb_client.get_campaigns()
-        campaign = next((c for c in campaigns if c.id == campaign_id), None)
+        # campaigns - это список dict, а не объектов
+        campaign = next((c for c in campaigns if c.get('id') == campaign_id), None)
 
         if not campaign:
             raise HTTPException(status_code=404, detail="Кампания не найдена")
