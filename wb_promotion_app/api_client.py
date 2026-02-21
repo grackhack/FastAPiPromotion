@@ -27,6 +27,7 @@ class WBPromotionClient:
     def __init__(self, token: str):
         self.token = token
         self.base_url = "https://advert-api.wildberries.ru"
+        self.media_base_url = "https://advert-media-api.wildberries.ru"
         self.headers = {
             "Authorization": f"Bearer {self.token}",
             "Content-Type": "application/json"
@@ -226,9 +227,9 @@ class WBPromotionClient:
     ) -> List[MediaCampaign]:
         """
         Получить список всех медиакампаний продавца по типам и статусам.
-        
+
         Эндпоинт: GET /adv/v1/adverts
-        
+
         Параметры:
             status - Статус медиакампании (1-11)
             type - Тип медиакампании: 1 — размещение по дням, 2 — по просмотрам
@@ -236,7 +237,7 @@ class WBPromotionClient:
             offset - Смещение относительно первой кампании
             order - Порядок сортировки: create или id
             direction - Направление: desc или asc
-            
+
         Возвращает:
             List[MediaCampaign] - список медиакампаний
         """
@@ -255,8 +256,8 @@ class WBPromotionClient:
                 params["order"] = order
             if direction:
                 params["direction"] = direction
-            
-            url = f"{self.base_url}{endpoint}"
+
+            url = f"{self.media_base_url}{endpoint}"
             response = requests.get(url, headers=self.headers, params=params)
             response.raise_for_status()
             data = response.json()
@@ -295,15 +296,18 @@ class WBPromotionClient:
     def get_media_campaigns_count(self) -> MediaCampaignCountResponse:
         """
         Получить количество медиакампаний продавца с группировкой по статусам.
-        
+
         Эндпоинт: GET /adv/v1/count
-        
+
         Возвращает:
             MediaCampaignCountResponse - объект с количеством кампаний
         """
         try:
             endpoint = "/adv/v1/count"
-            data = self._make_request("GET", endpoint)
+            url = f"{self.media_base_url}{endpoint}"
+            response = requests.get(url, headers=self.headers)
+            response.raise_for_status()
+            data = response.json()
             
             advert_list = []
             for item in data.get("adverts", []):
