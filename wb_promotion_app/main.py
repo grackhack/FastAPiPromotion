@@ -73,6 +73,14 @@ app.include_router(users_router, prefix="/api")
 from .web_auth import router as web_auth_router
 app.include_router(web_auth_router)  # Без префикса для веб-страниц
 
+# Подключение новых API endpoints (без токенов - берут из сессии)
+from .api.campaigns import router as api_campaigns_router
+app.include_router(api_campaigns_router)
+
+# Подключение новых Web endpoints (SSR)
+from .web.campaigns import router as web_campaigns_router
+app.include_router(web_campaigns_router)
+
 
 def get_wb_client(token: str) -> WBPromotionClient:
     """Создать клиент API для токена пользователя"""

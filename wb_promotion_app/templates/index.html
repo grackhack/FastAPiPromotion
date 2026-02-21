@@ -12,13 +12,18 @@
             <h1>📊 Wildberries Promotion Manager</h1>
             <nav class="nav">
                 <a href="/" class="nav-link active">Кампании</a>
-                <a href="/profile" class="nav-link" id="profileLink" style="display: none;">👤 Профиль</a>
-                <a href="/login" class="nav-link" id="loginLink">🔐 Вход</a>
-                <a href="/logout" class="nav-link" id="logoutLink" style="display: none;">🚪 Выйти</a>
+                {% if is_authenticated %}
+                <a href="/profile" class="nav-link">👤 Профиль</a>
+                <a href="/logout" class="nav-link">🚪 Выйти</a>
+                {% else %}
+                <a href="/login" class="nav-link">🔐 Вход</a>
+                {% endif %}
             </nav>
-            <div class="user-greeting hidden" id="userGreeting">
-                👋 <span id="userName"></span>
+            {% if is_authenticated and user %}
+            <div class="user-greeting">
+                👋 {{ user.username }}
             </div>
+            {% endif %}
         </header>
 
         <main class="main">
@@ -26,11 +31,23 @@
                 <h2>Выберите рекламные кампании</h2>
                 <p class="description">Выберите одну или несколько кампаний для работы</p>
 
+                {% if not is_authenticated %}
+                <div class="warning-message">
+                    <p>⚠️ Для просмотра кампаний необходимо <a href="/login">войти</a></p>
+                </div>
+                {% elif error %}
+                <div class="error-message">
+                    <p>❌ Ошибка загрузки: {{ error }}</p>
+                    <p>Для работы необходимо добавить WB API токен в <a href="/profile">личном кабинете</a></p>
+                </div>
+                {% else %}
                 <div class="controls">
                     <button id="refreshBtn" class="btn btn-secondary">🔄 Обновить список</button>
                 </div>
+                {% endif %}
 
                 <!-- Вкладки статусов -->
+                {% if is_authenticated and not error %}
                 <div class="status-tabs">
                     <button class="status-tab" data-status="all">Все</button>
                     <button class="status-tab active" data-status="active">Активные</button>
@@ -66,9 +83,18 @@
 
                 <div id="errorContainer" class="error-message hidden"></div>
 
+                <!-- Данные кампаний из шаблона (SSR) -->
+                <script id="campaigns-data" type="application/json" style="display: none;">
+                    {{ campaigns | tojson if campaigns else '[]' }}
+                </script>
+                <script id="media-campaigns-data" type="application/json" style="display: none;">
+                    {{ media_campaigns | tojson if media_campaigns else '[]' }}
+                </script>
+
                 <div id="campaignsContainer" class="campaigns-grid">
-                    <!-- Кампании будут загружены сюда -->
+                    <!-- Кампании будут загружены из JSON -->
                 </div>
+                {% endif %}
             </section>
         </main>
 

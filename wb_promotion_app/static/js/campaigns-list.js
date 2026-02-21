@@ -5,7 +5,6 @@ let promotionCampaigns = [];
 let mediaCampaigns = [];
 let currentTab = 'promotion';
 let currentStatusFilter = 'active'; // 'all', 'active', 'paused', 'draft', 'stopped'
-let currentApiToken = null; // Токен текущего пользователя
 
 // Статусы кампаний продвижения
 const PROMOTION_STATUS_MAP = {
@@ -48,15 +47,31 @@ const MEDIA_TYPE_MAP = {
 
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', async function() {
-    // Проверка аутентификации и загрузка токена
+    // Проверяем есть ли данные в шаблоне (SSR)
+    const campaignsDataEl = document.getElementById('campaigns-data');
+    const mediaCampaignsDataEl = document.getElementById('media-campaigns-data');
+    
+    if (campaignsDataEl && campaignsDataEl.textContent.trim()) {
+        // Данные уже загружены на бэкенде через SSR
+        try {
+            promotionCampaigns = JSON.parse(campaignsDataEl.textContent);
+            mediaCampaigns = mediaCampaignsDataEl ? JSON.parse(mediaCampaignsDataEl.textContent) : [];
+            updatePromotionStats();
+            filterPromotionCampaigns();
+            console.log('Кампании загружены через SSR');
+        } catch (e) {
+            console.error('Ошибка парсинга JSON кампаний:', e);
+        }
+    }
+    
+    // Проверка аутентификации (для навигации)
     await checkAuth();
     
-    // Теперь загружаем кампании (токен уже должен быть)
     initTabs();
     initFilters();
     initStatusTabs();
-    loadPromotionCampaigns();
-
+    
+    // Кнопка обновления - загружаем через API если нужно
     const refreshBtn = document.getElementById('refreshBtn');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', () => {
@@ -151,19 +166,22 @@ function initFilters() {
     if (mediaTypeFilter) mediaTypeFilter.addEventListener('change', filterMediaCampaigns);
 }
 
-// Загрузка кампаний продвижения
+// Загрузка кампаний продвижения (теперь только для кнопки обновления)
 async function loadPromotionCampaigns() {
     showLoading(true);
     hideError();
 
     try {
-        const headers = {};
-        if (currentApiToken) {
-            headers['X-API-Token'] = currentApiToken;
-        }
+        // Загружаем через API endpoint (без токена - берётся из сессии)
+        const response = await fetch('/api/campaigns');
         
-        const response = await fetch('/campaigns/adverts', { headers });
         if (!response.ok) {
+            if (response.status === 401) {
+                throw new Error('Требуется авторизация');
+            }
+            if (response.status === 403) {
+                throw new Error('Необходимо добавить WB API токен в личном кабинете');
+            }
             throw new Error(`Ошибка HTTP: ${response.status}`);
         }
 
@@ -177,7 +195,7 @@ async function loadPromotionCampaigns() {
     }
 }
 
-// Загрузка медиакампаний
+// Загрузка медиакампаний (теперь только для кнопки обновления)
 async function loadMediaCampaigns() {
     showLoading(true);
     hideError();
@@ -186,17 +204,20 @@ async function loadMediaCampaigns() {
         const status = document.getElementById('mediaStatusFilter').value;
         const type = document.getElementById('mediaTypeFilter').value;
 
-        let url = '/campaigns/media?';
+        let url = '/api/campaigns/media?';
         if (status) url += `status=${status}&`;
         if (type) url += `type=${type}&`;
 
-        const headers = {};
-        if (currentApiToken) {
-            headers['X-API-Token'] = currentApiToken;
-        }
-
-        const response = await fetch(url, { headers });
+        // Загружаем через API endpoint (без токена - берётся из сессии)
+        const response = await fetch(url);
+        
         if (!response.ok) {
+            if (response.status === 401) {
+                throw new Error('Требуется авторизация');
+            }
+            if (response.status === 403) {
+                throw new Error('Необходимо добавить WB API токен в личном кабинете');
+            }
             throw new Error(`Ошибка HTTP: ${response.status}`);
         }
 
@@ -395,46 +416,13 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Проверка аутентификации пользователя
+// Проверка аутентификации пользователя (для совместимости)
 async function checkAuth() {
-    try {
-        const response = await fetch('/auth/me');
-        if (response.ok) {
-            const user = await response.json();
-            // Пользователь авторизован
-            document.getElementById('loginLink').style.display = 'none';
-            document.getElementById('profileLink').style.display = '';
-            document.getElementById('logoutLink').style.display = '';
-            document.getElementById('userGreeting').classList.remove('hidden');
-            document.getElementById('userName').textContent = user.username;
-            
-            // Получаем токен пользователя и ждём завершения
-            await loadApiToken();
-        } else {
-            // Пользователь не авторизован
-            document.getElementById('loginLink').style.display = '';
-            document.getElementById('profileLink').style.display = 'none';
-            document.getElementById('logoutLink').style.display = 'none';
-            document.getElementById('userGreeting').classList.add('hidden');
-        }
-    } catch (error) {
-        console.error('Error checking auth:', error);
-    }
+    // Навигация теперь обрабатывается через Jinja2 в шаблоне
+    // Эта функция оставлена для совместимости
 }
 
-// Загрузка API токена пользователя
+// Загрузка API токена (не нужна при SSR)
 async function loadApiToken() {
-    try {
-        const response = await fetch('/auth/token');
-        const data = await response.json();
-        if (response.ok && data.has_token) {
-            currentApiToken = data.token;
-            console.log('API токен загружен');
-        } else {
-            console.warn('API токен не найден. Кампании не будут загружены.');
-            showError('Для просмотра кампаний необходимо добавить WB API токен в личном кабинете');
-        }
-    } catch (error) {
-        console.error('Error loading API token:', error);
-    }
+    // Токен теперь на бэкенде, фронтенд не знает о нём
 }
