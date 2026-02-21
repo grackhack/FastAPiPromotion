@@ -73,18 +73,25 @@ class WBService:
     ) -> List[str]:
         """Получить минус-фразы для товара"""
         try:
-            result = self.client.get_minus_phrases([{
-                "advert_id": advert_id,
-                "nm_id": nm_id
-            }])
+            # Создаём объект запроса
+            from ..schemas import MinusPhraseRequest
+            request_item = MinusPhraseRequest(advert_id=advert_id, nm_id=nm_id)
             
+            result = self.client.get_minus_phrases([request_item])
+
             # Извлекаем фразы из ответа
             phrases = []
-            for item in result.get('items', []):
-                if item.get('advert_id') == advert_id and item.get('nm_id') == nm_id:
-                    phrases = item.get('norm_queries', []) or item.get('excluded', [])
-                    break
-            
+            if isinstance(result, dict):
+                for item in result.get('items', []):
+                    if isinstance(item, dict):
+                        if item.get('advert_id') == advert_id and item.get('nm_id') == nm_id:
+                            phrases = item.get('norm_queries', []) or item.get('excluded', [])
+                            break
+                    else:
+                        if getattr(item, 'advert_id', None) == advert_id and getattr(item, 'nm_id', None) == nm_id:
+                            phrases = getattr(item, 'norm_queries', []) or getattr(item, 'excluded', [])
+                            break
+
             return phrases
         except Exception as e:
             raise Exception(f"Ошибка загрузки минус-фраз: {str(e)}")
