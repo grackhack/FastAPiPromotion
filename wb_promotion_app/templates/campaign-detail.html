@@ -89,7 +89,7 @@
 
     <!-- Данные кампании для JS -->
     <script id="campaign-data" type="application/json">
-        {{ campaign_data | tojson }}
+        {{ campaign_json | safe }}
     </script>
 
     <script src="/static/js/campaign-detail.js?v=20"></script>

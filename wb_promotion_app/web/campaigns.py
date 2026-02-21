@@ -154,6 +154,7 @@ async def campaign_detail_page(
         user=user,
         campaign_json=json.dumps(campaign, cls=DateTimeEncoder) if campaign else '{}',
         campaign_id=campaign_id,
+        campaign_data=campaign if campaign else {},
         error=error,
         debug_info=debug_info if DEBUG else None
     )
