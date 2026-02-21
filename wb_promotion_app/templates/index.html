@@ -11,8 +11,14 @@
         <header class="header">
             <h1>📊 Wildberries Promotion Manager</h1>
             <nav class="nav">
-                <a href="/" class="nav-link active">Выбор кампаний</a>
+                <a href="/" class="nav-link active">Кампании</a>
+                <a href="/profile" class="nav-link" id="profileLink" style="display: none;">👤 Профиль</a>
+                <a href="/login" class="nav-link" id="loginLink">🔐 Вход</a>
+                <a href="/logout" class="nav-link" id="logoutLink" style="display: none;">🚪 Выйти</a>
             </nav>
+            <div class="user-greeting hidden" id="userGreeting">
+                👋 <span id="userName"></span>
+            </div>
         </header>
 
         <main class="main">

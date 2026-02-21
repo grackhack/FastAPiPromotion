@@ -63,8 +63,15 @@ templates = Environment(
     autoescape=True
 )
 
+# Экспортируем templates для использования в других модулях
+__all__ = ["app", "templates"]
+
 # Подключение роутера пользователей
 app.include_router(users_router, prefix="/api")
+
+# Подключение веб-роутов аутентификации
+from .web_auth import router as web_auth_router
+app.include_router(web_auth_router)
 
 
 def get_wb_client(token: str) -> WBPromotionClient:

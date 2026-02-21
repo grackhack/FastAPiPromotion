@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет - Wildberries Promotion</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>👤 Личный кабинет</h1>
+            <nav class="nav">
+                <a href="/" class="nav-link">Кампании</a>
+                <a href="/profile" class="nav-link active">Профиль</a>
+                <a href="/logout" class="nav-link">Выйти</a>
+            </nav>
+        </header>
+
+        <main class="main">
+            <div class="profile-grid">
+                <!-- Информация о пользователе -->
+                <section class="profile-section">
+                    <div class="card">
+                        <h2>📋 Информация о пользователе</h2>
+                        <div class="user-info">
+                            <div class="info-row">
+                                <span class="info-label">Имя пользователя:</span>
+                                <span class="info-value" id="username"></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Email:</span>
+                                <span class="info-value" id="email">Не указан</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Дата регистрации:</span>
+                                <span class="info-value" id="created_at"></span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Управление API токеном -->
+                <section class="profile-section">
+                    <div class="card">
+                        <h2>🔑 Wildberries API Токен</h2>
+                        
+                        <div id="tokenStatus" class="token-status">
+                            <div class="loading">Загрузка...</div>
+                        </div>
+
+                        <div id="tokenFormContainer" class="hidden">
+                            <form id="tokenForm" class="token-form">
+                                <div class="form-group">
+                                    <label for="api_token">WB API Токен</label>
+                                    <textarea 
+                                        id="api_token" 
+                                        name="token" 
+                                        required 
+                                        rows="4"
+                                        placeholder="Вставьте ваш токен из личного кабинета Wildberries"
+                                    ></textarea>
+                                    <small class="form-hint">
+                                        Токен хранится в зашифрованном виде и используется для доступа к API Wildberries
+                                    </small>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">
+                                        💾 Сохранить токен
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div id="tokenSavedContainer" class="hidden">
+                            <div class="success-box">
+                                <p>✅ Токен сохранён и активен</p>
+                                <div class="token-actions">
+                                    <button id="editTokenBtn" class="btn btn-secondary">
+                                        ✏️ Изменить
+                                    </button>
+                                    <button id="deleteTokenBtn" class="btn btn-danger">
+                                        🗑️ Удалить
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="tokenErrorContainer" class="hidden">
+                            <div class="error-box">
+                                <p>⚠️ Токен не настроен</p>
+                                <p class="error-description">
+                                    Для работы с API необходимо сохранить ваш WB API токен
+                                </p>
+                                <button id="addTokenBtn" class="btn btn-primary">
+                                    ➕ Добавить токен
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="messageContainer" class="message-container hidden"></div>
+                    </div>
+                </section>
+
+                <!-- Список токенов -->
+                <section class="profile-section">
+                    <div class="card">
+                        <h2>📜 История токенов</h2>
+                        <div id="tokensList" class="tokens-list">
+                            <div class="loading">Загрузка списка токенов...</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2026 Wildberries Promotion Manager</p>
+        </footer>
+    </div>
+
+    <script src="/static/js/profile.js"></script>
+</body>
+</html>

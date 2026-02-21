@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход - Wildberries Promotion</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="auth-wrapper">
+            <div class="auth-card">
+                <h1>🔐 Вход в систему</h1>
+                <p class="auth-description">Введите ваше имя пользователя для входа</p>
+
+                <div id="errorContainer" class="error-message hidden"></div>
+                <div id="successContainer" class="success-message hidden"></div>
+
+                <form id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="username">Имя пользователя</label>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            required 
+                            minlength="3"
+                            placeholder="Введите имя пользователя"
+                            autocomplete="username"
+                        >
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">
+                        Войти
+                    </button>
+                </form>
+
+                <div class="auth-divider">
+                    <span>или</span>
+                </div>
+
+                <button id="registerBtn" class="btn btn-secondary btn-block">
+                    📝 Зарегистрироваться
+                </button>
+
+                <div class="auth-footer">
+                    <a href="/" class="back-link">← Вернуться на главную</a>
+                </div>
+            </div>
+
+            <!-- Модальное окно регистрации -->
+            <div id="registerModal" class="modal hidden">
+                <div class="modal-content">
+                    <span class="modal-close">&times;</span>
+                    <h2>📝 Регистрация нового пользователя</h2>
+                    
+                    <form id="registerForm" class="auth-form">
+                        <div class="form-group">
+                            <label for="reg_username">Имя пользователя *</label>
+                            <input 
+                                type="text" 
+                                id="reg_username" 
+                                name="username" 
+                                required 
+                                minlength="3"
+                                maxlength="100"
+                                placeholder="Придумайте имя пользователя"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reg_email">Email (необязательно)</label>
+                            <input 
+                                type="email" 
+                                id="reg_email" 
+                                name="email" 
+                                placeholder="example@mail.ru"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reg_token">WB API Токен *</label>
+                            <textarea 
+                                id="reg_token" 
+                                name="token" 
+                                required 
+                                rows="4"
+                                placeholder="Вставьте ваш токен из личного кабинета Wildberries"
+                            ></textarea>
+                            <small class="form-hint">
+                                Токен можно получить в личном кабинете продавца Wildberries
+                            </small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">
+                            Зарегистрироваться
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/auth.js"></script>
+</body>
+</html>

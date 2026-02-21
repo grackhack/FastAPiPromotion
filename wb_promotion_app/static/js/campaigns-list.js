@@ -47,6 +47,9 @@ const MEDIA_TYPE_MAP = {
 
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
+    // Проверка аутентификации пользователя
+    checkAuth();
+    
     initTabs();
     initFilters();
     initStatusTabs();
@@ -378,4 +381,28 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Проверка аутентификации пользователя
+async function checkAuth() {
+    try {
+        const response = await fetch('/api/auth/me');
+        if (response.ok) {
+            const user = await response.json();
+            // Пользователь авторизован
+            document.getElementById('loginLink').style.display = 'none';
+            document.getElementById('profileLink').style.display = '';
+            document.getElementById('logoutLink').style.display = '';
+            document.getElementById('userGreeting').classList.remove('hidden');
+            document.getElementById('userName').textContent = user.username;
+        } else {
+            // Пользователь не авторизован
+            document.getElementById('loginLink').style.display = '';
+            document.getElementById('profileLink').style.display = 'none';
+            document.getElementById('logoutLink').style.display = 'none';
+            document.getElementById('userGreeting').classList.add('hidden');
+        }
+    } catch (error) {
+        console.error('Error checking auth:', error);
+    }
 }
