@@ -24,7 +24,7 @@ class LoginRequest(BaseModel):
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     """Страница входа"""
-    import main
+    from . import main
     return main.templates.get_template("login.html").render(request=request)
 
 
@@ -138,7 +138,7 @@ async def get_current_token(request: Request, db: Session = Depends(get_db)):
 @router.get("/profile", response_class=HTMLResponse)
 async def profile_page(request: Request):
     """Страница профиля пользователя"""
-    import main
+    from . import main
     
     # Проверяем аутентификацию
     session_id = request.cookies.get("session_id")
