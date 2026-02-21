@@ -30,6 +30,22 @@ def create_session(user_id: int, username: str) -> str:
     return session_id
 
 
+def create_session_with_token(user_id: int, username: str, api_token: Optional[str]) -> str:
+    """Создать новую сессию для пользователя с API токеном"""
+    session_id = secrets.token_urlsafe(32)
+    session_data = {
+        "user_id": user_id,
+        "username": username,
+        "created_at": datetime.now(),
+        "expires_at": datetime.now() + timedelta(days=7)
+    }
+    # Сохраняем токен в сессию если он есть
+    if api_token:
+        session_data['api_token'] = api_token
+    sessions[session_id] = session_data
+    return session_id
+
+
 def get_session(session_id: str) -> Optional[dict]:
     """Получить данные сессии"""
     session = sessions.get(session_id)

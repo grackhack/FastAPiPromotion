@@ -10,7 +10,7 @@ from typing import Optional
 
 from .config import get_db
 from .models import User, UserApiToken
-from .auth import create_session, delete_session, get_current_user_from_session, get_user_api_token
+from .auth import create_session, create_session_with_token, delete_session, get_current_user_from_session, get_user_api_token
 from .schemas import UserCreate, UserApiTokenCreate
 
 
@@ -48,19 +48,14 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
             db.refresh(user)
             logger.info(f"Пользователь создан с ID: {user.id}")
 
-        # Создаём сессию
-        session_id = create_session(user.id, user.username)
-        logger.info(f"Сессия создана для пользователя {user.id}: {session_id[:8]}...")
-
-        # Проверяем наличие токена и сохраняем в сессию
+        # Получаем токен из БД
         token = get_user_api_token(db, user.id)
-        if token:
-            # Сохраняем токен в сессию для быстрого доступа
-            from . import auth
-            session_data = auth.get_session(session_id)
-            if session_data:
-                session_data['api_token'] = token
-                logger.info(f"API токен сохранён в сессию для {user.username}")
+        logger.info(f"Токен найден для пользователя {user.id}: {token is not None}")
+
+        # Создаём сессию с токеном сразу
+        from . import auth
+        session_id = auth.create_session_with_token(user.id, user.username, token)
+        logger.info(f"Сессия создана для пользователя {user.id}: {session_id[:8]}...")
 
         # Устанавливаем cookie
         redirect_response = RedirectResponse(url="/", status_code=303)  # Редирект на страницу кампаний
