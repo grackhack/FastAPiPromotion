@@ -100,8 +100,8 @@ from .web.campaigns import router as web_campaigns_router
 app.include_router(web_campaigns_router)
 
 # Подключение Web endpoints для статистики
-# from .web.stats import router as web_stats_router
-# app.include_router(web_stats_router)
+from .web.stats import router as web_stats_router
+app.include_router(web_stats_router)
 
 
 # Старые API endpoints (для обратной совместимости, будут удалены)
