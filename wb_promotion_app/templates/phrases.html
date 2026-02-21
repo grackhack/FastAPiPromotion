@@ -57,27 +57,9 @@
         </footer>
     </div>
 
-    <script src="/static/js/phrases.js"></script>
     <script>
-        // Проверка аутентификации при загрузке страницы
-        document.addEventListener('DOMContentLoaded', async function() {
-            try {
-                const response = await fetch('/auth/me');
-                if (response.ok) {
-                    const user = await response.json();
-                    document.getElementById('loginLink').style.display = 'none';
-                    document.getElementById('profileLink').style.display = '';
-                    document.getElementById('logoutLink').style.display = '';
-                    document.getElementById('userGreeting').classList.remove('hidden');
-                    document.getElementById('userName').textContent = user.username;
-                } else {
-                    window.location.href = '/login';
-                }
-            } catch (error) {
-                console.error('Error checking auth:', error);
-                window.location.href = '/login';
-            }
-        });
+        // Страница минус-фраз перемещена на главную
+        window.location.href = '/';
     </script>
 </body>
 </html>
