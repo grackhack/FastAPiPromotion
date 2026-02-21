@@ -13,13 +13,18 @@
             <nav class="nav">
                 <a href="/" class="nav-link">Главная</a>
                 <a href="/campaigns" class="nav-link">Кампании</a>
-                <a href="/profile" class="nav-link" id="profileLink" style="display: none;">👤 Профиль</a>
-                <a href="/login" class="nav-link" id="loginLink">🔐 Вход</a>
-                <a href="/logout" class="nav-link" id="logoutLink" style="display: none;">🚪 Выйти</a>
+                {% if is_authenticated %}
+                <a href="/profile" class="nav-link">👤 Профиль</a>
+                <a href="/logout" class="nav-link">🚪 Выйти</a>
+                {% else %}
+                <a href="/login" class="nav-link">🔐 Вход</a>
+                {% endif %}
             </nav>
-            <div class="user-greeting hidden" id="userGreeting">
-                👋 <span id="userName"></span>
+            {% if is_authenticated and user %}
+            <div class="user-greeting">
+                👋 {{ user.username }}
             </div>
+            {% endif %}
         </header>
 
         <main class="main">
@@ -328,32 +333,13 @@
         </div>
     </div>
 
-    <script src="/static/js/campaign-detail.js?v=16"></script>
-    <script>
-        // Проверка аутентификации ПЕРЕД загрузкой страницы
-        document.addEventListener('DOMContentLoaded', async function() {
-            try {
-                const response = await fetch('/auth/me');
-                if (!response.ok) {
-                    // Не авторизован - перенаправляем на login
-                    window.location.href = '/login';
-                    return;
-                }
-                
-                const user = await response.json();
-                document.getElementById('loginLink').style.display = 'none';
-                document.getElementById('profileLink').style.display = '';
-                document.getElementById('logoutLink').style.display = '';
-                document.getElementById('userGreeting').classList.remove('hidden');
-                document.getElementById('userName').textContent = user.username;
-                
-                // Авторизован - продолжаем загрузку страницы
-                console.log('User authenticated:', user.username);
-            } catch (error) {
-                console.error('Error checking auth:', error);
-                window.location.href = '/login';
-            }
-        });
+    <!-- Данные кампании из бэкенда (SSR) -->
+    {% if campaign %}
+    <script id="campaign-data" type="application/json" style="display: none;">
+        {{ campaign | tojson }}
     </script>
+    {% endif %}
+
+    <script src="/static/js/campaign-detail.js?v=17"></script>
 </body>
 </html>

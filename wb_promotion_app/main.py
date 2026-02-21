@@ -77,12 +77,13 @@ app.include_router(web_auth_router)  # Без префикса для веб-с�
 from .api.campaigns import router as api_campaigns_router
 app.include_router(api_campaigns_router)
 
-# Подключение новых Web endpoints (SSR)
+# Подключение новых Web endpoints (SSR) - должны быть ПОСЛЕ api роутов
 from .web.campaigns import router as web_campaigns_router
 app.include_router(web_campaigns_router)
 
 
-def get_wb_client(token: str) -> WBPromotionClient:
+# Старые API endpoints (для обратной совместимости, будут удалены)
+# def get_wb_client(token: str) -> WBPromotionClient:
     """Создать клиент API для токена пользователя"""
     return WBPromotionClient(token)
 

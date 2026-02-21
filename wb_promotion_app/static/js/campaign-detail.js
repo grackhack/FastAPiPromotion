@@ -9,40 +9,37 @@ let statsPhrases = []; // Текущая статистика фраз
 let currentPhraseToAdd = null; // Фраза для добавления в минус-фразы
 let clustersData = { active: [], excluded: [] }; // Текущие кластеры
 let selectedClusters = []; // Выбранные кластеры для добавления в минус
-let currentApiToken = null; // Токен текущего пользователя
 
 // Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', async function() {
-    currentCampaignId = parseInt(document.getElementById('campaignId').textContent);
-    // Сначала загружаем токен
-    await loadApiToken();
-    // Теперь загружаем кампанию с токеном
-    loadCampaignData();
+document.addEventListener('DOMContentLoaded', function() {
+    // Проверяем есть ли данные кампании в шаблоне (SSR)
+    const campaignDataEl = document.getElementById('campaign-data');
+    
+    if (campaignDataEl && campaignDataEl.textContent.trim()) {
+        // Данные уже загружены на бэкенде через SSR
+        try {
+            campaignData = JSON.parse(campaignDataEl.textContent);
+            currentCampaignId = campaignData.id;
+            renderCampaignInfo();
+            renderNmList();
+            expandAllPhrases();
+            console.log('Кампания загружена через SSR');
+        } catch (e) {
+            console.error('Ошибка парсинга JSON кампании:', e);
+            showError('Ошибка загрузки данных кампании');
+        }
+    } else {
+        // Данных нет - загружаем через API
+        currentCampaignId = parseInt(document.getElementById('campaignId').textContent);
+        loadCampaignData();
+    }
+    
     initStatsDates();
 });
 
-// Загрузка API токена пользователя
-async function loadApiToken() {
-    try {
-        const response = await fetch('/auth/token');
-        const data = await response.json();
-        if (response.ok && data.has_token) {
-            currentApiToken = data.token;
-            console.log('API токен загружен');
-        } else {
-            console.warn('API токен не найден');
-        }
-    } catch (error) {
-        console.error('Error loading API token:', error);
-    }
-}
-
-// Вспомогательная функция для API запросов с токеном
+// Вспомогательная функция для API запросов (токен берётся из сессии на бэкенде)
 async function apiFetch(url, options = {}) {
     const headers = options.headers || {};
-    if (currentApiToken) {
-        headers['X-API-Token'] = currentApiToken;
-    }
     headers['Content-Type'] = 'application/json';
     
     return fetch(url, {
@@ -61,26 +58,22 @@ function initStatsDates() {
     document.getElementById('statsToDate').value = today.toISOString().split('T')[0];
 }
 
-// Загрузка данных кампании
+// Загрузка данных кампании (теперь только если нет данных в шаблоне)
 async function loadCampaignData() {
     showLoading(true);
     hideError();
 
-    // Ждём пока токен загрузится если ещё не загружен
-    if (!currentApiToken) {
-        await loadApiToken();
-    }
-
     try {
-        const headers = {};
-        if (currentApiToken) {
-            headers['X-API-Token'] = currentApiToken;
-        } else {
-            throw new Error('API токен не найден. Добавьте токен в личном кабинете.');
-        }
-
-        const response = await fetch(`/campaigns/adverts?ids=${currentCampaignId}`, { headers });
+        // Загружаем через новый API endpoint (токен берётся из сессии)
+        const response = await apiFetch(`/api/campaigns?ids=${currentCampaignId}`);
+        
         if (!response.ok) {
+            if (response.status === 401) {
+                throw new Error('Требуется авторизация');
+            }
+            if (response.status === 403) {
+                throw new Error('Необходимо добавить WB API токен в личном кабинете');
+            }
             throw new Error(`Ошибка HTTP: ${response.status}`);
         }
 
