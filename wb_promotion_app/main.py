@@ -84,8 +84,8 @@ app.include_router(web_campaigns_router)
 
 # Старые API endpoints (для обратной совместимости, будут удалены)
 # def get_wb_client(token: str) -> WBPromotionClient:
-    """Создать клиент API для токена пользователя"""
-    return WBPromotionClient(token)
+#     """Создать клиент API для токена пользователя"""
+#     return WBPromotionClient(token)
 
 
 @app.get("/api/campaigns/list", response_model=List[CampaignInfo])
