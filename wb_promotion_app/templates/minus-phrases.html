@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Минус-фразы кампании {{ campaign.id }} - Wildberries Promotion</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #0066FF;
+            text-decoration: none;
+            margin-bottom: 15px;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .nm-card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .nm-header {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nm-header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+        .nm-body {
+            padding: 20px;
+        }
+        .minus-phrase-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .minus-phrase-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .minus-phrase-item:last-child {
+            border-bottom: none;
+        }
+        .minus-phrase-text {
+            flex: 1;
+            font-size: 14px;
+        }
+        .add-phrase-form {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .add-phrase-form input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary {
+            background: #0066FF;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #0052CC;
+        }
+        .btn-danger {
+            background: #FF4444;
+            color: white;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        .btn-danger:hover {
+            background: #CC0000;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .nav-tab {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            color: #333;
+        }
+        .nav-tab.active {
+            background: #0066FF;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <a href="/">🎯 WB Promotion</a>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link">Кампании</a>
+                <a href="/profile" class="nav-link">Профиль</a>
+                <a href="/logout" class="nav-link">Выйти</a>
+            </div>
+        </nav>
+
+        <div class="header">
+            <a href="/campaigns/{{ campaign.id }}" class="back-link">
+                ← Назад к кампании
+            </a>
+            <h1>Минус-фразы кампании {{ campaign.id }}</h1>
+            <p style="color: #666; margin: 5px 0 0 0;">{{ campaign.name }}</p>
+        </div>
+
+        <div class="nav-tabs">
+            <a href="/stats/campaign/{{ campaign.id }}" class="nav-tab">Статистика</a>
+            <a href="/campaigns/{{ campaign.id }}/minus-phrases" class="nav-tab active">Минус-фразы</a>
+        </div>
+
+        {% if nm_list %}
+            {% for nm in nm_list %}
+            <div class="nm-card">
+                <div class="nm-header">
+                    <h3>📦 Товар {{ nm.nm_id }}</h3>
+                    <span class="badge">{{ nm.minus_phrases|length }} минус-фраз</span>
+                </div>
+                <div class="nm-body">
+                    {% if nm.minus_phrases %}
+                        <ul class="minus-phrase-list">
+                            {% for phrase in nm.minus_phrases %}
+                            <li class="minus-phrase-item">
+                                <span class="minus-phrase-text">{{ phrase }}</span>
+                                <button class="btn btn-danger" onclick="removePhrase({{ nm.nm_id }}, '{{ phrase }}')">
+                                    ✕
+                                </button>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="empty-state">
+                            <p>Нет минус-фраз для этого товара</p>
+                        </div>
+                    {% endif %}
+
+                    <form class="add-phrase-form" onsubmit="addPhrase(event, {{ nm.nm_id }})">
+                        <input type="text" placeholder="Введите минус-фразу" required>
+                        <button type="submit" class="btn btn-primary">Добавить</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>Нет товаров в кампании</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        async function addPhrase(event, nmId) {
+            event.preventDefault();
+            const form = event.target;
+            const phrase = form.querySelector('input').value.trim();
+            
+            if (!phrase) return;
+            
+            try {
+                const response = await fetch('/search-clusters/set-minus-phrases', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        advert_id: {{ campaign.id }},
+                        nm_id: nmId,
+                        minus_phrases: [phrase]
+                    })
+                });
+                
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Ошибка добавления фразы');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Ошибка подключения к серверу');
+            }
+        }
+        
+        async function removePhrase(nmId, phrase) {
+            if (!confirm('Удалить минус-фразу "' + phrase + '"?')) return;
+            
+            try {
+                const response = await fetch('/search-clusters/set-minus-phrases', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        advert_id: {{ campaign.id }},
+                        nm_id: nmId,
+                        norm_queries: [] // Пустой список для удаления
+                    })
+                });
+                
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Ошибка удаления фразы');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Ошибка подключения к серверу');
+            }
+        }
+    </script>
+</body>
+</html>
