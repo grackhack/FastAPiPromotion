@@ -106,6 +106,7 @@ async def minus_phrases_page(
                 nm_id = nm_setting.nm_id
                 
                 # Получаем минус-фразы для этого nm_id
+                # get_minus_phrases возвращает dict: {"items": [...]}
                 minus_data = wb_client.get_minus_phrases([{
                     "advert_id": campaign_id,
                     "nm_id": nm_id
@@ -113,8 +114,8 @@ async def minus_phrases_page(
                 
                 # Извлекаем фразы из ответа API
                 phrases = []
-                if hasattr(minus_data, 'items') and minus_data.items:
-                    for item in minus_data.items:
+                if isinstance(minus_data, dict) and minus_data.get('items'):
+                    for item in minus_data['items']:
                         if item.get('advert_id') == campaign_id and item.get('nm_id') == nm_id:
                             phrases = item.get('norm_queries', []) or item.get('excluded', [])
                             break
