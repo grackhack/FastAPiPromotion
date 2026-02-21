@@ -85,10 +85,10 @@
 
                 <!-- Данные кампаний из шаблона (SSR) -->
                 <script id="campaigns-data" type="application/json" style="display: none;">
-                    {{ campaigns | tojson if campaigns else '[]' }}
+                    {{ campaigns_json | safe }}
                 </script>
                 <script id="media-campaigns-data" type="application/json" style="display: none;">
-                    {{ media_campaigns | tojson if media_campaigns else '[]' }}
+                    {{ media_campaigns_json | safe }}
                 </script>
 
                 <div id="campaignsContainer" class="campaigns-grid">

@@ -2,6 +2,7 @@
 Web endpoints для кампаний (SSR)
 Загружают данные на бэкенде и рендерят шаблоны
 """
+import json
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from typing import Optional
@@ -9,6 +10,14 @@ from typing import Optional
 from ..core.dependencies import require_auth, get_wb_client, get_current_user
 from ..models import User
 from ..services.wb_service import WBService
+
+# Кастомный JSON encoder для datetime
+class DateTimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        from datetime import datetime, date
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        return super().default(obj)
 
 router = APIRouter(tags=["Web"])
 
@@ -47,8 +56,8 @@ async def campaigns_page(
         request=request,
         user=user,
         is_authenticated=user is not None,
-        campaigns=campaigns,
-        media_campaigns=media_campaigns,
+        campaigns_json=json.dumps(campaigns, cls=DateTimeEncoder) if campaigns else '[]',
+        media_campaigns_json=json.dumps(media_campaigns, cls=DateTimeEncoder) if media_campaigns else '[]',
         error=error
     )
 
