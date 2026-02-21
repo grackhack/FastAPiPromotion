@@ -97,8 +97,8 @@ async def all_campaigns_page(
 async def campaign_detail_page(
     request: Request,
     campaign_id: int,
-    user: User = Depends(require_auth),
-    wb: WBService = Depends(get_wb_client)
+    user: Optional[User] = Depends(get_current_user),
+    wb: Optional[WBService] = Depends(get_wb_client)
 ):
     """Страница кампании"""
     from ..main import templates
@@ -106,14 +106,18 @@ async def campaign_detail_page(
     campaign = None
     error = None
 
-    try:
-        campaigns = wb.get_campaigns(ids=str(campaign_id))
-        campaign = campaigns[0] if campaigns else None
+    # Если нет авторизации или токена - показываем ошибку
+    if not user or not wb:
+        error = "Необходимо войти и добавить WB API токен"
+    else:
+        try:
+            campaigns = wb.get_campaigns(ids=str(campaign_id))
+            campaign = campaigns[0] if campaigns else None
 
-        if not campaign:
-            error = "Кампания не найдена"
-    except Exception as e:
-        error = str(e)
+            if not campaign:
+                error = "Кампания не найдена"
+        except Exception as e:
+            error = str(e)
 
     template = templates.get_template("campaign-detail.html")
     return template.render(
