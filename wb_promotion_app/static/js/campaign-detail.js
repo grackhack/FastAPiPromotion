@@ -9,13 +9,31 @@ let statsPhrases = []; // Текущая статистика фраз
 let currentPhraseToAdd = null; // Фраза для добавления в минус-фразы
 let clustersData = { active: [], excluded: [] }; // Текущие кластеры
 let selectedClusters = []; // Выбранные кластеры для добавления в минус
+let currentApiToken = null; // Токен текущего пользователя
 
 // Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     currentCampaignId = parseInt(document.getElementById('campaignId').textContent);
+    await loadApiToken(); // Загружаем токен перед использованием
     loadCampaignData();
     initStatsDates();
 });
+
+// Загрузка API токена пользователя
+async function loadApiToken() {
+    try {
+        const response = await fetch('/auth/token');
+        const data = await response.json();
+        if (response.ok && data.has_token) {
+            currentApiToken = data.token;
+            console.log('API токен загружен');
+        } else {
+            console.warn('API токен не найден');
+        }
+    } catch (error) {
+        console.error('Error loading API token:', error);
+    }
+}
 
 // Инициализация дат статистики (последние 7 дней)
 function initStatsDates() {
@@ -33,7 +51,12 @@ async function loadCampaignData() {
     hideError();
 
     try {
-        const response = await fetch(`/campaigns/adverts?ids=${currentCampaignId}`);
+        const headers = {};
+        if (currentApiToken) {
+            headers['X-API-Token'] = currentApiToken;
+        }
+        
+        const response = await fetch(`/campaigns/adverts?ids=${currentCampaignId}`, { headers });
         if (!response.ok) {
             throw new Error(`Ошибка HTTP: ${response.status}`);
         }
@@ -47,7 +70,7 @@ async function loadCampaignData() {
         campaignData = campaigns[0];
         renderCampaignInfo();
         renderNmList();
-        
+
         // Автоматически загружаем фразы для всех товаров
         expandAllPhrases();
     } catch (error) {

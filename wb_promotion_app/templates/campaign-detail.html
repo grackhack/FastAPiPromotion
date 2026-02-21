@@ -11,8 +11,15 @@
         <header class="header">
             <h1>📊 Wildberries Promotion Manager</h1>
             <nav class="nav">
-                <a href="/" class="nav-link">Выбор кампаний</a>
+                <a href="/" class="nav-link">Главная</a>
+                <a href="/campaigns" class="nav-link">Кампании</a>
+                <a href="/profile" class="nav-link" id="profileLink" style="display: none;">👤 Профиль</a>
+                <a href="/login" class="nav-link" id="loginLink">🔐 Вход</a>
+                <a href="/logout" class="nav-link" id="logoutLink" style="display: none;">🚪 Выйти</a>
             </nav>
+            <div class="user-greeting hidden" id="userGreeting">
+                👋 <span id="userName"></span>
+            </div>
         </header>
 
         <main class="main">
@@ -322,5 +329,26 @@
     </div>
 
     <script src="/static/js/campaign-detail.js?v=15"></script>
+    <script>
+        // Проверка аутентификации при загрузке страницы
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                const response = await fetch('/auth/me');
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('loginLink').style.display = 'none';
+                    document.getElementById('profileLink').style.display = '';
+                    document.getElementById('logoutLink').style.display = '';
+                    document.getElementById('userGreeting').classList.remove('hidden');
+                    document.getElementById('userName').textContent = user.username;
+                } else {
+                    window.location.href = '/login';
+                }
+            } catch (error) {
+                console.error('Error checking auth:', error);
+                window.location.href = '/login';
+            }
+        });
+    </script>
 </body>
 </html>
