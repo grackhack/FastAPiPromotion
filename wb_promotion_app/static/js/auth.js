@@ -67,10 +67,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const username = document.getElementById('reg_username').value.trim();
             const email = document.getElementById('reg_email').value.trim();
-            const token = document.getElementById('reg_token').value.trim();
 
             try {
-                // Сначала создаём пользователя
+                // Создаём пользователя
                 const userResponse = await fetch('/api/users', {
                     method: 'POST',
                     headers: {
@@ -85,25 +84,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     throw new Error(userData.detail || 'Ошибка регистрации пользователя');
                 }
 
-                // Затем создаём токен для пользователя
-                const tokenResponse = await fetch(`/api/users/${userData.id}/tokens`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                        token, 
-                        description: 'Токен при регистрации' 
-                    })
-                });
-
-                const tokenData = await tokenResponse.json();
-
-                if (!tokenResponse.ok) {
-                    throw new Error(tokenData.detail || 'Ошибка сохранения токена');
-                }
-
-                // Теперь автоматически входим
+                // После регистрации автоматически входим
                 const loginResponse = await fetch('/auth/login', {
                     method: 'POST',
                     headers: {

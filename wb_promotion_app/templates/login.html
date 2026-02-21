@@ -53,6 +53,7 @@
                 <div class="modal-content">
                     <span class="modal-close">&times;</span>
                     <h2>📝 Регистрация нового пользователя</h2>
+                    <p class="auth-description">После регистрации вы сможете добавить токен в личном кабинете</p>
                     
                     <form id="registerForm" class="auth-form">
                         <div class="form-group">
@@ -76,20 +77,6 @@
                                 name="email" 
                                 placeholder="example@mail.ru"
                             >
-                        </div>
-
-                        <div class="form-group">
-                            <label for="reg_token">WB API Токен *</label>
-                            <textarea 
-                                id="reg_token" 
-                                name="token" 
-                                required 
-                                rows="4"
-                                placeholder="Вставьте ваш токен из личного кабинета Wildberries"
-                            ></textarea>
-                            <small class="form-hint">
-                                Токен можно получить в личном кабинете продавца Wildberries
-                            </small>
                         </div>
 
                         <button type="submit" class="btn btn-primary btn-block">
