@@ -93,10 +93,14 @@ async def minus_phrases_page(
 ):
     """Страница управления минус-фразами кампании"""
     from ..main import templates
+    from ..services.wb_service import WBService
 
     try:
         # Получаем данные о кампании напрямую из API
         adverts = wb_client.get_adverts(ids=str(campaign_id))
+        
+        # Создаём WBService для работы с методами
+        wb_service = WBService(wb_client)
         
         nm_list = []
         if adverts and hasattr(adverts, 'adverts') and adverts.adverts:
@@ -105,20 +109,8 @@ async def minus_phrases_page(
             for nm_setting in advert.nm_settings:
                 nm_id = nm_setting.nm_id
                 
-                # Получаем минус-фразы для этого nm_id
-                # get_minus_phrases возвращает dict: {"items": [...]}
-                minus_data = wb_client.get_minus_phrases([{
-                    "advert_id": campaign_id,
-                    "nm_id": nm_id
-                }])
-                
-                # Извлекаем фразы из ответа API
-                phrases = []
-                if isinstance(minus_data, dict) and minus_data.get('items'):
-                    for item in minus_data['items']:
-                        if item.get('advert_id') == campaign_id and item.get('nm_id') == nm_id:
-                            phrases = item.get('norm_queries', []) or item.get('excluded', [])
-                            break
+                # Получаем минус-фразы через WBService
+                phrases = wb_service.get_minus_phrases(campaign_id, nm_id)
                 
                 nm_list.append({
                     "nm_id": nm_id,
