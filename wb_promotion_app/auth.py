@@ -54,16 +54,16 @@ def cleanup_expired_sessions():
         sessions.pop(sid, None)
 
 
-async def get_current_user_from_session(request: Request) -> Optional[dict]:
+async def get_current_user_from_session(request: Request) -> Optional[User]:
     """Получить текущего пользователя из session cookie"""
     session_id = request.cookies.get("session_id")
     if not session_id:
         return None
-    
+
     session = get_session(session_id)
     if not session:
         return None
-    
+
     # Проверка в БД что пользователь всё ещё активен
     db = SessionLocal()
     try:
@@ -72,12 +72,12 @@ async def get_current_user_from_session(request: Request) -> Optional[dict]:
         if not user:
             delete_session(session_id)
             return None
-        return {"id": user.id, "username": user.username, "session_id": session_id}
+        return user
     finally:
         db.close()
 
 
-async def require_auth(request: Request) -> dict:
+async def require_auth(request: Request) -> User:
     """Требует аутентификации"""
     user = await get_current_user_from_session(request)
     if not user:
