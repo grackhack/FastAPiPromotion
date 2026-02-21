@@ -116,11 +116,48 @@ class WBService:
             raise Exception(f"Ошибка загрузки кластеров: {str(e)}")
     
     def _to_dict(self, obj) -> Dict[str, Any]:
-        """Конвертирует объект в dict"""
+        """Конвертирует объект в JSON-сериализуемый dict"""
+        import json
+        from datetime import datetime, date
+        
+        if obj is None:
+            return None
+        
+        # Обработка datetime/date
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        
+        # Pydantic v2 с mode='json' для вложенных моделей
         if hasattr(obj, 'model_dump'):
-            return obj.model_dump(mode='json')
-        elif hasattr(obj, 'dict'):
+            try:
+                return obj.model_dump(mode='json')
+            except (TypeError, AttributeError):
+                # Если mode='json' не работает, пробуем обычный
+                return obj.model_dump()
+        
+        # Pydantic v1
+        if hasattr(obj, 'dict'):
             return obj.dict()
-        elif hasattr(obj, '__dict__'):
-            return obj.__dict__
+        
+        # Dataclass
+        if hasattr(obj, '__dataclass_fields__'):
+            from dataclasses import asdict
+            try:
+                return asdict(obj)
+            except (TypeError, AttributeError):
+                pass
+        
+        # Обычный объект
+        if hasattr(obj, '__dict__'):
+            return {k: self._to_dict(v) for k, v in obj.__dict__.items() if not k.startswith('_')}
+        
+        # Список
+        if isinstance(obj, list):
+            return [self._to_dict(item) for item in obj]
+        
+        # Dict
+        if isinstance(obj, dict):
+            return {k: self._to_dict(v) for k, v in obj.items()}
+        
+        # Базовые типы
         return obj
