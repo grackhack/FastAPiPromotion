@@ -109,15 +109,21 @@ async def campaign_detail_page(
     # Если нет авторизации или токена - показываем ошибку
     if not user or not wb:
         error = "Необходимо войти и добавить WB API токен"
+        import logging
+        logging.warning(f"Campaign {campaign_id}: user={user is not None}, wb={wb is not None}")
     else:
         try:
             campaigns = wb.get_campaigns(ids=str(campaign_id))
+            import logging
+            logging.info(f"Campaign {campaign_id}: found {len(campaigns)} campaigns")
             campaign = campaigns[0] if campaigns else None
 
             if not campaign:
                 error = "Кампания не найдена"
         except Exception as e:
             error = str(e)
+            import logging
+            logging.error(f"Campaign {campaign_id} error: {e}")
 
     template = templates.get_template("campaign-detail.html")
     return template.render(
