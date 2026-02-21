@@ -119,7 +119,7 @@ async def campaign_detail_page(
     return template.render(
         request=request,
         user=user,
-        campaign=campaign,
+        campaign_json=json.dumps(campaign, cls=DateTimeEncoder) if campaign else '{}',
         campaign_id=campaign_id,
         error=error
     )

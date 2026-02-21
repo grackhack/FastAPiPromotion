@@ -336,7 +336,7 @@
     <!-- Данные кампании из бэкенда (SSR) -->
     {% if campaign %}
     <script id="campaign-data" type="application/json" style="display: none;">
-        {{ campaign | tojson }}
+        {{ campaign_json | safe }}
     </script>
     {% endif %}
 
