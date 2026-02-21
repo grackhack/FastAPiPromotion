@@ -538,7 +538,7 @@ async def get_full_stats(request: FullStatsRequest, token: str = Depends(get_tok
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse, response_model=None)
 async def read_root(request: Request):
     """
     Главная страница веб-интерфейса
@@ -547,7 +547,7 @@ async def read_root(request: Request):
     return template.render(request=request)
 
 
-@app.get("/phrases", response_class=HTMLResponse)
+@app.get("/phrases", response_class=HTMLResponse, response_model=None)
 async def phrases_page(request: Request):
     """
     Страница управления минус-фразами
@@ -556,7 +556,7 @@ async def phrases_page(request: Request):
     return template.render(request=request)
 
 
-@app.get("/campaigns", response_class=HTMLResponse)
+@app.get("/campaigns", response_class=HTMLResponse, response_model=None)
 async def campaigns_page(request: Request):
     """
     Страница просмотра всех рекламных кампаний
@@ -565,7 +565,7 @@ async def campaigns_page(request: Request):
     return template.render(request=request)
 
 
-@app.get("/campaign/{campaign_id}", response_class=HTMLResponse)
+@app.get("/campaign/{campaign_id}", response_class=HTMLResponse, response_model=None)
 async def campaign_detail_page(request: Request, campaign_id: int):
     """
     Страница настройки кампании (минус-слова)

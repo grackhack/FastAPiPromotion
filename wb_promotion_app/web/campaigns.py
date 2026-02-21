@@ -22,7 +22,7 @@ class DateTimeEncoder(json.JSONEncoder):
 router = APIRouter(tags=["Web"])
 
 
-@router.get("/", response_class=HTMLResponse)
+@router.get("/", response_class=HTMLResponse, response_model=None)
 async def campaigns_page(
     request: Request,
     user: Optional[User] = Depends(get_current_user),
@@ -62,7 +62,7 @@ async def campaigns_page(
     )
 
 
-@router.get("/campaigns", response_class=HTMLResponse)
+@router.get("/campaigns", response_class=HTMLResponse, response_model=None)
 async def all_campaigns_page(
     request: Request,
     user: Optional[User] = Depends(get_current_user),
@@ -93,7 +93,7 @@ async def all_campaigns_page(
     )
 
 
-@router.get("/campaign/{campaign_id}", response_class=HTMLResponse)
+@router.get("/campaign/{campaign_id}", response_class=HTMLResponse, response_model=None)
 async def campaign_detail_page(
     request: Request,
     campaign_id: int,

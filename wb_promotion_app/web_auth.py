@@ -21,7 +21,7 @@ class LoginRequest(BaseModel):
     username: str
 
 
-@router.get("/login", response_class=HTMLResponse)
+@router.get("/login", response_class=HTMLResponse, response_model=None)
 async def login_page(request: Request):
     """Страница входа"""
     from . import main
@@ -159,7 +159,7 @@ async def get_current_token(request: Request, db: Session = Depends(get_db)):
     return {"has_token": False}
 
 
-@router.get("/profile", response_class=HTMLResponse)
+@router.get("/profile", response_class=HTMLResponse, response_model=None)
 async def profile_page(request: Request):
     """Страница профиля пользователя"""
     from . import main
