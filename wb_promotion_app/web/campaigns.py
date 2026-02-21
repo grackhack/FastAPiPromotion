@@ -30,9 +30,17 @@ async def campaigns_page(
     if user and wb:
         try:
             campaigns = wb.get_campaigns()
+        except Exception as e:
+            error = f"Кампании: {str(e)}"
+        
+        try:
             media_campaigns = wb.get_media_campaigns()
         except Exception as e:
-            error = str(e)
+            # Медиакампании могут быть недоступны - не показываем ошибку
+            media_campaigns = []
+            # Логируем ошибку но не показываем пользователю
+            import logging
+            logging.warning(f"Media campaigns unavailable: {str(e)}")
 
     template = templates.get_template("index.html")
     return template.render(
