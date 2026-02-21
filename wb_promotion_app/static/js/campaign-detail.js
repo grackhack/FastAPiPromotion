@@ -37,6 +37,20 @@ async function loadApiToken() {
     }
 }
 
+// Вспомогательная функция для API запросов с токеном
+async function apiFetch(url, options = {}) {
+    const headers = options.headers || {};
+    if (currentApiToken) {
+        headers['X-API-Token'] = currentApiToken;
+    }
+    headers['Content-Type'] = 'application/json';
+    
+    return fetch(url, {
+        ...options,
+        headers
+    });
+}
+
 // Инициализация дат статистики (последние 7 дней)
 function initStatsDates() {
     const today = new Date();
@@ -207,9 +221,8 @@ async function loadPhrasesForNm(nmId) {
     renderNmList();
 
     try {
-        const response = await fetch('/search-clusters/minus-phrases', {
+        const response = await apiFetch('/search-clusters/minus-phrases', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify([{ advert_id: currentCampaignId, nm_id: nmId }])
         });
 
@@ -250,9 +263,8 @@ async function savePhrasesForNm(nmId) {
     }
 
     try {
-        const response = await fetch('/search-clusters/set-minus-phrases', {
+        const response = await apiFetch('/search-clusters/set-minus-phrases', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 advert_id: currentCampaignId,
                 nm_id: nmId,
@@ -280,9 +292,8 @@ async function removePhraseFromNm(nmId, index) {
 
     try {
         const updated = (nmPhrasesMap[nmId] || []).filter((_, i) => i !== index);
-        const response = await fetch('/search-clusters/set-minus-phrases', {
+        const response = await apiFetch('/search-clusters/set-minus-phrases', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 advert_id: currentCampaignId,
                 nm_id: nmId,
@@ -391,11 +402,8 @@ async function loadClusters() {
     error.classList.add('hidden');
     
     try {
-        const response = await fetch('/search-clusters/list', {
+        const response = await apiFetch('/search-clusters/list', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
             body: JSON.stringify([{
                 advert_id: currentCampaignId,
                 nm_id: parseInt(nmId)
@@ -540,11 +548,8 @@ async function addSelectedToMinus() {
     
     try {
         // Загружаем текущие минус-фразы
-        const currentResponse = await fetch('/search-clusters/minus-phrases', {
+        const currentResponse = await apiFetch('/search-clusters/minus-phrases', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
             body: JSON.stringify([{
                 advert_id: currentCampaignId,
                 nm_id: parseInt(nmId)
@@ -568,12 +573,9 @@ async function addSelectedToMinus() {
         
         // Добавляем новые кластеры к существующим
         const allPhrases = [...new Set([...currentPhrases, ...selectedClusters])];
-        
-        const response = await fetch('/search-clusters/set-minus-phrases', {
+
+        const response = await apiFetch('/search-clusters/set-minus-phrases', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
             body: JSON.stringify({
                 advert_id: currentCampaignId,
                 nm_id: parseInt(nmId),
@@ -1257,11 +1259,8 @@ async function selectProductForMinus(nmId) {
     
     try {
         // Сначала загружаем текущие минус-фразы для этого товара
-        const currentResponse = await fetch('/search-clusters/minus-phrases', {
+        const currentResponse = await apiFetch('/search-clusters/minus-phrases', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
             body: JSON.stringify([{
                 advert_id: currentCampaignId,
                 nm_id: nmId
@@ -1292,12 +1291,9 @@ async function selectProductForMinus(nmId) {
         
         // Добавляем новую фразу к существующим
         const allPhrases = [...currentPhrases, currentPhraseToAdd];
-        
-        const response = await fetch('/search-clusters/set-minus-phrases', {
+
+        const response = await apiFetch('/search-clusters/set-minus-phrases', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
             body: JSON.stringify({
                 advert_id: currentCampaignId,
                 nm_id: nmId,
