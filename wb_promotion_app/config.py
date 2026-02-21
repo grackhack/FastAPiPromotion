@@ -21,7 +21,15 @@ APP_DEBUG = os.getenv("APP_DEBUG", "False").lower() == "true"
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 # Конфигурация базы данных
+# Добавляем client_encoding=utf8 для поддержки кириллицы
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./wb_promotion.db")
+
+# Для PostgreSQL добавляем параметры кодировки
+if DATABASE_URL.startswith("postgresql://"):
+    if "?" not in DATABASE_URL:
+        DATABASE_URL += "?client_encoding=utf8"
+    else:
+        DATABASE_URL += "&client_encoding=utf8"
 
 # Создание движка SQLAlchemy
 engine = create_engine(

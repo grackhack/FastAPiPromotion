@@ -140,7 +140,7 @@ async function saveToken(e) {
                 },
                 body: JSON.stringify({ 
                     token,
-                    description: 'Сохранён из личного кабинета'
+                    description: 'Saved from profile'
                 })
             });
             data = await response.json();
