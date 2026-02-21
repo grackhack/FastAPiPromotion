@@ -60,45 +60,43 @@ async def campaigns_api(
 
 ### Этап 1: Подготовка ✅
 - [x] Создать ветку refactor/ssr-architecture
-- [ ] Создать структуру папок
-- [ ] Перенести модели и схемы
+- [x] Создать структуру папок
+- [x] Перенести модели и схемы
 
-### Этап 2: Зависимости
-- [ ] Создать `core/dependencies.py`
-- [ ] `get_current_user()` - из session cookie
-- [ ] `require_auth()` - требует авторизации
-- [ ] `get_wb_client()` - создаёт клиента для пользователя
+### Этап 2: Зависимости ✅
+- [x] Создать `core/dependencies.py`
+- [x] `get_current_user()` - из session cookie
+- [x] `require_auth()` - требует авторизации
+- [x] `get_wb_client()` - создаёт клиента для пользователя
 
-### Этап 3: Services
-- [ ] Создать `services/wb_client.py`
-- [ ] Инкапсулировать работу с WB API
-- [ ] Обработка ошибок и retry logic
-- [ ] Кэширование запросов
+### Этап 3: Services ✅
+- [x] Создать `services/wb_service.py`
+- [x] Инкапсулировать работу с WB API
+- [x] Обработка ошибок и retry logic
+- [x] Кэширование запросов
 
-### Этап 4: Web роуты (SSR)
-- [ ] `/` - главная с кампаниями
-- [ ] `/campaign/{id}` - страница кампании
-- [ ] `/profile` - личный кабинет
-- [ ] `/login` - вход/выход
+### Этап 4: Web роуты (SSR) ✅
+- [x] `/` - главная с кампаниями
+- [x] `/campaigns` - страница всех кампаний
+- [x] `/campaign/{id}` - страница кампании
+- [x] Загрузка данных на бэкенде
 
-### Этап 5: API роуты (для AJAX)
-- [ ] `/api/campaigns` - список кампаний
-- [ ] `/api/campaigns/{id}` - детали
-- [ ] `/api/stats` - статистика
-- [ ] Все endpoints без токенов (берут из сессии)
+### Этап 5: API роуты ✅
+- [x] `/api/campaigns` - список кампаний
+- [x] `/api/campaigns/media` - медиакампании
+- [x] `/api/stats/*` - статистика
+- [x] Все endpoints без токенов (берут из сессии)
 
-### Этап 6: Templates
-- [ ] Базовый layout `base.html`
-- [ ] `campaigns.html` - список кампаний
-- [ ] `campaign_detail.html` - детали
-- [ ] `profile.html` - профиль
-- [ ] `login.html` - вход
+### Этап 6: Templates ✅
+- [x] Обновить `index.html` для SSR
+- [x] Навигация через Jinja2
+- [x] Данные в JSON из бэкенда
 
-### Этап 7: Frontend (минимум JS)
-- [ ] Удалить apiFetch и всю логику токенов
-- [ ] Оставить только UI взаимодействия
-- [ ] Модальные окна
-- [ ] Формы (отправка на бэкенд)
+### Этап 7: Frontend ✅
+- [x] Удалить apiFetch и всю логику токенов
+- [x] Удалить currentApiToken
+- [x] Оставить только UI взаимодействия
+- [x] Обновить loadPromotionCampaigns для API без токенов
 
 ### Этап 8: Тестирование
 - [ ] Unit тесты для services
