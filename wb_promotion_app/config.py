@@ -32,10 +32,11 @@ if DATABASE_URL.startswith("postgresql://"):
         DATABASE_URL += "&client_encoding=utf8"
 
 # Создание движка SQLAlchemy
+# Отключаем echo (логирование SQL) чтобы избежать проблем с кодировкой
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,
-    echo=APP_DEBUG  # Логирование SQL запросов в режиме отладки
+    echo=False  # Отключаем логирование SQL запросов
 )
 
 # Session factory для использования в приложении
