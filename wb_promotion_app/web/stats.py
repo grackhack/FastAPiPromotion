@@ -2,6 +2,7 @@
 Web роуты для страниц статистики
 SSR рендеринг страниц
 """
+from typing import Any
 from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
@@ -16,7 +17,7 @@ from ..services.stats_service import StatsService
 router = APIRouter(tags=["Web Stats"])
 
 
-async def get_wb_client_for_user(request: Request, db: Session) -> WBPromotionClient:
+async def get_wb_client_for_user(request: Request, db: Session) -> Any:
     """Получить WB клиент для текущего пользователя"""
     user = await get_current_user_from_session(request)
     if not user:
@@ -32,12 +33,12 @@ async def get_wb_client_for_user(request: Request, db: Session) -> WBPromotionCl
     return WBPromotionClient(token)
 
 
-@router.get("/stats/campaign/{campaign_id}")
+@router.get("/stats/campaign/{campaign_id}", response_model=None)
 async def campaign_stats_page(
     request: Request,
     campaign_id: int,
     db: Session = Depends(get_db),
-    wb_client: WBPromotionClient = Depends(get_wb_client_for_user)
+    wb_client: Any = Depends(get_wb_client_for_user)
 ):
     """Страница статистики рекламной кампании"""
     from . import main
@@ -77,12 +78,12 @@ async def campaign_stats_page(
     ))
 
 
-@router.get("/campaigns/{campaign_id}/minus-phrases")
+@router.get("/campaigns/{campaign_id}/minus-phrases", response_model=None)
 async def minus_phrases_page(
     request: Request,
     campaign_id: int,
     db: Session = Depends(get_db),
-    wb_client: WBPromotionClient = Depends(get_wb_client_for_user)
+    wb_client: Any = Depends(get_wb_client_for_user)
 ):
     """Страница управления минус-фразами кампании"""
     from . import main
