@@ -87,9 +87,36 @@ def get_wb_client(
 ):
     """
     Создать WB API сервис для текущего пользователя.
+    Возвращает None если токен не найден.
     """
     from ..services.wb_service import WBService
     from ..api_client import WBPromotionClient
     
+    if not token:
+        return None
+
+    client = WBPromotionClient(token)
+    return WBService(client)
+
+
+async def get_wb_client_optional(
+    request: Request,
+    db: Session = Depends(get_db)
+) -> Optional[WBService]:
+    """
+    Создать WB API сервис для текущего пользователя (опционально).
+    Возвращает None если пользователь не авторизован или нет токена.
+    """
+    from ..services.wb_service import WBService
+    from ..api_client import WBPromotionClient
+    
+    user = await get_current_user_from_session(request)
+    if not user:
+        return None
+    
+    token = get_user_api_token(db, user.id)
+    if not token:
+        return None
+
     client = WBPromotionClient(token)
     return WBService(client)

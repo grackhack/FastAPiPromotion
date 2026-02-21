@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from typing import Optional
 
-from ..core.dependencies import require_auth, get_wb_client, get_current_user
+from ..core.dependencies import require_auth, get_wb_client, get_current_user, get_wb_client_optional
 from ..models import User
 from ..services.wb_service import WBService
 
@@ -98,7 +98,7 @@ async def campaign_detail_page(
     request: Request,
     campaign_id: int,
     user: Optional[User] = Depends(get_current_user),
-    wb: Optional[WBService] = Depends(get_wb_client)
+    wb: Optional[WBService] = Depends(get_wb_client_optional)
 ):
     """Страница кампании"""
     from ..main import templates
