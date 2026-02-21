@@ -24,14 +24,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
 
                 // Сервер возвращает 303 редирект с cookie
-                if (response.status === 303 || response.ok) {
+                // Тело ответа пустое, поэтому не пытаемся читать JSON
+                if (response.status === 303) {
+                    showSuccess('Вход выполнен успешно! Перенаправление...');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
+                } else if (response.ok) {
+                    // Если вдруг вернул 200 OK
                     showSuccess('Вход выполнен успешно! Перенаправление...');
                     setTimeout(() => {
                         window.location.href = '/';
                     }, 1000);
                 } else {
-                    const data = await response.json().catch(() => ({}));
-                    showError(data.detail || 'Ошибка входа');
+                    // Ошибка - пытаемся прочитать JSON
+                    try {
+                        const data = await response.json();
+                        showError(data.detail || 'Ошибка входа');
+                    } catch {
+                        showError('Ошибка входа');
+                    }
                 }
             } catch (error) {
                 showError('Ошибка подключения к серверу');
