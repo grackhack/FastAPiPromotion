@@ -259,3 +259,20 @@ async def clusters_page(
         campaign={"id": campaign_id},
         nm_list=nm_list
     ))
+
+
+@router.get("/tasks")
+async def tasks_page(
+    request: Request,
+    user: Any = Depends(get_current_user_from_session)
+):
+    """Веб-интерфейс управления периодическими задачами"""
+    from ..main import templates
+
+    template = templates.get_template("tasks.html")
+    return template.render(
+        request=request,
+        user=user,
+        is_authenticated=user is not None,
+        current_page='tasks'
+    )

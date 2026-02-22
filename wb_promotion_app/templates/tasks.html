@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Периодические задачи - Wildberries Promotion</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .tasks-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .tasks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .task-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+        }
+        .task-card h3 {
+            margin: 0 0 15px 0;
+            color: #1e293b;
+            font-size: 16px;
+        }
+        .task-info {
+            margin-bottom: 15px;
+        }
+        .task-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+        }
+        .task-info-row:last-child {
+            border-bottom: none;
+        }
+        .task-info-label {
+            color: #64748b;
+        }
+        .task-info-value {
+            color: #1e293b;
+            font-weight: 500;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .status-inactive {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        .btn-xs {
+            padding: 4px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            font-size: 13px;
+            box-sizing: border-box;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        .form-hint {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .history-table th,
+        .history-table td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .history-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+        }
+        .history-table tr:hover {
+            background: #f8fafc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% include '_nav.html' %}
+
+        <div class="tasks-container">
+            <!-- Расписания задач -->
+            <div class="section-header">
+                <h2 class="section-title">📅 Расписания задач</h2>
+                <button class="btn btn-primary" onclick="showCreateTaskModal()">+ Добавить расписание</button>
+            </div>
+
+            <div id="scheduledTasks" class="tasks-grid">
+                <!-- Загружается через JS -->
+            </div>
+
+            <!-- Правила авто-управления -->
+            <div class="section-header" style="margin-top: 40px;">
+                <h2 class="section-title">🤖 Правила авто-управления</h2>
+                <button class="btn btn-primary" onclick="showCreateRuleModal()">+ Добавить правило</button>
+            </div>
+
+            <div id="autoRules" class="tasks-grid">
+                <!-- Загружается через JS -->
+            </div>
+
+            <!-- История статистики -->
+            <div class="section-header" style="margin-top: 40px;">
+                <h2 class="section-title">📊 История статистики</h2>
+                <div>
+                    <select id="historyCampaign" onchange="loadStatsHistory()" style="padding: 8px 12px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                        <option value="">Все кампании</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Дата сбора</th>
+                            <th>Кампания</th>
+                            <th>Просмотры</th>
+                            <th>Клики</th>
+                            <th>Заказы</th>
+                            <th>CTR</th>
+                            <th>Затраты</th>
+                        </tr>
+                    </thead>
+                    <tbody id="statsHistoryBody">
+                        <!-- Загружается через JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания расписания -->
+    <div id="createTaskModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Новое расписание</h3>
+                <button class="modal-close" onclick="closeModal('createTaskModal')">&times;</button>
+            </div>
+            <form id="createTaskForm" onsubmit="createScheduledTask(event)">
+                <div class="form-group">
+                    <label>Тип задачи</label>
+                    <select name="task_type" required>
+                        <option value="collect_stats">Сбор статистики</option>
+                        <option value="check_rules">Проверка правил</option>
+                        <option value="calculate_metrics">Расчет метрик</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Кампания (опционально)</label>
+                    <input type="number" name="campaign_id" placeholder="ID кампании">
+                </div>
+                <div class="form-group">
+                    <label>Cron расписание</label>
+                    <input type="text" name="cron_schedule" required placeholder="0 */6 * * *" value="0 */6 * * *">
+                    <div class="form-hint">Например: 0 */6 * * * (каждые 6 часов)</div>
+                </div>
+                <div class="btn-group" style="justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('createTaskModal')">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Создать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания правила -->
+    <div id="createRuleModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Новое правило</h3>
+                <button class="modal-close" onclick="closeModal('createRuleModal')">&times;</button>
+            </div>
+            <form id="createRuleForm" onsubmit="createAutoRule(event)">
+                <div class="form-group">
+                    <label>Название</label>
+                    <input type="text" name="name" required placeholder="Например: Остановить при расходе > 500₽">
+                </div>
+                <div class="form-group">
+                    <label>Кампания</label>
+                    <input type="number" name="campaign_id" required placeholder="ID кампании">
+                </div>
+                <div class="form-group">
+                    <label>Условие</label>
+                    <div style="display: flex; gap: 8px;">
+                        <select name="condition_type" required style="flex: 2;">
+                            <option value="spend_limit">Лимит расхода (₽)</option>
+                            <option value="ctr_low">Низкий CTR (%)</option>
+                            <option value="views_limit">Лимит просмотров</option>
+                            <option value="clicks_limit">Лимит кликов</option>
+                            <option value="cpc_high">Высокий CPC (₽)</option>
+                        </select>
+                        <select name="condition_operator" required style="flex: 1;">
+                            <option value=">">&gt;</option>
+                            <option value="<">&lt;</option>
+                            <option value=">=">&ge;</option>
+                            <option value="<=">&le;</option>
+                            <option value="=">=</option>
+                        </select>
+                        <input type="number" name="condition_value" required placeholder="Значение" style="flex: 1;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Действие</label>
+                    <select name="action_type" required>
+                        <option value="pause_campaign">Остановить кампанию</option>
+                        <option value="delete_phrase">Удалить минус-фразу</option>
+                        <option value="reduce_bid">Уменьшить ставку</option>
+                    </select>
+                </div>
+                <div class="btn-group" style="justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('createRuleModal')">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Создать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Загрузка данных при инициализации
+        document.addEventListener('DOMContentLoaded', function() {
+            loadScheduledTasks();
+            loadAutoRules();
+            loadStatsHistory();
+            loadCampaigns();
+        });
+
+        // ==================== Расписания ====================
+        async function loadScheduledTasks() {
+            try {
+                const response = await fetch('/api/tasks/scheduled');
+                const tasks = await response.json();
+                
+                const container = document.getElementById('scheduledTasks');
+                
+                if (tasks.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📋</div>
+                            <p>Нет активных расписаний</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = tasks.map(task => `
+                    <div class="task-card">
+                        <h3>${getTaskTypeName(task.task_type)}</h3>
+                        <div class="task-info">
+                            <div class="task-info-row">
+                                <span class="task-info-label">Расписание:</span>
+                                <span class="task-info-value">${task.cron_schedule}</span>
+                            </div>
+                            <div class="task-info-row">
+                                <span class="task-info-label">Кампания:</span>
+                                <span class="task-info-value">${task.campaign_id || 'Все'}</span>
+                            </div>
+                            <div class="task-info-row">
+                                <span class="task-info-label">Статус:</span>
+                                <span class="status-badge ${task.is_active ? 'status-active' : 'status-inactive'}">
+                                    ${task.is_active ? 'Активно' : 'Неактивно'}
+                                </span>
+                            </div>
+                            ${task.last_run_at ? `
+                            <div class="task-info-row">
+                                <span class="task-info-label">Последний запуск:</span>
+                                <span class="task-info-value">${formatDate(task.last_run_at)}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-xs btn-secondary" onclick="toggleTask(${task.id}, ${!task.is_active})">
+                                ${task.is_active ? '⏸️' : '▶️'}
+                            </button>
+                            <button class="btn btn-xs btn-danger" onclick="deleteTask(${task.id})">🗑️</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+            }
+        }
+
+        function getTaskTypeName(type) {
+            const names = {
+                'collect_stats': '📊 Сбор статистики',
+                'check_rules': '🤖 Проверка правил',
+                'calculate_metrics': '📈 Расчет метрик'
+            };
+            return names[type] || type;
+        }
+
+        async function createScheduledTask(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            const data = {
+                task_type: formData.get('task_type'),
+                campaign_id: formData.get('campaign_id') ? parseInt(formData.get('campaign_id')) : null,
+                cron_schedule: formData.get('cron_schedule'),
+                task_params: null
+            };
+            
+            try {
+                const response = await fetch('/api/tasks/scheduled', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    closeModal('createTaskModal');
+                    loadScheduledTasks();
+                    alert('Расписание создано');
+                } else {
+                    const error = await response.json();
+                    alert('Ошибка: ' + (error.detail || 'Не удалось создать расписание'));
+                }
+            } catch (error) {
+                console.error('Error creating task:', error);
+                alert('Ошибка создания расписания');
+            }
+        }
+
+        async function toggleTask(taskId, isActive) {
+            try {
+                const response = await fetch(`/api/tasks/scheduled/${taskId}?is_active=${isActive}`, {
+                    method: 'PATCH'
+                });
+                
+                if (response.ok) {
+                    loadScheduledTasks();
+                }
+            } catch (error) {
+                console.error('Error toggling task:', error);
+            }
+        }
+
+        async function deleteTask(taskId) {
+            if (!confirm('Удалить расписание?')) return;
+            
+            try {
+                const response = await fetch(`/api/tasks/scheduled/${taskId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    loadScheduledTasks();
+                }
+            } catch (error) {
+                console.error('Error deleting task:', error);
+            }
+        }
+
+        // ==================== Правила ====================
+        async function loadAutoRules() {
+            try {
+                const response = await fetch('/api/tasks/rules');
+                const rules = await response.json();
+                
+                const container = document.getElementById('autoRules');
+                
+                if (rules.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📋</div>
+                            <p>Нет активных правил</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = rules.map(rule => `
+                    <div class="task-card">
+                        <h3>${rule.name}</h3>
+                        <div class="task-info">
+                            <div class="task-info-row">
+                                <span class="task-info-label">Кампания:</span>
+                                <span class="task-info-value">#${rule.campaign_id}</span>
+                            </div>
+                            <div class="task-info-row">
+                                <span class="task-info-label">Условие:</span>
+                                <span class="task-info-value">${rule.condition_type} ${rule.condition_operator} ${rule.condition_value}</span>
+                            </div>
+                            <div class="task-info-row">
+                                <span class="task-info-label">Действие:</span>
+                                <span class="task-info-value">${getActionName(rule.action_type)}</span>
+                            </div>
+                            <div class="task-info-row">
+                                <span class="task-info-label">Статус:</span>
+                                <span class="status-badge ${rule.is_active ? 'status-active' : 'status-inactive'}">
+                                    ${rule.is_active ? 'Активно' : 'Неактивно'}
+                                </span>
+                            </div>
+                            ${rule.last_triggered_at ? `
+                            <div class="task-info-row">
+                                <span class="task-info-label">Последнее срабатывание:</span>
+                                <span class="task-info-value">${formatDate(rule.last_triggered_at)}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-xs btn-secondary" onclick="testRule(${rule.id})">🧪 Тест</button>
+                            <button class="btn btn-xs btn-secondary" onclick="toggleRule(${rule.id}, ${!rule.is_active})">
+                                ${rule.is_active ? '⏸️' : '▶️'}
+                            </button>
+                            <button class="btn btn-xs btn-danger" onclick="deleteRule(${rule.id})">🗑️</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading rules:', error);
+            }
+        }
+
+        function getActionName(type) {
+            const names = {
+                'pause_campaign': '⏸️ Остановить кампанию',
+                'delete_phrase': '🗑️ Удалить фразу',
+                'reduce_bid': '📉 Уменьшить ставку'
+            };
+            return names[type] || type;
+        }
+
+        async function createAutoRule(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            const data = {
+                name: formData.get('name'),
+                campaign_id: parseInt(formData.get('campaign_id')),
+                nm_id: null,
+                condition_type: formData.get('condition_type'),
+                condition_operator: formData.get('condition_operator'),
+                condition_value: parseFloat(formData.get('condition_value')),
+                action_type: formData.get('action_type'),
+                action_params: null
+            };
+            
+            try {
+                const response = await fetch('/api/tasks/rules', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    closeModal('createRuleModal');
+                    loadAutoRules();
+                    alert('Правило создано');
+                } else {
+                    const error = await response.json();
+                    alert('Ошибка: ' + (error.detail || 'Не удалось создать правило'));
+                }
+            } catch (error) {
+                console.error('Error creating rule:', error);
+                alert('Ошибка создания правила');
+            }
+        }
+
+        async function testRule(ruleId) {
+            try {
+                const response = await fetch(`/api/tasks/rules/${ruleId}/test`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                const message = result.triggered 
+                    ? `⚠️ Правило сработает!\nТекущее значение: ${result.current_value}`
+                    : `✅ Правило не сработает\nТекущее значение: ${result.current_value}`;
+                
+                alert(message);
+            } catch (error) {
+                console.error('Error testing rule:', error);
+            }
+        }
+
+        async function toggleRule(ruleId, isActive) {
+            try {
+                const response = await fetch(`/api/tasks/rules/${ruleId}?is_active=${isActive}`, {
+                    method: 'PATCH'
+                });
+                
+                if (response.ok) {
+                    loadAutoRules();
+                }
+            } catch (error) {
+                console.error('Error toggling rule:', error);
+            }
+        }
+
+        async function deleteRule(ruleId) {
+            if (!confirm('Удалить правило?')) return;
+            
+            try {
+                const response = await fetch(`/api/tasks/rules/${ruleId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    loadAutoRules();
+                }
+            } catch (error) {
+                console.error('Error deleting rule:', error);
+            }
+        }
+
+        // ==================== История статистики ====================
+        async function loadStatsHistory() {
+            const campaignId = document.getElementById('historyCampaign').value;
+            const url = campaignId 
+                ? `/api/tasks/stats-history?campaign_id=${campaignId}&days=7`
+                : '/api/tasks/stats-history?days=7';
+            
+            try {
+                const response = await fetch(url);
+                const history = await response.json();
+                
+                const tbody = document.getElementById('statsHistoryBody');
+                
+                if (history.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px;">Нет данных</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = history.map(record => `
+                    <tr>
+                        <td>${formatDate(record.collected_at)}</td>
+                        <td>#${record.campaign_id}${record.nm_id ? ` (NM ${record.nm_id})` : ''}</td>
+                        <td>${record.views.toLocaleString()}</td>
+                        <td>${record.clicks.toLocaleString()}</td>
+                        <td>${record.orders.toLocaleString()}</td>
+                        <td>${record.ctr.toFixed(2)}%</td>
+                        <td>${record.spend.toFixed(2)} ₽</td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        async function loadCampaigns() {
+            try {
+                const response = await fetch('/api/campaigns/list');
+                const campaigns = await response.json();
+                
+                const select = document.getElementById('historyCampaign');
+                campaigns.forEach(campaign => {
+                    const option = document.createElement('option');
+                    option.value = campaign.id;
+                    option.textContent = `#${campaign.id} ${campaign.name || ''}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading campaigns:', error);
+            }
+        }
+
+        // ==================== Утилиты ====================
+        function showCreateTaskModal() {
+            document.getElementById('createTaskModal').style.display = 'flex';
+        }
+
+        function showCreateRuleModal() {
+            document.getElementById('createRuleModal').style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Закрытие модальных окон по клику вне
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
