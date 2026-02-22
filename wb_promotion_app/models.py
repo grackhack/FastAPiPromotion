@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Optional, Dict, Any
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Text, Float, JSON, UniqueConstraint
 from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy.sql import func
 
@@ -40,6 +40,113 @@ class UserApiToken(Base):
 
     # Связь с пользователем
     user = relationship("User", back_populates="api_tokens")
+
+
+class CampaignStatsHistory(Base):
+    """
+    История статистики рекламной кампании
+    Сохраняется периодически для отслеживания динамики
+    """
+    __tablename__ = "campaign_stats_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    campaign_id = Column(Integer, nullable=False, index=True)
+    nm_id = Column(Integer, nullable=True, index=True)  # Опционально по товару
+    
+    # Метрики
+    views = Column(Integer, default=0)
+    clicks = Column(Integer, default=0)
+    orders = Column(Integer, default=0)
+    atbs = Column(Integer, default=0)  # В корзину
+    shks = Column(Integer, default=0)  # Штуки
+    canceled = Column(Integer, default=0)  # Отмены
+    spend = Column(Float, default=0)  # Затраты
+    sum_price = Column(Float, default=0)  # Сумма заказов
+    
+    # Расчетные метрики
+    ctr = Column(Float, default=0)  # CTR %
+    cr = Column(Float, default=0)  # CR %
+    cpc = Column(Float, default=0)  # CPC ₽
+    cpm = Column(Float, default=0)  # CPM ₽
+    
+    # Период сбора
+    period_from = Column(DateTime(timezone=True), nullable=False)
+    period_to = Column(DateTime(timezone=True), nullable=False)
+    
+    # Метаданные
+    collected_at = Column(DateTime(timezone=True), server_default=func.now())
+    is_auto = Column(Boolean, default=True)  # Автоматический сбор или ручной
+    
+    __table_args__ = (
+        UniqueConstraint('campaign_id', 'nm_id', 'period_from', 'period_to', name='uq_campaign_period'),
+    )
+
+
+class AutoRule(Base):
+    """
+    Правило автоматического управления кампанией
+    """
+    __tablename__ = "auto_rules"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    campaign_id = Column(Integer, nullable=False, index=True)
+    nm_id = Column(Integer, nullable=True)  # Опционально по товару
+    
+    # Название правила
+    name = Column(String(255), nullable=False)
+    
+    # Условие срабатывания
+    condition_type = Column(String(50), nullable=False)  # spend_limit, ctr_low, views_limit, budget_low
+    condition_operator = Column(String(10), default=">")  # >, <, >=, <=, =
+    condition_value = Column(Float, nullable=False)
+    
+    # Действие при срабатывании
+    action_type = Column(String(50), nullable=False)  # pause_campaign, delete_phrase, reduce_bid
+    action_params = Column(JSON, nullable=True)  # Дополнительные параметры действия
+    
+    # Статус
+    is_active = Column(Boolean, default=True)
+    last_checked_at = Column(DateTime(timezone=True), nullable=True)
+    last_triggered_at = Column(DateTime(timezone=True), nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Связь с пользователем
+    user = relationship("User")
+
+
+class ScheduledTask(Base):
+    """
+    Расписание периодических задач
+    """
+    __tablename__ = "scheduled_tasks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    
+    # Тип задачи
+    task_type = Column(String(50), nullable=False)  # collect_stats, check_rules, calculate_metrics
+    
+    # Параметры задачи
+    campaign_id = Column(Integer, nullable=True, index=True)  # Опционально конкретная кампания
+    nm_id = Column(Integer, nullable=True)  # Опционально конкретный товар
+    task_params = Column(JSON, nullable=True)  # Дополнительные параметры
+    
+    # Расписание (cron)
+    cron_schedule = Column(String(100), nullable=False)  # Например: "0 */6 * * *" (каждые 6 часов)
+    
+    # Статус
+    is_active = Column(Boolean, default=True)
+    last_run_at = Column(DateTime(timezone=True), nullable=True)
+    next_run_at = Column(DateTime(timezone=True), nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Связь с пользователем
+    user = relationship("User")
 
 
 @dataclass

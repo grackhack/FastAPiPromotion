@@ -88,6 +88,10 @@ app.include_router(web_campaigns_router)
 from .web.stats import router as web_stats_router
 app.include_router(web_stats_router)
 
+# Подключение API endpoints для периодических задач
+from .api.tasks import router as tasks_router
+app.include_router(tasks_router)
+
 
 # Старые API endpoints (для обратной совместимости, будут удалены)
 def get_wb_client(token: str) -> WBPromotionClient:
