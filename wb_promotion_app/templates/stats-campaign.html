@@ -187,9 +187,10 @@
             </div>
 
             <div class="nav-tabs">
-                <a href="/stats/campaign/{{ campaign.id }}?from_date={{ from_date }}&to_date={{ to_date }}" 
-                   class="nav-tab active">Общая статистика</a>
+                <a href="/stats/campaign/{{ campaign.id }}?from_date={{ from_date }}&to_date={{ to_date }}"
+                   class="nav-tab active">📊 Статистика по фразам</a>
                 <a href="/campaigns/{{ campaign.id }}/minus-phrases" class="nav-tab">Минус-фразы</a>
+                <a href="/campaigns/{{ campaign.id }}/clusters" class="nav-tab">📋 Списки кластеров</a>
             </div>
 
             <!-- Сводные показатели -->
