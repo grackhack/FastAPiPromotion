@@ -448,7 +448,9 @@ async def get_phrase_daily_stats(
             raise HTTPException(status_code=400, detail="No API token found")
         
         # Получаем статистику
-        wb_service = WBService(user_token.token)
+        from ..api_client import WBPromotionClient
+        wb_client = WBPromotionClient(user_token.token)
+        wb_service = WBService(wb_client)
         stats = wb_service.get_normquery_daily_stats(
             advert_id=campaign_id,
             nm_id=nm_id,
