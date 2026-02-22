@@ -593,7 +593,7 @@ class WBPromotionClient:
             self.logger.error(f"Error in {error_context}: {str(e)}")
             raise
 
-    def get_full_stats(self, ids: List[int], from_date: str, to_date: str) -> Dict[str, Any]:
+    def get_full_stats(self, ids: List[int], from_date: str, to_date: str, nm_id: int = None) -> Dict[str, Any]:
         """
         Получить полную статистику по кампаниям
 
@@ -601,6 +601,7 @@ class WBPromotionClient:
             ids: Список ID кампаний
             from_date: Дата начала периода (YYYY-MM-DD)
             to_date: Дата окончания периода (YYYY-MM-DD)
+            nm_id: ID товара (опционально, для фильтрации по конкретному товару)
         """
         try:
             url = f"{self.base_url}/adv/v3/fullstats"
@@ -609,6 +610,11 @@ class WBPromotionClient:
                 "beginDate": from_date,
                 "endDate": to_date
             }
+            
+            # Добавляем фильтрацию по товару если указан nm_id
+            if nm_id:
+                params["nmId"] = nm_id
+            
             response = requests.get(url, headers=self.headers, params=params)
 
             if response.status_code != 200:
@@ -617,11 +623,11 @@ class WBPromotionClient:
                     error_msg = error_data.get('detail', str(error_data))
                 except:
                     error_msg = response.text or f"HTTP {response.status_code}"
-                
+
                 # Проверка на лимитирование запросов
                 if "Limited by global limiter" in error_msg or "per seller" in error_msg:
                     raise RateLimitError(f"Превышен лимит запросов к API: {error_msg}")
-                
+
                 raise Exception(f"Ошибка API: {error_msg}")
 
             return response.json()

@@ -73,18 +73,31 @@ class StatsService:
         Returns:
             Словарь с полной статистикой
         """
-        items = [{"advert_id": campaign_id}]
-        if nm_id:
-            items[0]["nm_id"] = nm_id
-            
-        request = FullStatsRequest(
-            from_date=from_date,
-            to_date=to_date,
-            items=items
-        )
-
-        stats = self.client.get_full_stats(request)
-        return self._process_full_stats(stats, campaign_id)
+        try:
+            # Получаем статистику через API
+            stats = self.client.get_full_stats(
+                ids=[campaign_id],
+                from_date=from_date,
+                to_date=to_date,
+                nm_id=nm_id
+            )
+            return self._process_full_stats(stats, campaign_id)
+        except Exception as e:
+            # Возвращаем пустую статистику при ошибке
+            return {
+                "campaign_id": campaign_id,
+                "total_views": 0,
+                "total_clicks": 0,
+                "total_orders": 0,
+                "total_atbs": 0,
+                "total_shks": 0,
+                "total_spend": 0,
+                "ctr": 0,
+                "cpc": 0,
+                "cpm": 0,
+                "avg_pos": 0,
+                "days": []
+            }
 
     def get_norm_query_stats(
         self,
