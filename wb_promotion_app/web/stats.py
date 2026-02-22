@@ -53,23 +53,24 @@ async def campaign_stats_page(
     stats_service = StatsService(wb_client)
 
     try:
-        # Получаем кампанию и первый nm_id для статистики
-        campaigns = wb_client.get_campaigns()
-        campaign = next((c for c in campaigns if c.get('id') == campaign_id), None)
+        # Получаем nm_id из кампании через get_adverts
+        adverts = wb_client.get_adverts(ids=str(campaign_id))
         
-        if not campaign:
-            raise HTTPException(status_code=404, detail="Кампания не найдена")
-        
-        # Получаем nm_id из кампании (берём первый товар)
         nm_id = 0
-        if campaign.get('nm_settings'):
-            nm_id = campaign['nm_settings'][0].get('nm_id', 0)
+        if adverts and hasattr(adverts, 'adverts') and adverts.adverts:
+            advert = adverts.adverts[0]
+            if advert.nm_settings:
+                nm_id = advert.nm_settings[0].nm_id
         
         # Получаем статистику
         stats = stats_service.get_campaign_stats(campaign_id, from_date, to_date, nm_id=nm_id)
         norm_stats = stats_service.get_norm_query_stats(
             campaign_id, nm_id=nm_id, from_date=from_date, to_date=to_date
         )
+        
+        # Получаем информацию о кампании для отображения
+        campaigns = wb_client.get_campaigns()
+        campaign = next((c for c in campaigns if c.get('id') == campaign_id), None)
 
     except Exception as e:
         return HTMLResponse(f"Ошибка: {str(e)}", status_code=500)
