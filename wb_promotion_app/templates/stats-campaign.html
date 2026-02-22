@@ -232,9 +232,13 @@
             <div class="stats-section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h2 style="margin: 0;">🔍 Поисковые запросы</h2>
-                    <div style="font-size: 14px; color: #666;">
-                        <span style="color: #d32f2f;">●</span> В минус-фразах
-                        <span style="margin-left: 15px; color: #388e3c;">●</span> Активные
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button id="addSelectedBtn" class="btn btn-primary" style="display: none;" onclick="addSelectedToMinus()">
+                            ➕ Добавить выбранные (<span id="selectedCount">0</span>)
+                        </button>
+                        <button id="selectAllBtn" class="btn btn-secondary" onclick="toggleSelectAll()">
+                            ☑️ Выбрать все
+                        </button>
                     </div>
                 </div>
                 <div style="margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 8px; font-size: 13px;">
@@ -246,6 +250,9 @@
                 <table class="stats-table">
                     <thead>
                         <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" style="cursor: pointer;">
+                            </th>
                             <th>Запрос</th>
                             <th class="number">Просмотры</th>
                             <th class="number">Клики</th>
@@ -315,9 +322,14 @@
                             {% set eff_text = '#c62828' %}
                         {% endif %}
                         
-                        <tr class="{{ 'minus-phrase-row' if is_minus else '' }}" 
+                        <tr class="{{ 'minus-phrase-row' if is_minus else '' }}"
                             data-query="{{ item.query }}"
                             style="{{ 'background-color: ' + eff_color + ' !important;' if not is_minus else '' }}">
+                            <td>
+                                {% if not is_minus %}
+                                <input type="checkbox" class="query-checkbox" data-query="{{ item.query }}" style="cursor: pointer;">
+                                {% endif %}
+                            </td>
                             <td>
                                 {{ item.query }}
                                 {% if is_minus %}
@@ -360,7 +372,7 @@
         const campaignId = {{ campaign_id }};
         const nmId = {{ nm_id }};
         let apiToken = null;
-        
+
         // Загружаем API токен при загрузке страницы
         async function loadApiToken() {
             try {
@@ -375,6 +387,107 @@
                 console.error('Error loading token:', error);
             }
         }
+
+        // === Функции для массового выбора фраз ===
+        
+        // Обновление счётчика выбранных фраз
+        function updateSelectedCount() {
+            const checkboxes = document.querySelectorAll('.query-checkbox:checked');
+            const count = checkboxes.length;
+            document.getElementById('selectedCount').textContent = count;
+            
+            const btn = document.getElementById('addSelectedBtn');
+            if (count > 0) {
+                btn.style.display = 'inline-flex';
+            } else {
+                btn.style.display = 'none';
+            }
+        }
+
+        // Выбрать все доступные фразы
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            const checkboxes = document.querySelectorAll('.query-checkbox');
+            
+            checkboxes.forEach(cb => {
+                cb.checked = selectAllCheckbox.checked;
+            });
+            
+            updateSelectedCount();
+        }
+
+        // Добавить выбранные фразы в минус-фразы
+        async function addSelectedToMinus() {
+            const checkboxes = document.querySelectorAll('.query-checkbox:checked');
+            const selectedQueries = Array.from(checkboxes).map(cb => cb.dataset.query);
+            
+            if (selectedQueries.length === 0) {
+                showNotification('Выберите хотя бы одну фразу', 'info');
+                return;
+            }
+            
+            showConfirm(
+                `Добавить ${selectedQueries.length} фразу(ы) в минус-фразы?`,
+                async () => {
+                    if (!apiToken) {
+                        showNotification('Ошибка: не найден API токен', 'error');
+                        return;
+                    }
+
+                    try {
+                        // Получаем все текущие минус-фразы
+                        let currentPhrases = getCurrentMinusPhrasesFromDOM();
+
+                        // Добавляем новые фразы
+                        selectedQueries.forEach(query => {
+                            if (!currentPhrases.includes(query)) {
+                                currentPhrases.push(query);
+                            }
+                        });
+
+                        // Отправляем обновлённый список
+                        const response = await fetch('/search-clusters/set-minus-phrases', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-API-Token': apiToken
+                            },
+                            body: JSON.stringify({
+                                advert_id: campaignId,
+                                nm_id: nmId,
+                                norm_queries: currentPhrases
+                            })
+                        });
+
+                        if (response.ok) {
+                            showNotification(
+                                `Добавлено ${selectedQueries.length} фраз(ы) в минус-фразы`,
+                                'success'
+                            );
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            const error = await response.json();
+                            console.error('API error:', error);
+                            showNotification(error.detail || 'Не удалось добавить фразы', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        showNotification('Ошибка подключения к серверу', 'error');
+                    }
+                }
+            );
+        }
+
+        // Навешиваем обработчики на чекбоксы
+        document.addEventListener('DOMContentLoaded', function() {
+            loadApiToken();
+            
+            // Обработчики на индивидуальные чекбоксы
+            document.querySelectorAll('.query-checkbox').forEach(cb => {
+                cb.addEventListener('change', updateSelectedCount);
+            });
+        });
+
         
         // Расчёт эффективности запроса
         function calculateEfficiency(item) {
