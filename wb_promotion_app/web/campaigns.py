@@ -41,7 +41,7 @@ async def campaigns_page(
             campaigns = wb.get_campaigns()
         except Exception as e:
             error = f"Кампании: {str(e)}"
-        
+
         try:
             media_campaigns = wb.get_media_campaigns()
         except Exception as e:
@@ -56,6 +56,7 @@ async def campaigns_page(
         request=request,
         user=user,
         is_authenticated=user is not None,
+        current_page='index',
         campaigns_json=json.dumps(campaigns, cls=DateTimeEncoder) if campaigns else '[]',
         media_campaigns_json=json.dumps(media_campaigns, cls=DateTimeEncoder) if media_campaigns else '[]',
         error=error
@@ -87,6 +88,7 @@ async def all_campaigns_page(
         request=request,
         user=user,
         is_authenticated=user is not None,
+        current_page='campaigns',
         campaigns=campaigns,
         media_campaigns=media_campaigns,
         error=error
@@ -132,6 +134,8 @@ async def campaign_detail_page(
     return template.render(
         request=request,
         user=user,
+        is_authenticated=user is not None,
+        current_page='campaign_detail',
         campaign_json=json.dumps(campaign, cls=DateTimeEncoder) if campaign else '{}',
         campaign_id=campaign_id,
         campaign_data=campaign if campaign else {},

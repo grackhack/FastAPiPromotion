@@ -42,6 +42,7 @@ async def campaign_stats_page(
     """Страница статистики рекламной кампании"""
     from ..main import templates
     from ..services.wb_service import WBService
+    from ..auth import get_current_user_from_session
 
     from_date = request.query_params.get("from_date")
     to_date = request.query_params.get("to_date")
@@ -81,12 +82,18 @@ async def campaign_stats_page(
         campaigns = wb_client.get_campaigns()
         campaign = next((c for c in campaigns if c.get('id') == campaign_id), None)
 
+        # Получаем текущего пользователя
+        user = await get_current_user_from_session(request)
+
     except Exception as e:
         return HTMLResponse(f"Ошибка: {str(e)}", status_code=500)
 
     template = templates.get_template("stats-campaign.html")
     return HTMLResponse(template.render(
         request=request,
+        user=user,
+        is_authenticated=user is not None,
+        current_page='stats',
         campaign=campaign,
         stats=stats,
         queries=norm_stats.get("queries", [])[:20],
@@ -107,28 +114,32 @@ async def minus_phrases_page(
     """Страница управления минус-фразами кампании"""
     from ..main import templates
     from ..services.wb_service import WBService
+    from ..auth import get_current_user_from_session
 
     try:
         # Получаем данные о кампании напрямую из API
         adverts = wb_client.get_adverts(ids=str(campaign_id))
-        
+
         # Создаём WBService для работы с методами
         wb_service = WBService(wb_client)
-        
+
         nm_list = []
         if adverts and hasattr(adverts, 'adverts') and adverts.adverts:
             advert = adverts.adverts[0]
             # Получаем все nm_id из кампании
             for nm_setting in advert.nm_settings:
                 nm_id = nm_setting.nm_id
-                
+
                 # Получаем минус-фразы через WBService
                 phrases = wb_service.get_minus_phrases(campaign_id, nm_id)
-                
+
                 nm_list.append({
                     "nm_id": nm_id,
                     "minus_phrases": phrases
                 })
+
+        # Получаем текущего пользователя
+        user = await get_current_user_from_session(request)
 
     except Exception as e:
         return HTMLResponse(f"Ошибка: {str(e)}", status_code=500)
@@ -136,6 +147,9 @@ async def minus_phrases_page(
     template = templates.get_template("minus-phrases.html")
     return HTMLResponse(template.render(
         request=request,
+        user=user,
+        is_authenticated=user is not None,
+        current_page='minus_phrases',
         campaign={"id": campaign_id},
         nm_list=nm_list
     ))

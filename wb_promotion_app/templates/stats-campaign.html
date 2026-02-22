@@ -155,16 +155,7 @@
 </head>
 <body>
     <div class="container">
-        <nav class="navbar">
-            <div class="nav-brand">
-                <a href="/">🎯 WB Promotion</a>
-            </div>
-            <div class="nav-links">
-                <a href="/" class="nav-link">Кампании</a>
-                <a href="/profile" class="nav-link">Профиль</a>
-                <a href="/logout" class="nav-link">Выйти</a>
-            </div>
-        </nav>
+        {% include '_nav.html' %}
 
         <div class="stats-container">
             <a href="/campaigns/{{ campaign.id }}" class="back-link">

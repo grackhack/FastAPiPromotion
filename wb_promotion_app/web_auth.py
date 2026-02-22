@@ -25,7 +25,11 @@ class LoginRequest(BaseModel):
 async def login_page(request: Request):
     """Страница входа"""
     from . import main
-    return main.templates.get_template("login.html").render(request=request)
+    return main.templates.get_template("login.html").render(
+        request=request,
+        current_page='login',
+        is_authenticated=False
+    )
 
 
 @router.post("/auth/login")
@@ -163,15 +167,26 @@ async def get_current_token(request: Request, db: Session = Depends(get_db)):
 async def profile_page(request: Request):
     """Страница профиля пользователя"""
     from . import main
-    
+
     # Проверяем аутентификацию
     session_id = request.cookies.get("session_id")
     if not session_id:
         return RedirectResponse(url="/login", status_code=303)
-    
+
     from .auth import get_session
     session = get_session(session_id)
     if not session:
         return RedirectResponse(url="/login", status_code=303)
-    
-    return main.templates.get_template("profile.html").render(request=request)
+
+    # Получаем пользователя
+    from sqlalchemy import select
+    from .models import User
+    stmt = select(User).where(User.id == session["user_id"], User.is_active == True)
+    user = main.get_db().execute(stmt).scalar_one_or_none()
+
+    return main.templates.get_template("profile.html").render(
+        request=request,
+        user=user,
+        is_authenticated=True,
+        current_page='profile'
+    )

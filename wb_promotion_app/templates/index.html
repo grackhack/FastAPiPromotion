@@ -8,23 +8,7 @@
 </head>
 <body>
     <div class="container">
-        <header class="header">
-            <h1>📊 Wildberries Promotion Manager</h1>
-            <nav class="nav">
-                <a href="/" class="nav-link active">Кампании</a>
-                {% if is_authenticated %}
-                <a href="/profile" class="nav-link">👤 Профиль</a>
-                <a href="/logout" class="nav-link">🚪 Выйти</a>
-                {% else %}
-                <a href="/login" class="nav-link">🔐 Вход</a>
-                {% endif %}
-            </nav>
-            {% if is_authenticated and user %}
-            <div class="user-greeting">
-                👋 {{ user.username }}
-            </div>
-            {% endif %}
-        </header>
+        {% include '_nav.html' %}
 
         <main class="main">
             <section class="section">
