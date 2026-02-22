@@ -427,6 +427,35 @@
                 }
                 
                 try {
+                    // Сначала получаем текущие минус-фразы
+                    const getResponse = await fetch('/search-clusters/minus-phrases', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-API-Token': apiToken
+                        },
+                        body: JSON.stringify({
+                            items: [{
+                                advert_id: campaignId,
+                                nm_id: nmId
+                            }]
+                        })
+                    });
+                    
+                    let currentPhrases = [];
+                    if (getResponse.ok) {
+                        const data = await getResponse.json();
+                        if (data.items && data.items.length > 0) {
+                            currentPhrases = data.items[0].norm_queries || data.items[0].excluded || [];
+                        }
+                    }
+                    
+                    // Добавляем новую фразу если её ещё нет
+                    if (!currentPhrases.includes(query)) {
+                        currentPhrases.push(query);
+                    }
+                    
+                    // Отправляем обновлённый список
                     const response = await fetch('/search-clusters/set-minus-phrases', {
                         method: 'POST',
                         headers: {
@@ -436,7 +465,7 @@
                         body: JSON.stringify({
                             advert_id: campaignId,
                             nm_id: nmId,
-                            norm_queries: [query]
+                            norm_queries: currentPhrases
                         })
                     });
                     
