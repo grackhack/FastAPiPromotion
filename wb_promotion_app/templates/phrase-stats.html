@@ -119,15 +119,11 @@
                 <div class="filters-grid">
                     <div class="filter-group">
                         <label>Кампания</label>
-                        <select id="campaignSelect" onchange="loadCampaignCampaigns()">
-                            <option value="">Выберите кампанию</option>
-                        </select>
+                        <input type="text" id="campaignDisplay" readonly style="background: #f8fafc;">
                     </div>
                     <div class="filter-group">
                         <label>Товар (NM ID)</label>
-                        <select id="nmSelect" disabled>
-                            <option value="">Сначала выберите кампанию</option>
-                        </select>
+                        <input type="text" id="nmDisplay" readonly style="background: #f8fafc;">
                     </div>
                     <div class="filter-group">
                         <label>С даты</label>
@@ -140,7 +136,7 @@
                 </div>
 
                 <div class="filter-actions">
-                    <button class="btn btn-secondary" onclick="resetFilters()">🔄 Сбросить</button>
+                    <button class="btn btn-secondary" onclick="resetDates()">📅 Последние 7 дней</button>
                     <button class="btn btn-primary" onclick="loadStats()">📊 Загрузить статистику</button>
                 </div>
             </div>
@@ -206,119 +202,63 @@
 
     <script>
         let currentCampaignId = null;
-        let campaignNms = {};
+        let currentNmId = null;
+        let campaignName = '';
+        let nmName = '';
 
         // Загрузка при инициализации
         document.addEventListener('DOMContentLoaded', function() {
             // Проверяем параметры из URL
             const urlParams = new URLSearchParams(window.location.search);
-            const campaignFromUrl = urlParams.get('campaign');
-            const nmFromUrl = urlParams.get('nm');
+            currentCampaignId = urlParams.get('campaign');
+            currentNmId = urlParams.get('nm');
             
-            if (campaignFromUrl) {
-                document.getElementById('campaignSelect').value = campaignFromUrl;
-                loadCampaignCampaigns().then(() => {
-                    if (nmFromUrl) {
-                        document.getElementById('nmSelect').value = nmFromUrl;
-                    }
-                    loadStats();
-                });
-            } else {
-                loadCampaigns();
+            if (!currentCampaignId || !currentNmId) {
+                document.getElementById('emptyState').innerHTML = '<p>❌ Не указаны параметры кампании и товара<br>Перейдите со страницы кампании</p>';
+                return;
             }
+            
+            // Загружаем данные кампании
+            loadCampaignData();
         });
 
-        // Загрузка списка кампаний
-        async function loadCampaigns() {
+        // Загрузка данных кампании
+        async function loadCampaignData() {
             try {
-                const response = await fetch('/api/campaigns');
-                if (!response.ok) return;
-
-                const data = await response.json();
-                const campaigns = data.campaigns || data.adverts || [];
-
-                const select = document.getElementById('campaignSelect');
-                
-                for (const campaign of campaigns) {
-                    const id = campaign.id || campaign.advertId;
-                    const name = campaign.name || '';
-                    const option = document.createElement('option');
-                    option.value = id;
-                    option.textContent = `#${id} ${name}`;
-                    select.appendChild(option);
-                    
-                    // Сохраняем товары кампании
-                    if (campaign.nm_settings) {
-                        campaignNms[id] = campaign.nm_settings;
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading campaigns:', error);
-            }
-        }
-
-        // Загрузка товаров выбранной кампании
-        async function loadCampaignCampaigns() {
-            const campaignId = document.getElementById('campaignSelect').value;
-            const nmSelect = document.getElementById('nmSelect');
-            
-            if (!campaignId) {
-                nmSelect.disabled = true;
-                nmSelect.innerHTML = '<option value="">Сначала выберите кампанию</option>';
-                return;
-            }
-
-            // Проверяем, есть ли уже загруженные товары
-            if (campaignNms[campaignId]) {
-                loadNmsFromCache(campaignId);
-                return;
-            }
-
-            // Загружаем детали кампании
-            try {
-                const response = await fetch(`/api/campaigns?ids=${campaignId}`);
-                if (!response.ok) return;
+                const response = await fetch(`/api/campaigns?ids=${currentCampaignId}`);
+                if (!response.ok) throw new Error('Failed to load campaign');
 
                 const data = await response.json();
                 const campaigns = data.campaigns || data.adverts || [];
                 
                 if (campaigns.length > 0) {
                     const campaign = campaigns[0];
-                    campaignNms[campaignId] = campaign.nm_settings || [];
-                    loadNmsFromCache(campaignId);
+                    campaignName = campaign.name || `Кампания #${currentCampaignId}`;
+                    
+                    // Находим товар
+                    const nmSettings = campaign.nm_settings || [];
+                    const nm = nmSettings.find(n => n.nm_id == currentNmId);
+                    nmName = nm ? (nm.name || `Товар #${currentNmId}`) : `Товар #${currentNmId}`;
+                    
+                    // Отображаем
+                    document.getElementById('campaignDisplay').value = `#${currentCampaignId} ${campaignName}`;
+                    document.getElementById('nmDisplay').value = `#${currentNmId} ${nmName}`;
+                    
+                    // Автоматически загружаем статистику
+                    loadStats();
                 }
             } catch (error) {
-                console.error('Error loading campaign details:', error);
+                console.error('Error loading campaign:', error);
+                document.getElementById('campaignDisplay').value = `#${currentCampaignId}`;
+                document.getElementById('nmDisplay').value = `#${currentNmId}`;
+                loadStats();
             }
-        }
-
-        // Загрузка товаров из кэша
-        function loadNmsFromCache(campaignId) {
-            const nmSelect = document.getElementById('nmSelect');
-            const nmSettings = campaignNms[campaignId];
-            
-            nmSelect.disabled = false;
-            nmSelect.innerHTML = '<option value="">Выберите товар</option>';
-            
-            nmSettings.forEach(nm => {
-                const option = document.createElement('option');
-                option.value = nm.nm_id;
-                option.textContent = `${nm.name || 'Товар ' + nm.nm_id} (#${nm.nm_id})`;
-                nmSelect.appendChild(option);
-            });
         }
 
         // Загрузка статистики
         async function loadStats() {
-            const campaignId = document.getElementById('campaignSelect').value;
-            const nmId = document.getElementById('nmSelect').value;
             const fromDate = document.getElementById('fromDate').value;
             const toDate = document.getElementById('toDate').value;
-
-            if (!campaignId || !nmId) {
-                alert('Выберите кампанию и товар');
-                return;
-            }
 
             const loading = document.getElementById('loadingState');
             const empty = document.getElementById('emptyState');
@@ -331,7 +271,7 @@
             summary.style.display = 'none';
 
             try {
-                const url = `/api/tasks/phrase-daily-stats?campaign_id=${campaignId}&nm_id=${nmId}&from_date=${fromDate}&to_date=${toDate}`;
+                const url = `/api/tasks/phrase-daily-stats?campaign_id=${currentCampaignId}&nm_id=${currentNmId}&from_date=${fromDate}&to_date=${toDate}`;
                 const response = await fetch(url);
                 
                 if (!response.ok) {
@@ -423,18 +363,15 @@
             }
         }
 
-        // Сброс фильтров
-        function resetFilters() {
-            document.getElementById('campaignSelect').value = '';
-            document.getElementById('nmSelect').value = '';
-            document.getElementById('nmSelect').disabled = true;
-            document.getElementById('fromDate').value = '2026-02-15';
-            document.getElementById('toDate').value = '2026-02-22';
+        // Сброс дат на последние 7 дней
+        function resetDates() {
+            const today = new Date();
+            const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
             
-            document.getElementById('emptyState').innerHTML = '<p>Выберите кампанию, товар и период, затем нажмите "Загрузить статистику"</p>';
-            document.getElementById('emptyState').style.display = 'block';
-            document.getElementById('statsTable').style.display = 'none';
-            document.getElementById('summaryCards').style.display = 'none';
+            document.getElementById('fromDate').value = lastWeek.toISOString().split('T')[0];
+            document.getElementById('toDate').value = today.toISOString().split('T')[0];
+            
+            loadStats();
         }
     </script>
 </body>
