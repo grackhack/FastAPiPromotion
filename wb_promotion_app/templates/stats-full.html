@@ -209,24 +209,55 @@
                     <div class="value small">{{ "{:,.2f} ₽".format(stats.total_sum_price) if stats.total_sum_price else '0 ₽' }}</div>
                 </div>
                 <div class="stat-card">
-                    <h3>CTR</h3>
+                    <h3 title="Click-Through Rate — отношение кликов к показам">CTR</h3>
                     <div class="value small">{{ "{:.2f}%".format(stats.ctr) if stats.ctr else '0%' }}</div>
                 </div>
                 <div class="stat-card">
-                    <h3>CR</h3>
+                    <h3 title="Conversion Rate — отношение заказов к кликам">CR</h3>
                     <div class="value small">{{ "{:.2f}%".format(stats.cr) if stats.cr else '0%' }}</div>
                 </div>
                 <div class="stat-card">
-                    <h3>CPC</h3>
+                    <h3 title="Cost Per Click — средняя стоимость клика">CPC</h3>
                     <div class="value small">{{ "{:.2f} ₽".format(stats.cpc) if stats.cpc else '0 ₽' }}</div>
                 </div>
                 <div class="stat-card">
-                    <h3>CPM</h3>
+                    <h3 title="Cost Per Mille — стоимость за 1000 показов">CPM</h3>
                     <div class="value small">{{ "{:.2f} ₽".format(stats.cpm) if stats.cpm else '0 ₽' }}</div>
                 </div>
                 <div class="stat-card">
-                    <h3>Ср. позиция</h3>
+                    <h3 title="Средняя позиция товара в выдаче">Ср. позиция</h3>
                     <div class="value small">{{ "{:.2f}".format(stats.avg_pos) if stats.avg_pos else '0' }}</div>
+                </div>
+            </div>
+
+            <!-- Легенда метрик -->
+            <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 20px; font-size: 13px;">
+                <strong>📊 Справочник метрик:</strong>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 10px;">
+                    <div>
+                        <strong>CTR (Click-Through Rate)</strong>
+                        <div style="color: #666; margin-top: 3px;">Кликабельность — отношение кликов к показам (%)</div>
+                        <div style="color: #2e7d32; font-size: 12px; margin-top: 3px;">🟢 Хорошо: ≥5%</div>
+                    </div>
+                    <div>
+                        <strong>CR (Conversion Rate)</strong>
+                        <div style="color: #666; margin-top: 3px;">Конверсия — отношение заказов к кликам (%)</div>
+                        <div style="color: #2e7d32; font-size: 12px; margin-top: 3px;">🟢 Хорошо: ≥3%</div>
+                    </div>
+                    <div>
+                        <strong>CPC (Cost Per Click)</strong>
+                        <div style="color: #666; margin-top: 3px;">Стоимость одного клика (₽)</div>
+                        <div style="color: #2e7d32; font-size: 12px; margin-top: 3px;">🟢 Хорошо: ≤20₽</div>
+                    </div>
+                    <div>
+                        <strong>CPM (Cost Per Mille)</strong>
+                        <div style="color: #666; margin-top: 3px;">Стоимость за 1000 показов (₽)</div>
+                    </div>
+                    <div>
+                        <strong>Ср. позиция</strong>
+                        <div style="color: #666; margin-top: 3px;">Средняя позиция товара в поисковой выдаче</div>
+                        <div style="color: #2e7d32; font-size: 12px; margin-top: 3px;">🟢 Хорошо: ≤10</div>
+                    </div>
                 </div>
             </div>
 
