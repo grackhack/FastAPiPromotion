@@ -327,8 +327,11 @@ class StatsService:
                 "total_orders": 0,
                 "total_atbs": 0,
                 "total_shks": 0,
+                "total_canceled": 0,
                 "total_spend": 0,
+                "total_sum_price": 0,
                 "ctr": 0,
+                "cr": 0,
                 "cpc": 0,
                 "cpm": 0,
                 "avg_pos": 0,
@@ -344,10 +347,13 @@ class StatsService:
         total_orders = 0
         total_atbs = 0
         total_shks = 0
+        total_canceled = 0
         total_spend = 0
+        total_sum_price = 0
         total_cpc = 0
         total_cpm = 0
         total_avg_pos = 0
+        total_cr = 0
         days_data = []
         
         days = campaign.get("days", []) if isinstance(campaign, dict) else getattr(campaign, 'days', [])
@@ -359,10 +365,13 @@ class StatsService:
                 day_orders = day.get('orders', 0)
                 day_atbs = day.get('atbs', 0)
                 day_shks = day.get('shks', 0)
+                day_canceled = day.get('canceled', 0)
                 day_sum = day.get('sum', 0)
+                day_sum_price = day.get('sum_price', 0)
                 day_cpc = day.get('cpc', 0)
                 day_cpm = day.get('cpm', 0)
                 day_ctr = day.get('ctr', 0)
+                day_cr = day.get('cr', 0)
                 day_avg_pos = day.get('avg_pos', 0)
             else:
                 day_views = getattr(day, 'views', 0)
@@ -370,10 +379,13 @@ class StatsService:
                 day_orders = getattr(day, 'orders', 0)
                 day_atbs = getattr(day, 'atbs', 0)
                 day_shks = getattr(day, 'shks', 0)
+                day_canceled = getattr(day, 'canceled', 0)
                 day_sum = getattr(day, 'sum', 0)
+                day_sum_price = getattr(day, 'sum_price', 0)
                 day_cpc = getattr(day, 'cpc', 0)
                 day_cpm = getattr(day, 'cpm', 0)
                 day_ctr = getattr(day, 'ctr', 0)
+                day_cr = getattr(day, 'cr', 0)
                 day_avg_pos = getattr(day, 'avg_pos', 0)
             
             total_views += day_views
@@ -381,10 +393,13 @@ class StatsService:
             total_orders += day_orders
             total_atbs += day_atbs
             total_shks += day_shks
+            total_canceled += day_canceled
             total_spend += day_sum
+            total_sum_price += day_sum_price
             total_cpc += day_cpc
             total_cpm += day_cpm
             total_avg_pos += day_avg_pos
+            total_cr += day_cr
             
             # Добавляем день в данные (используем дату как query для совместимости с шаблоном)
             day_date = day.get('date', '') if isinstance(day, dict) else getattr(day, 'date', '')
@@ -395,11 +410,14 @@ class StatsService:
                 "orders": day_orders,
                 "atbs": day_atbs,
                 "shks": day_shks,
+                "canceled": day_canceled,
                 "ctr": day_ctr,
+                "cr": day_cr,
                 "cpc": day_cpc,
                 "cpm": day_cpm,
                 "avg_pos": day_avg_pos,
                 "spend": day_sum,
+                "sum_price": day_sum_price,
             })
         
         # Считаем средние значения
@@ -408,6 +426,7 @@ class StatsService:
         avg_cpm = round(total_cpm / count, 2) if count > 0 else 0
         avg_avg_pos = round(total_avg_pos / count, 2) if count > 0 else 0
         ctr = round((total_clicks / total_views * 100) if total_views > 0 else 0, 2)
+        cr = round((total_orders / total_clicks * 100) if total_clicks > 0 else 0, 2)
         cpc = round(total_spend / total_clicks if total_clicks > 0 else 0, 2)
         
         return {
@@ -417,8 +436,11 @@ class StatsService:
             "total_orders": total_orders,
             "total_atbs": total_atbs,
             "total_shks": total_shks,
+            "total_canceled": total_canceled,
             "total_spend": total_spend,
+            "total_sum_price": total_sum_price,
             "ctr": ctr,
+            "cr": cr,
             "cpc": cpc,
             "cpm": avg_cpm,
             "avg_pos": avg_avg_pos,

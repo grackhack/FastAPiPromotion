@@ -215,12 +215,24 @@
                     <div class="value">{{ "{:,}".format(stats.total_shks) if stats.total_shks else '0' }}</div>
                 </div>
                 <div class="stat-card">
+                    <h3>Отмены</h3>
+                    <div class="value">{{ "{:,}".format(stats.total_canceled) if stats.total_canceled else '0' }}</div>
+                </div>
+                <div class="stat-card">
                     <h3>Затраты</h3>
                     <div class="value small">{{ "{:,.2f} ₽".format(stats.total_spend) if stats.total_spend else '0 ₽' }}</div>
                 </div>
                 <div class="stat-card">
+                    <h3>Сумма заказов</h3>
+                    <div class="value small">{{ "{:,.2f} ₽".format(stats.total_sum_price) if stats.total_sum_price else '0 ₽' }}</div>
+                </div>
+                <div class="stat-card">
                     <h3>CTR</h3>
                     <div class="value small">{{ "{:.2f}%".format(stats.ctr) if stats.ctr else '0%' }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>CR</h3>
+                    <div class="value small">{{ "{:.2f}%".format(stats.cr) if stats.cr else '0%' }}</div>
                 </div>
                 <div class="stat-card">
                     <h3>CPC</h3>
@@ -236,137 +248,50 @@
                 </div>
             </div>
 
-            <!-- Статистика по запросам -->
+            <!-- Статистика по дням -->
             <div class="stats-section">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h2 style="margin: 0;">🔍 Поисковые запросы</h2>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <button id="addSelectedBtn" class="btn btn-primary" style="display: none;" onclick="addSelectedToMinus()">
-                            ➕ Добавить выбранные (<span id="selectedCount">0</span>)
-                        </button>
-                        <button id="selectAllBtn" class="btn btn-secondary" onclick="toggleSelectAll()">
-                            ☑️ Выбрать все
-                        </button>
-                    </div>
-                </div>
-                <div style="margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 8px; font-size: 13px;">
-                    <strong>📊 Метрики:</strong>
-                    <span style="display: inline-block; margin-left: 10px; padding: 3px 8px; background: #e8f5e9; color: #2e7d32; border-radius: 4px;">🟢 CTR ≥5%</span>
-                    <span style="display: inline-block; margin-left: 5px; padding: 3px 8px; background: #e3f2fd; color: #1976d2; border-radius: 4px;">🎯 CR ≥3%</span>
-                    <span style="display: inline-block; margin-left: 5px; padding: 3px 8px; background: #fff3e0; color: #ef6c00; border-radius: 4px;">💰 CPC ≤20₽</span>
-                </div>
+                <h2 style="margin: 0; padding: 20px; border-bottom: 1px solid #eee;">📅 Статистика по дням</h2>
                 <table class="stats-table">
                     <thead>
                         <tr>
-                            <th style="width: 40px;">
-                                <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" style="cursor: pointer;">
-                            </th>
-                            <th>Запрос</th>
+                            <th>Дата</th>
                             <th class="number">Просмотры</th>
                             <th class="number">Клики</th>
                             <th class="number">Заказы</th>
                             <th class="number">В корзину</th>
                             <th class="number">Штуки</th>
+                            <th class="number">Отмены</th>
                             <th class="number">Затраты</th>
+                            <th class="number">Сумма заказов</th>
                             <th class="number">CTR, %</th>
+                            <th class="number">CR, %</th>
                             <th class="number">CPC, ₽</th>
                             <th class="number">CPM, ₽</th>
                             <th class="number">Позиция</th>
-                            <th style="width: 120px;">Действия</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for item in stats.days %}
-                        {% set is_minus = item.query in minus_phrases %}
-                        
-                        {# Расчёт метрик #}
-                        {% set ctr_val = item.ctr if item.ctr else 0 %}
-                        {% set cpc_val = item.cpc if item.cpc else 0 %}
-                        {% set cr_val = (item.orders / item.clicks * 100) if (item.clicks and item.clicks > 0 and item.orders and item.orders > 0) else 0 %}
-                        
-                        {# Оценка CTR #}
-                        {% if ctr_val >= 5 %}
-                            {% set ctr_good = true %}
+                        {% for day in stats.days %}
+                        <tr>
+                            <td>{{ day.query }}</td>
+                            <td class="number">{{ "{:,}".format(day.views) if day.views else '—' }}</td>
+                            <td class="number">{{ "{:,}".format(day.clicks) if day.clicks else '—' }}</td>
+                            <td class="number">{{ "{:,}".format(day.orders) if day.orders else '—' }}</td>
+                            <td class="number">{{ "{:,}".format(day.atbs) if day.atbs else '—' }}</td>
+                            <td class="number">{{ "{:,}".format(day.shks) if day.shks else '—' }}</td>
+                            <td class="number">{{ "{:,}".format(day.canceled) if day.canceled else '—' }}</td>
+                            <td class="number">{{ "{:,.2f} ₽".format(day.spend) if day.spend else '—' }}</td>
+                            <td class="number">{{ "{:,.2f} ₽".format(day.sum_price) if day.sum_price else '—' }}</td>
+                            <td class="number">{{ "{:.2f}".format(day.ctr) if day.ctr else '—' }}</td>
+                            <td class="number">{{ "{:.2f}".format(day.cr) if day.cr else '—' }}</td>
+                            <td class="number">{{ "{:.2f}".format(day.cpc) if day.cpc else '—' }}</td>
+                            <td class="number">{{ "{:.2f}".format(day.cpm) if day.cpm else '—' }}</td>
+                            <td class="number">{{ "{:.2f}".format(day.avg_pos) if day.avg_pos else '—' }}</td>
+                        </tr>
                         {% else %}
-                            {% set ctr_good = false %}
-                        {% endif %}
-                        
-                        {# Оценка CR #}
-                        {% if cr_val >= 3 %}
-                            {% set cr_good = true %}
-                        {% else %}
-                            {% set cr_good = false %}
-                        {% endif %}
-                        
-                        {# Оценка CPC #}
-                        {% if cpc_val <= 20 %}
-                            {% set cpc_good = true %}
-                        {% else %}
-                            {% set cpc_good = false %}
-                        {% endif %}
-                        
-                        {# Комплексная оценка #}
-                        {% set good_count = 0 %}
-                        {% if ctr_good %}{% set good_count = good_count + 1 %}{% endif %}
-                        {% if cr_good %}{% set good_count = good_count + 1 %}{% endif %}
-                        {% if cpc_good %}{% set good_count = good_count + 1 %}{% endif %}
-                        
-                        {# Определение цвета и метки #}
-                        {% if good_count >= 3 %}
-                            {% set eff_color = '#e8f5e9' %}
-                            {% set eff_label = '✅ Отлично' %}
-                            {% set eff_text = '#2e7d32' %}
-                        {% elif good_count >= 2 %}
-                            {% set eff_color = '#f1f8e9' %}
-                            {% set eff_label = '👍 Хорошо' %}
-                            {% set eff_text = '#558b2f' %}
-                        {% elif good_count >= 1 %}
-                            {% set eff_color = '#fff3e0' %}
-                            {% set eff_label = '⚠️ Средне' %}
-                            {% set eff_text = '#ef6c00' %}
-                        {% else %}
-                            {% set eff_color = '#ffebee' %}
-                            {% set eff_label = '❌ Плохо' %}
-                            {% set eff_text = '#c62828' %}
-                        {% endif %}
-                        
-                        <tr class="{{ 'minus-phrase-row' if is_minus else '' }}"
-                            data-query="{{ item.query }}"
-                            style="{{ 'background-color: ' + eff_color + ' !important;' if not is_minus else '' }}">
-                            <td>
-                                {% if not is_minus %}
-                                <input type="checkbox" class="query-checkbox" data-query="{{ item.query }}" style="cursor: pointer;">
-                                {% endif %}
-                            </td>
-                            <td>
-                                {{ item.query }}
-                                {% if is_minus %}
-                                <span style="color: #d32f2f; font-size: 12px; margin-left: 5px;">🚫 В минусах</span>
-                                {% endif %}
-                                <span style="font-size: 11px; color: {{ eff_text }}; margin-left: 8px; padding: 2px 6px; background: {{ eff_color }}; border-radius: 4px; border: 1px solid {{ eff_text }};" title="CTR: {{ '✓' if ctr_good else '✗' }}, CR: {{ '✓' if cr_good else '✗' }}, CPC: {{ '✓' if cpc_good else '✗' }}">
-                                    {{ eff_label }}
-                                </span>
-                            </td>
-                            <td class="number">{{ "{:,}".format(item.views) if item.views else '—' }}</td>
-                            <td class="number">{{ "{:,}".format(item.clicks) if item.clicks else '—' }}</td>
-                            <td class="number">{{ "{:,}".format(item.orders) if item.orders else '—' }}</td>
-                            <td class="number">{{ "{:,}".format(item.atbs) if item.atbs else '—' }}</td>
-                            <td class="number">{{ "{:,}".format(item.shks) if item.shks else '—' }}</td>
-                            <td class="number">{{ "{:.2f} ₽".format(item.spend) if item.spend else '—' }}</td>
-                            <td class="number">{{ "{:.2f}".format(item.ctr) if item.ctr else '—' }}</td>
-                            <td class="number">{{ "{:.2f}".format(item.cpc) if item.cpc else '—' }}</td>
-                            <td class="number">{{ "{:.2f}".format(item.cpm) if item.cpm else '—' }}</td>
-                            <td class="number">{{ "{:.2f}".format(item.avg_pos) if item.avg_pos else '—' }}</td>
-                            <td>
-                                {% if is_minus %}
-                                <button class="btn btn-sm btn-danger" onclick="removeFromMinus('{{ item.query }}')">
-                                    Удалить из минус
-                                </button>
-                                {% else %}
-                                <button class="btn btn-sm btn-secondary" onclick="addToMinus('{{ item.query }}')">
-                                    + В минус-фразы
-                                </button>
-                                {% endif %}
+                        <tr>
+                            <td colspan="14" style="text-align: center; padding: 40px; color: #666;">
+                                Нет данных за выбранный период
                             </td>
                         </tr>
                         {% endfor %}
