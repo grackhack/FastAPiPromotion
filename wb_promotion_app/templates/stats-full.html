@@ -237,6 +237,7 @@
                     <thead>
                         <tr>
                             <th>Дата</th>
+                            <th>Приложение</th>
                             <th class="number">Просмотры</th>
                             <th class="number">Клики</th>
                             <th class="number">Заказы</th>
@@ -249,13 +250,14 @@
                             <th class="number">CR, %</th>
                             <th class="number">CPC, ₽</th>
                             <th class="number">CPM, ₽</th>
-                            <th class="number">Позиция</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for day in stats.days %}
-                        <tr>
-                            <td>{{ day.date }}</td>
+                        <!-- Итого за день -->
+                        <tr style="background: #f5f5f5; font-weight: 600;">
+                            <td rowspan="{{ [1, day.apps|length]|max }}">{{ day.date }}</td>
+                            <td><strong>Итого за день</strong></td>
                             <td class="number">{{ "{:,}".format(day.views) if day.views else '—' }}</td>
                             <td class="number">{{ "{:,}".format(day.clicks) if day.clicks else '—' }}</td>
                             <td class="number">{{ "{:,}".format(day.orders) if day.orders else '—' }}</td>
@@ -268,8 +270,45 @@
                             <td class="number">{{ "{:.2f}".format(day.cr) if day.cr else '—' }}</td>
                             <td class="number">{{ "{:.2f}".format(day.cpc) if day.cpc else '—' }}</td>
                             <td class="number">{{ "{:.2f}".format(day.cpm) if day.cpm else '—' }}</td>
-                            <td class="number">{{ "{:.2f}".format(day.avg_pos) if day.avg_pos else '—' }}</td>
                         </tr>
+                        <!-- Детализация по приложениям -->
+                        {% for app in day.apps %}
+                        <tr>
+                            <td>
+                                {% if app.app_type == 1 %}
+                                    📱 Поиск (моб.)
+                                {% elif app.app_type == 2 %}
+                                    💻 Поиск (деск.)
+                                {% elif app.app_type == 4 %}
+                                    📱 Карточка (моб.)
+                                {% elif app.app_type == 8 %}
+                                    💻 Карточка (деск.)
+                                {% elif app.app_type == 16 %}
+                                    📱 Категория (моб.)
+                                {% elif app.app_type == 32 %}
+                                    💻 Категория (деск.)
+                                {% elif app.app_type == 64 %}
+                                    🏠 Главная (моб.)
+                                {% elif app.app_type == 128 %}
+                                    🏠 Главная (деск.)
+                                {% else %}
+                                    Приложение #{{ app.app_type }}
+                                {% endif %}
+                            </td>
+                            <td class="number">{{ "{:,}".format(app.views) if app.views else '—' }}</td>
+                            <td class="number">{{ "{:,}".format(app.clicks) if app.clicks else '—' }}</td>
+                            <td class="number">{{ "{:,}".format(app.orders) if app.orders else '—' }}</td>
+                            <td class="number">{{ "{:,}".format(app.atbs) if app.atbs else '—' }}</td>
+                            <td class="number">{{ "{:,}".format(app.shks) if app.shks else '—' }}</td>
+                            <td class="number">{{ "{:,}".format(app.canceled) if app.canceled else '—' }}</td>
+                            <td class="number">{{ "{:,.2f} ₽".format(app.spend) if app.spend else '—' }}</td>
+                            <td class="number">{{ "{:,.2f} ₽".format(app.sum_price) if app.sum_price else '—' }}</td>
+                            <td class="number">{{ "{:.2f}".format(app.ctr) if app.ctr else '—' }}</td>
+                            <td class="number">{{ "{:.2f}".format(app.cr) if app.cr else '—' }}</td>
+                            <td class="number">{{ "{:.2f}".format(app.cpc) if app.cpc else '—' }}</td>
+                            <td class="number">{{ "{:.2f}".format(app.cpm) if app.cpm else '—' }}</td>
+                        </tr>
+                        {% endfor %}
                         {% else %}
                         <tr>
                             <td colspan="14" style="text-align: center; padding: 40px; color: #666;">

@@ -292,56 +292,8 @@ class StatsService:
         """
         Обработать полную статистику из /adv/v3/fullstats
         
-        API возвращает массив кампаний:
-        [
-            {
-                "advertId": 123,
-                "views": 100,
-                "clicks": 10,
-                "orders": 5,
-                "atbs": 8,
-                "shks": 6,
-                "canceled": 1,
-                "sum": 500,
-                "sum_price": 5000,
-                "cpc": 50,
-                "cr": 50,
-                "ctr": 10,
-                "days": [
-                    {
-                        "date": "2024-01-01T00:00:00Z",
-                        "views": 50,
-                        "clicks": 5,
-                        "orders": 2,
-                        "atbs": 3,
-                        "shks": 2,
-                        "canceled": 0,
-                        "sum": 200,
-                        "sum_price": 2000,
-                        "cpc": 40,
-                        "cr": 40,
-                        "ctr": 10,
-                        "apps": [
-                            {
-                                "appType": 1,
-                                "views": 25,
-                                "clicks": 2,
-                                ...
-                                "nms": [
-                                    {
-                                        "nmId": 456,
-                                        "name": "Товар",
-                                        "views": 25,
-                                        "clicks": 2,
-                                        ...
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            }
-        ]
+        API возвращает массив кампаний с вложенной структурой:
+        days[].apps[].nms[]
         """
         # API возвращает массив кампаний
         if not stats or not isinstance(stats, list) or len(stats) == 0:
@@ -404,6 +356,7 @@ class StatsService:
                 day_ctr = day.get('ctr', 0)
                 day_cr = day.get('cr', 0)
                 day_avg_pos = day.get('avg_pos', 0)
+                day_apps = day.get('apps', [])
             else:
                 day_date = getattr(day, 'date', '')
                 day_views = getattr(day, 'views', 0)
@@ -419,6 +372,7 @@ class StatsService:
                 day_ctr = getattr(day, 'ctr', 0)
                 day_cr = getattr(day, 'cr', 0)
                 day_avg_pos = getattr(day, 'avg_pos', 0)
+                day_apps = getattr(day, 'apps', [])
             
             total_views += day_views
             total_clicks += day_clicks
@@ -437,7 +391,6 @@ class StatsService:
             # Форматируем дату
             if day_date:
                 try:
-                    # Обрабатываем формат ISO 8601
                     date_str = str(day_date)[:10] if len(str(day_date)) > 10 else str(day_date)
                     if 'T' in str(day_date):
                         date_str = str(day_date).split('T')[0]
@@ -445,6 +398,55 @@ class StatsService:
                     date_str = str(day_date)
             else:
                 date_str = 'N/A'
+            
+            # Обрабатываем приложения
+            apps_data = []
+            if day_apps:
+                for app in day_apps:
+                    if isinstance(app, dict):
+                        app_type = app.get('appType', 0)
+                        app_views = app.get('views', 0)
+                        app_clicks = app.get('clicks', 0)
+                        app_orders = app.get('orders', 0)
+                        app_atbs = app.get('atbs', 0)
+                        app_shks = app.get('shks', 0)
+                        app_canceled = app.get('canceled', 0)
+                        app_sum = app.get('sum', 0)
+                        app_sum_price = app.get('sum_price', 0)
+                        app_cpc = app.get('cpc', 0)
+                        app_cpm = app.get('cpm', 0)
+                        app_ctr = app.get('ctr', 0)
+                        app_cr = app.get('cr', 0)
+                    else:
+                        app_type = getattr(app, 'appType', 0)
+                        app_views = getattr(app, 'views', 0)
+                        app_clicks = getattr(app, 'clicks', 0)
+                        app_orders = getattr(app, 'orders', 0)
+                        app_atbs = getattr(app, 'atbs', 0)
+                        app_shks = getattr(app, 'shks', 0)
+                        app_canceled = getattr(app, 'canceled', 0)
+                        app_sum = getattr(app, 'sum', 0)
+                        app_sum_price = getattr(app, 'sum_price', 0)
+                        app_cpc = getattr(app, 'cpc', 0)
+                        app_cpm = getattr(app, 'cpm', 0)
+                        app_ctr = getattr(app, 'ctr', 0)
+                        app_cr = getattr(app, 'cr', 0)
+                    
+                    apps_data.append({
+                        "app_type": app_type,
+                        "views": app_views,
+                        "clicks": app_clicks,
+                        "orders": app_orders,
+                        "atbs": app_atbs,
+                        "shks": app_shks,
+                        "canceled": app_canceled,
+                        "spend": app_sum,
+                        "sum_price": app_sum_price,
+                        "cpc": app_cpc,
+                        "cpm": app_cpm,
+                        "ctr": app_ctr,
+                        "cr": app_cr,
+                    })
             
             days_data.append({
                 "date": date_str,
@@ -461,6 +463,7 @@ class StatsService:
                 "avg_pos": day_avg_pos,
                 "spend": day_sum,
                 "sum_price": day_sum_price,
+                "apps": apps_data,
             })
         
         # Считаем средние значения
