@@ -273,41 +273,68 @@
                     <tbody>
                         {% for item in stats.days %}
                         {% set is_minus = item.query in minus_phrases %}
-                        {% set eff = namespace(cr=0, cpa=0, roi=0, score=50) %}
-                        {% set _ = eff.update({
-                            'cr': ((item.orders / item.clicks * 100) if item.clicks > 0 and item.orders else 0)|round(2),
-                            'cpa': ((item.spend / item.orders) if item.orders > 0 else 0)|round(2),
-                            'roi': 0
-                        }) %}
+                        
+                        {# Расчёт конверсии #}
+                        {% set cr = 0 %}
+                        {% if item.clicks and item.clicks > 0 and item.orders and item.orders > 0 %}
+                            {% set cr = (item.orders / item.clicks * 100)|round(2) %}
+                        {% endif %}
+                        
+                        {# Расчёт CPA #}
+                        {% set cpa = 0 %}
+                        {% if item.orders and item.orders > 0 and item.spend %}
+                            {% set cpa = (item.spend / item.orders)|round(2) %}
+                        {% endif %}
+                        
+                        {# Расчёт score #}
                         {% set score = 0 %}
-                        {% if item.ctr >= 10 %}{% set score = score + 25 %}
-                        {% elif item.ctr >= 5 %}{% set score = score + 20 %}
-                        {% elif item.ctr >= 3 %}{% set score = score + 15 %}
-                        {% elif item.ctr >= 1 %}{% set score = score + 10 %}
+                        
+                        {# CTR баллы #}
+                        {% if item.ctr and item.ctr >= 10 %}{% set score = score + 25 %}
+                        {% elif item.ctr and item.ctr >= 5 %}{% set score = score + 20 %}
+                        {% elif item.ctr and item.ctr >= 3 %}{% set score = score + 15 %}
+                        {% elif item.ctr and item.ctr >= 1 %}{% set score = score + 10 %}
                         {% else %}{% set score = score + 5 %}{% endif %}
                         
-                        {% if eff.cr >= 10 %}{% set score = score + 25 %}
-                        {% elif eff.cr >= 5 %}{% set score = score + 20 %}
-                        {% elif eff.cr >= 2 %}{% set score = score + 15 %}
-                        {% elif eff.cr >= 1 %}{% set score = score + 10 %}
+                        {# CR баллы #}
+                        {% if cr >= 10 %}{% set score = score + 25 %}
+                        {% elif cr >= 5 %}{% set score = score + 20 %}
+                        {% elif cr >= 2 %}{% set score = score + 15 %}
+                        {% elif cr >= 1 %}{% set score = score + 10 %}
                         {% else %}{% set score = score + 5 %}{% endif %}
                         
-                        {% if item.cpc <= 5 %}{% set score = score + 25 %}
-                        {% elif item.cpc <= 10 %}{% set score = score + 20 %}
-                        {% elif item.cpc <= 20 %}{% set score = score + 15 %}
-                        {% elif item.cpc <= 50 %}{% set score = score + 10 %}
+                        {# CPC баллы #}
+                        {% if item.cpc and item.cpc <= 5 %}{% set score = score + 25 %}
+                        {% elif item.cpc and item.cpc <= 10 %}{% set score = score + 20 %}
+                        {% elif item.cpc and item.cpc <= 20 %}{% set score = score + 15 %}
+                        {% elif item.cpc and item.cpc <= 50 %}{% set score = score + 10 %}
                         {% else %}{% set score = score + 5 %}{% endif %}
                         
-                        {% if eff.cpa == 0 and item.orders == 0 %}{% set score = score + 10 %}
-                        {% elif eff.cpa <= 100 %}{% set score = score + 25 %}
-                        {% elif eff.cpa <= 300 %}{% set score = score + 20 %}
-                        {% elif eff.cpa <= 500 %}{% set score = score + 15 %}
+                        {# CPA баллы #}
+                        {% if cpa == 0 and (not item.orders or item.orders == 0) %}{% set score = score + 10 %}
+                        {% elif cpa > 0 and cpa <= 100 %}{% set score = score + 25 %}
+                        {% elif cpa > 0 and cpa <= 300 %}{% set score = score + 20 %}
+                        {% elif cpa > 0 and cpa <= 500 %}{% set score = score + 15 %}
                         {% else %}{% set score = score + 10 %}{% endif %}
                         
-                        {% if score >= 80 %}{% set eff_color = '#e8f5e9' %}{% set eff_label = 'Отлично' %}{% set eff_text = '#2e7d32' %}
-                        {% elif score >= 60 %}{% set eff_color = '#fff3e0' %}{% set eff_label = 'Нормально' %}{% set eff_text = '#ef6c00' %}
-                        {% elif score >= 40 %}{% set eff_color = '#fff8e1' %}{% set eff_label = 'Средне' %}{% set eff_text = '#f9a825' %}
-                        {% else %}{% set eff_color = '#ffebee' %}{% set eff_label = 'Плохо' %}{% set eff_text = '#c62828' %}{% endif %}
+                        {# Определение цвета #}
+                        {% if score >= 80 %}
+                            {% set eff_color = '#e8f5e9' %}
+                            {% set eff_label = 'Отлично' %}
+                            {% set eff_text = '#2e7d32' %}
+                        {% elif score >= 60 %}
+                            {% set eff_color = '#fff3e0' %}
+                            {% set eff_label = 'Нормально' %}
+                            {% set eff_text = '#ef6c00' %}
+                        {% elif score >= 40 %}
+                            {% set eff_color = '#fff8e1' %}
+                            {% set eff_label = 'Средне' %}
+                            {% set eff_text = '#f9a825' %}
+                        {% else %}
+                            {% set eff_color = '#ffebee' %}
+                            {% set eff_label = 'Плохо' %}
+                            {% set eff_text = '#c62828' %}
+                        {% endif %}
                         
                         <tr class="{{ 'minus-phrase-row' if is_minus else '' }}" 
                             data-query="{{ item.query }}"
