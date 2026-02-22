@@ -276,21 +276,11 @@
                         <tr>
                             <td>
                                 {% if app.app_type == 1 %}
-                                    📱 Поиск (моб.)
-                                {% elif app.app_type == 2 %}
-                                    💻 Поиск (деск.)
-                                {% elif app.app_type == 4 %}
-                                    📱 Карточка (моб.)
-                                {% elif app.app_type == 8 %}
-                                    💻 Карточка (деск.)
-                                {% elif app.app_type == 16 %}
-                                    📱 Категория (моб.)
+                                    🌐 Сайт
                                 {% elif app.app_type == 32 %}
-                                    💻 Категория (деск.)
+                                    🤖 Android
                                 {% elif app.app_type == 64 %}
-                                    🏠 Главная (моб.)
-                                {% elif app.app_type == 128 %}
-                                    🏠 Главная (деск.)
+                                    🍎 iOS
                                 {% else %}
                                     Приложение #{{ app.app_type }}
                                 {% endif %}
