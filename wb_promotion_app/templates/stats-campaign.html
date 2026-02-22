@@ -427,7 +427,7 @@
                 }
                 
                 try {
-                    // Сначала получаем текущие минус-фразы
+                    // Сначала получаем текущие минус-фразы для этого nm_id
                     const getResponse = await fetch('/search-clusters/minus-phrases', {
                         method: 'POST',
                         headers: {
@@ -445,15 +445,22 @@
                     let currentPhrases = [];
                     if (getResponse.ok) {
                         const data = await getResponse.json();
+                        console.log('Current minus phrases:', data);
                         if (data.items && data.items.length > 0) {
-                            currentPhrases = data.items[0].norm_queries || data.items[0].excluded || [];
+                            // Получаем фразы из ответа
+                            const item = data.items[0];
+                            currentPhrases = item.norm_queries || item.excluded || [];
                         }
                     }
+                    
+                    console.log('Phrases before add:', currentPhrases);
                     
                     // Добавляем новую фразу если её ещё нет
                     if (!currentPhrases.includes(query)) {
                         currentPhrases.push(query);
                     }
+                    
+                    console.log('Phrases after add:', currentPhrases);
                     
                     // Отправляем обновлённый список
                     const response = await fetch('/search-clusters/set-minus-phrases', {
@@ -474,6 +481,7 @@
                         setTimeout(() => location.reload(), 1000);
                     } else {
                         const error = await response.json();
+                        console.error('API error:', error);
                         showNotification(error.detail || 'Не удалось добавить фразу', 'error');
                     }
                 } catch (error) {
