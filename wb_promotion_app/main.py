@@ -57,21 +57,6 @@ app = FastAPI(
 # Получаем директорию текущего модуля
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Middleware для логирования ошибок
-@app.middleware("http")
-async def log_errors(request: Request, call_next):
-    import logging
-    logger = logging.getLogger(__name__)
-    
-    try:
-        response = await call_next(request)
-        if response.status_code >= 500:
-            logger.error(f"500 error for {request.url.path}")
-        return response
-    except Exception as e:
-        logger.exception(f"Exception in {request.url.path}: {str(e)}")
-        raise
-
 # Подключение статических файлов и шаблонов
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 
