@@ -180,6 +180,9 @@ async def nm_stats_page(
         # Получаем полную статистику через новый API с указанием nm_id
         stats_service = StatsService(wb_client)
         full_stats = stats_service.get_full_stats(campaign_id, from_date, to_date, nm_id=nm_id)
+        
+        # Получаем статистику по поисковым запросам (normquery stats)
+        norm_stats = stats_service.get_norm_query_stats(campaign_id, nm_id, from_date, to_date)
 
         # Получаем информацию о кампании
         campaigns = wb_client.get_campaigns()
@@ -210,7 +213,7 @@ async def nm_stats_page(
         current_page='stats',
         campaign=campaign,
         stats=full_stats,
-        queries=[],
+        queries=norm_stats.get("queries", [])[:100],  # Берём первые 100 запросов
         from_date=from_date,
         to_date=to_date,
         minus_phrases=list(all_minus_phrases),
