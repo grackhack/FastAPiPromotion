@@ -11,6 +11,12 @@ TaskIQ Worker для Wildberries Promotion Manager
 import asyncio
 import sys
 import os
+import codecs
+
+# Устанавливаем кодировку UTF-8 для Windows
+if sys.platform == 'win32':
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
 
 # Добавляем корневую директорию в путь
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -20,23 +26,23 @@ from wb_promotion_app.taskiq_config import taskiq_broker
 
 async def main():
     """Запуск воркера"""
-    print("🚀 Starting TaskIQ Worker for Wildberries Promotion Manager...")
-    print(f"Broker: {taskiq_broker.__class__.__name__}")
+    print("[INFO] Starting TaskIQ Worker for Wildberries Promotion Manager...")
+    print(f"[INFO] Broker: {taskiq_broker.__class__.__name__}")
     
     # Запускаем воркера
     await taskiq_broker.startup()
     
-    print("✅ Worker is ready to process tasks")
-    print("Press Ctrl+C to stop")
+    print("[INFO] Worker is ready to process tasks")
+    print("[INFO] Press Ctrl+C to stop")
     
     try:
         # Держим воркера запущенным
         while True:
             await asyncio.sleep(1)
     except KeyboardInterrupt:
-        print("\n🛑 Shutting down worker...")
+        print("\n[INFO] Shutting down worker...")
         await taskiq_broker.shutdown()
-        print("✅ Worker stopped")
+        print("[INFO] Worker stopped")
 
 
 if __name__ == "__main__":

@@ -9,11 +9,12 @@ TaskIQ задачи для Wildberries Promotion Manager
 import logging
 from datetime import datetime, timedelta
 from typing import List, Optional
+
 from taskiq import Depends
 
 from .taskiq_config import taskiq_broker
 from .config import get_db
-from .models import CampaignStatsHistory, AutoRule, ScheduledTask, UserApiToken
+from .models import CampaignStatsHistory, AutoRule, UserApiToken
 from .services.wb_service import WBService
 from .services.stats_service import StatsService
 from sqlalchemy import select
@@ -379,39 +380,45 @@ async def scheduled_collect_all_stats():
     
     db = next(get_db())
     try:
-        # Получаем все активные расписания для сбора статистики
-        stmt = select(ScheduledTask).where(
-            ScheduledTask.is_active == True,
-            ScheduledTask.task_type == "collect_stats"
-        )
-        tasks = db.execute(stmt).scalars().all()
+        # Получаем все активные кампании пользователя
+        # Для простоты собираем статистику для первой найденной кампании
+        # В реальной реализации нужно получить список кампаний из WB API
+        stmt = select(UserApiToken).where(UserApiToken.is_active == True).limit(1)
+        user_token = db.execute(stmt).scalar_one_or_none()
         
-        results = []
-        for task in tasks:
-            # Отправляем задачу на выполнение
-            await collect_campaign_stats.kiq(
-                campaign_id=task.campaign_id,
-                nm_id=task.nm_id,
-                days_back=1,
-                user_id=task.user_id
-            )
-            
-            # Обновляем время последнего запуска
-            task.last_run_at = datetime.now()
-            results.append({"task_id": task.id, "campaign_id": task.campaign_id})
+        if not user_token:
+            logger.warning("No active API token found for scheduled stats collection")
+            return {"success": False, "error": "No API token"}
         
-        db.commit()
+        # Получаем список кампаний
+        wb_service = WBService(user_token.token)
+        campaigns = wb_service.get_campaigns()
         
-        logger.info(f"Scheduled stats collection: {len(results)} tasks queued")
+        if not campaigns:
+            logger.info("No campaigns found for scheduled stats collection")
+            return {"success": True, "message": "No campaigns"}
+        
+        # Отправляем задачи на сбор статистики для каждой кампании
+        tasks_queued = 0
+        for campaign in campaigns[:10]:  # Ограничиваем 10 кампаниями
+            campaign_id = campaign.get('id')
+            if campaign_id:
+                await collect_campaign_stats.kiq(
+                    campaign_id=campaign_id,
+                    days_back=1,
+                    user_id=user_token.user_id
+                )
+                tasks_queued += 1
+        
+        logger.info(f"Scheduled stats collection: {tasks_queued} tasks queued")
         
         return {
             "success": True,
-            "tasks_queued": len(results),
-            "tasks": results
+            "tasks_queued": tasks_queued,
+            "campaigns_count": len(campaigns)
         }
         
     except Exception as e:
-        db.rollback()
         logger.exception(f"Error in scheduled stats collection: {e}")
         return {"error": str(e)}
     finally:
