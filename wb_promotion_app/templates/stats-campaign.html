@@ -322,6 +322,18 @@
             }
         }
         
+        // Получаем все текущие минус-фразы из DOM
+        function getCurrentMinusPhrasesFromDOM() {
+            const phrases = [];
+            document.querySelectorAll('tr.minus-phrase-row').forEach(row => {
+                const query = row.dataset.query;
+                if (query) {
+                    phrases.push(query);
+                }
+            });
+            return phrases;
+        }
+        
         // Показ уведомления
         function showNotification(message, type = 'info') {
             const colors = {
@@ -427,40 +439,17 @@
                 }
                 
                 try {
-                    // Сначала получаем текущие минус-фразы для этого nm_id
-                    const getResponse = await fetch('/search-clusters/minus-phrases', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-API-Token': apiToken
-                        },
-                        body: JSON.stringify({
-                            items: [{
-                                advert_id: campaignId,
-                                nm_id: nmId
-                            }]
-                        })
-                    });
+                    // Получаем все текущие минус-фразы из DOM
+                    let currentPhrases = getCurrentMinusPhrasesFromDOM();
                     
-                    let currentPhrases = [];
-                    if (getResponse.ok) {
-                        const data = await getResponse.json();
-                        console.log('Current minus phrases:', data);
-                        if (data.items && data.items.length > 0) {
-                            // Получаем фразы из ответа
-                            const item = data.items[0];
-                            currentPhrases = item.norm_queries || item.excluded || [];
-                        }
-                    }
-                    
-                    console.log('Phrases before add:', currentPhrases);
+                    console.log('Current minus phrases from DOM:', currentPhrases);
                     
                     // Добавляем новую фразу если её ещё нет
                     if (!currentPhrases.includes(query)) {
                         currentPhrases.push(query);
                     }
                     
-                    console.log('Phrases after add:', currentPhrases);
+                    console.log('All phrases to save:', currentPhrases);
                     
                     // Отправляем обновлённый список
                     const response = await fetch('/search-clusters/set-minus-phrases', {
