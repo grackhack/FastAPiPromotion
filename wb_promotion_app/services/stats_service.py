@@ -296,18 +296,43 @@ class StatsService:
         [
             {
                 "advertId": 123,
+                "views": 100,
+                "clicks": 10,
+                "orders": 5,
+                "atbs": 8,
+                "shks": 6,
+                "canceled": 1,
+                "sum": 500,
+                "sum_price": 5000,
+                "cpc": 50,
+                "cr": 50,
+                "ctr": 10,
                 "days": [
                     {
-                        "date": "2024-01-01T...",
+                        "date": "2024-01-01T00:00:00Z",
+                        "views": 50,
+                        "clicks": 5,
+                        "orders": 2,
+                        "atbs": 3,
+                        "shks": 2,
+                        "canceled": 0,
+                        "sum": 200,
+                        "sum_price": 2000,
+                        "cpc": 40,
+                        "cr": 40,
+                        "ctr": 10,
                         "apps": [
                             {
                                 "appType": 1,
+                                "views": 25,
+                                "clicks": 2,
+                                ...
                                 "nms": [
                                     {
                                         "nmId": 456,
                                         "name": "Товар",
-                                        "views": 100,
-                                        "clicks": 10,
+                                        "views": 25,
+                                        "clicks": 2,
                                         ...
                                     }
                                 ]
@@ -322,6 +347,7 @@ class StatsService:
         if not stats or not isinstance(stats, list) or len(stats) == 0:
             return {
                 "campaign_id": campaign_id,
+                "advert_id": 0,
                 "total_views": 0,
                 "total_clicks": 0,
                 "total_orders": 0,
@@ -341,7 +367,10 @@ class StatsService:
         # Берём первую кампанию (запрашивали одну)
         campaign = stats[0] if isinstance(stats, list) else stats
         
-        # Агрегируем статистику по всем дням и товарам
+        # Получаем данные кампании
+        advert_id = campaign.get("advertId", 0) if isinstance(campaign, dict) else getattr(campaign, 'advert_id', 0)
+        
+        # Агрегируем статистику по всем дням
         total_views = 0
         total_clicks = 0
         total_orders = 0
@@ -354,12 +383,14 @@ class StatsService:
         total_cpm = 0
         total_avg_pos = 0
         total_cr = 0
+        total_ctr = 0
         days_data = []
         
         days = campaign.get("days", []) if isinstance(campaign, dict) else getattr(campaign, 'days', [])
         
         for day in days:
             if isinstance(day, dict):
+                day_date = day.get('date', '')
                 day_views = day.get('views', 0)
                 day_clicks = day.get('clicks', 0)
                 day_orders = day.get('orders', 0)
@@ -374,6 +405,7 @@ class StatsService:
                 day_cr = day.get('cr', 0)
                 day_avg_pos = day.get('avg_pos', 0)
             else:
+                day_date = getattr(day, 'date', '')
                 day_views = getattr(day, 'views', 0)
                 day_clicks = getattr(day, 'clicks', 0)
                 day_orders = getattr(day, 'orders', 0)
@@ -400,11 +432,22 @@ class StatsService:
             total_cpm += day_cpm
             total_avg_pos += day_avg_pos
             total_cr += day_cr
+            total_ctr += day_ctr
             
-            # Добавляем день в данные (используем дату как query для совместимости с шаблоном)
-            day_date = day.get('date', '') if isinstance(day, dict) else getattr(day, 'date', '')
+            # Форматируем дату
+            if day_date:
+                try:
+                    # Обрабатываем формат ISO 8601
+                    date_str = str(day_date)[:10] if len(str(day_date)) > 10 else str(day_date)
+                    if 'T' in str(day_date):
+                        date_str = str(day_date).split('T')[0]
+                except:
+                    date_str = str(day_date)
+            else:
+                date_str = 'N/A'
+            
             days_data.append({
-                "query": str(day_date)[:10] if day_date else 'N/A',
+                "date": date_str,
                 "views": day_views,
                 "clicks": day_clicks,
                 "orders": day_orders,
@@ -431,6 +474,7 @@ class StatsService:
         
         return {
             "campaign_id": campaign_id,
+            "advert_id": advert_id,
             "total_views": total_views,
             "total_clicks": total_clicks,
             "total_orders": total_orders,

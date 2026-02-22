@@ -255,7 +255,7 @@
                     <tbody>
                         {% for day in stats.days %}
                         <tr>
-                            <td>{{ day.query }}</td>
+                            <td>{{ day.date }}</td>
                             <td class="number">{{ "{:,}".format(day.views) if day.views else '—' }}</td>
                             <td class="number">{{ "{:,}".format(day.clicks) if day.clicks else '—' }}</td>
                             <td class="number">{{ "{:,}".format(day.orders) if day.orders else '—' }}</td>
