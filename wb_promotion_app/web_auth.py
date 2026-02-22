@@ -166,7 +166,8 @@ async def get_current_token(request: Request, db: Session = Depends(get_db)):
 @router.get("/profile", response_class=HTMLResponse, response_model=None)
 async def profile_page(request: Request):
     """Страница профиля пользователя"""
-    from . import main
+    from .config import SessionLocal
+    from sqlalchemy.orm import Session
 
     # Проверяем аутентификацию
     session_id = request.cookies.get("session_id")
@@ -182,8 +183,15 @@ async def profile_page(request: Request):
     from sqlalchemy import select
     from .models import User
     stmt = select(User).where(User.id == session["user_id"], User.is_active == True)
-    user = main.get_db().execute(stmt).scalar_one_or_none()
+    
+    # Создаём сессию БД
+    db = SessionLocal()
+    try:
+        user = db.execute(stmt).scalar_one_or_none()
+    finally:
+        db.close()
 
+    from . import main
     return main.templates.get_template("profile.html").render(
         request=request,
         user=user,
