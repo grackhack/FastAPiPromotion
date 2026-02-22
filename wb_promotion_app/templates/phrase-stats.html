@@ -238,20 +238,26 @@
                 const campaigns = data.campaigns || data.adverts || [];
 
                 const select = document.getElementById('campaignSelect');
-                campaigns.forEach(campaign => {
+                
+                for (const campaign of campaigns) {
                     const id = campaign.id || campaign.advertId;
                     const name = campaign.name || '';
                     const option = document.createElement('option');
                     option.value = id;
                     option.textContent = `#${id} ${name}`;
                     select.appendChild(option);
-                });
+                    
+                    // Сохраняем товары кампании
+                    if (campaign.nm_settings) {
+                        campaignNms[id] = campaign.nm_settings;
+                    }
+                }
             } catch (error) {
                 console.error('Error loading campaigns:', error);
             }
         }
 
-        // Загрузка товаров кампании
+        // Загрузка товаров выбранной кампании
         async function loadCampaignCampaigns() {
             const campaignId = document.getElementById('campaignSelect').value;
             const nmSelect = document.getElementById('nmSelect');
@@ -262,6 +268,13 @@
                 return;
             }
 
+            // Проверяем, есть ли уже загруженные товары
+            if (campaignNms[campaignId]) {
+                loadNmsFromCache(campaignId);
+                return;
+            }
+
+            // Загружаем детали кампании
             try {
                 const response = await fetch(`/api/campaigns?ids=${campaignId}`);
                 if (!response.ok) return;
@@ -271,23 +284,28 @@
                 
                 if (campaigns.length > 0) {
                     const campaign = campaigns[0];
-                    const nmSettings = campaign.nm_settings || [];
-                    
-                    campaignNms[campaignId] = nmSettings;
-                    
-                    nmSelect.disabled = false;
-                    nmSelect.innerHTML = '<option value="">Выберите товар</option>';
-                    
-                    nmSettings.forEach(nm => {
-                        const option = document.createElement('option');
-                        option.value = nm.nm_id;
-                        option.textContent = `${nm.name || 'Товар ' + nm.nm_id} (#${nm.nm_id})`;
-                        nmSelect.appendChild(option);
-                    });
+                    campaignNms[campaignId] = campaign.nm_settings || [];
+                    loadNmsFromCache(campaignId);
                 }
             } catch (error) {
                 console.error('Error loading campaign details:', error);
             }
+        }
+
+        // Загрузка товаров из кэша
+        function loadNmsFromCache(campaignId) {
+            const nmSelect = document.getElementById('nmSelect');
+            const nmSettings = campaignNms[campaignId];
+            
+            nmSelect.disabled = false;
+            nmSelect.innerHTML = '<option value="">Выберите товар</option>';
+            
+            nmSettings.forEach(nm => {
+                const option = document.createElement('option');
+                option.value = nm.nm_id;
+                option.textContent = `${nm.name || 'Товар ' + nm.nm_id} (#${nm.nm_id})`;
+                nmSelect.appendChild(option);
+            });
         }
 
         // Загрузка статистики
