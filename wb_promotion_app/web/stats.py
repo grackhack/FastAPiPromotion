@@ -39,8 +39,9 @@ async def campaign_stats_page(
     campaign_id: int,
     wb_client: Any = Depends(get_wb_client_for_user)
 ):
-    """Страница статистики рекламной кампании"""
+    """Страница статистики по поисковым запросам (использует /adv/v0/normquery/stats)"""
     from ..main import templates
+    from ..services.stats_service import StatsService
     from ..services.wb_service import WBService
     from ..auth import get_current_user_from_session
 
@@ -52,10 +53,10 @@ async def campaign_stats_page(
         from_date = (to - timedelta(days=7)).strftime("%Y-%m-%d")
         to_date = to.strftime("%Y-%m-%d")
 
-    stats_service = StatsService(wb_client)
-    wb_service = WBService(wb_client)
-
     try:
+        stats_service = StatsService(wb_client)
+        wb_service = WBService(wb_client)
+
         # Получаем nm_id из кампании через get_adverts
         adverts = wb_client.get_adverts(ids=str(campaign_id))
 
@@ -65,9 +66,8 @@ async def campaign_stats_page(
             if advert.nm_settings:
                 nm_ids = [nm.nm_id for nm in advert.nm_settings]
 
-        # Получаем статистику для первого nm_id
+        # Получаем статистику по запросам для первого nm_id
         nm_id = nm_ids[0] if nm_ids else 0
-        stats = stats_service.get_campaign_stats(campaign_id, from_date, to_date, nm_id=nm_id)
         norm_stats = stats_service.get_norm_query_stats(
             campaign_id, nm_id=nm_id, from_date=from_date, to_date=to_date
         )
@@ -86,6 +86,8 @@ async def campaign_stats_page(
         user = await get_current_user_from_session(request)
 
     except Exception as e:
+        import logging
+        logging.exception(f"Error loading normquery stats for campaign {campaign_id}: {e}")
         return HTMLResponse(f"Ошибка: {str(e)}", status_code=500)
 
     template = templates.get_template("stats-campaign.html")
@@ -95,8 +97,8 @@ async def campaign_stats_page(
         is_authenticated=user is not None,
         current_page='stats',
         campaign=campaign,
-        stats=stats,
-        queries=norm_stats.get("queries", [])[:20],
+        stats=norm_stats,  # Статистика по запросам
+        queries=norm_stats.get("queries", [])[:100],
         from_date=from_date,
         to_date=to_date,
         minus_phrases=list(all_minus_phrases),
@@ -180,22 +182,10 @@ async def nm_stats_page(
         # Получаем полную статистику через новый API с указанием nm_id
         stats_service = StatsService(wb_client)
         full_stats = stats_service.get_full_stats(campaign_id, from_date, to_date, nm_id=nm_id)
-        
-        # Получаем статистику по поисковым запросам (normquery stats)
-        norm_stats = stats_service.get_norm_query_stats(campaign_id, nm_id, from_date, to_date)
 
         # Получаем информацию о кампании
         campaigns = wb_client.get_campaigns()
         campaign = next((c for c in campaigns if c.get('id') == campaign_id), None)
-
-        # Получаем минус-фразы
-        wb_service = WBService(wb_client)
-        all_minus_phrases = set()
-        try:
-            phrases = wb_service.get_minus_phrases(campaign_id, nm_id)
-            all_minus_phrases.update(phrases)
-        except:
-            pass
 
         # Получаем текущего пользователя
         user = await get_current_user_from_session(request)
@@ -205,7 +195,7 @@ async def nm_stats_page(
         logging.exception(f"Error loading full stats for campaign {campaign_id}, nm {nm_id}: {e}")
         return HTMLResponse(f"Ошибка: {str(e)}", status_code=500)
 
-    template = templates.get_template("stats-campaign.html")
+    template = templates.get_template("stats-full.html")
     return HTMLResponse(template.render(
         request=request,
         user=user,
@@ -213,10 +203,8 @@ async def nm_stats_page(
         current_page='stats',
         campaign=campaign,
         stats=full_stats,
-        queries=norm_stats.get("queries", [])[:100],  # Берём первые 100 запросов
         from_date=from_date,
         to_date=to_date,
-        minus_phrases=list(all_minus_phrases),
         campaign_id=campaign_id,
         nm_id=nm_id
     ))

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Полная статистика кампании {{ campaign.id }} - Wildberries Promotion</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .stats-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stats-dates {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .stats-dates input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .stats-dates button {
+            padding: 8px 20px;
+            background: #0066FF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .stats-dates button:hover {
+            background: #0052CC;
+        }
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            color: #666;
+            font-size: 14px;
+            font-weight: normal;
+        }
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #0066FF;
+        }
+        .stat-card .value.small {
+            font-size: 24px;
+        }
+        .stats-section {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .stats-section h2 {
+            margin: 0;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            font-size: 18px;
+        }
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .stats-table th,
+        .stats-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .stats-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+        }
+        .stats-table tr:hover {
+            background: #f8f9fa;
+        }
+        .stats-table td.number {
+            text-align: right;
+            font-family: monospace;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #0066FF;
+            text-decoration: none;
+            margin-bottom: 20px;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .date-range-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .date-range-btn {
+            padding: 6px 12px;
+            background-color: #f5f5f5;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .date-range-btn:hover {
+            background-color: #0066FF;
+            color: white;
+            border-color: #0066FF;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% include '_nav.html' %}
+
+        <div class="stats-container">
+            <a href="/campaign/{{ campaign.id }}" class="back-link">
+                ← Назад к кампании
+            </a>
+
+            <div class="stats-header">
+                <div>
+                    <h1>Полная статистика кампании {{ campaign.id }}</h1>
+                    <p style="color: #666; margin: 5px 0 0 0;">
+                        {{ campaign.name if campaign else 'Кампания #' + campaign_id|string }} | Товар #{{ nm_id }}
+                    </p>
+                </div>
+                <div>
+                    <div class="date-range-buttons">
+                        <button type="button" class="date-range-btn" onclick="setDateRange('today')">Сегодня</button>
+                        <button type="button" class="date-range-btn" onclick="setDateRange('yesterday')">Вчера</button>
+                        <button type="button" class="date-range-btn" onclick="setDateRange('7days')">7 дней</button>
+                        <button type="button" class="date-range-btn" onclick="setDateRange('30days')">30 дней</button>
+                    </div>
+                    <form class="stats-dates" method="GET">
+                        <input type="date" name="from_date" id="from_date" value="{{ from_date }}" required>
+                        <span>—</span>
+                        <input type="date" name="to_date" id="to_date" value="{{ to_date }}" required>
+                        <button type="submit">Показать</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Сводные показатели -->
+            <div class="stats-summary">
+                <div class="stat-card">
+                    <h3>Просмотры</h3>
+                    <div class="value">{{ "{:,}".format(stats.total_views) if stats.total_views else '0' }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Клики</h3>
+                    <div class="value">{{ "{:,}".format(stats.total_clicks) if stats.total_clicks else '0' }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Заказы</h3>
+                    <div class="value">{{ "{:,}".format(stats.total_orders) if stats.total_orders else '0' }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>В корзину</h3>
+                    <div class="value">{{ "{:,}".format(stats.total_atbs) if stats.total_atbs else '0' }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Штуки</h3>
+                    <div class="value">{{ "{:,}".format(stats.total_shks) if stats.total_shks else '0' }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Отмены</h3>
+                    <div class="value">{{ "{:,}".format(stats.total_canceled) if stats.total_canceled else '0' }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Затраты</h3>
+                    <div class="value small">{{ "{:,.2f} ₽".format(stats.total_spend) if stats.total_spend else '0 ₽' }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Сумма заказов</h3>
+                    <div class="value small">{{ "{:,.2f} ₽".format(stats.total_sum_price) if stats.total_sum_price else '0 ₽' }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>CTR</h3>
+                    <div class="value small">{{ "{:.2f}%".format(stats.ctr) if stats.ctr else '0%' }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>CR</h3>
+                    <div class="value small">{{ "{:.2f}%".format(stats.cr) if stats.cr else '0%' }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>CPC</h3>
+                    <div class="value small">{{ "{:.2f} ₽".format(stats.cpc) if stats.cpc else '0 ₽' }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>CPM</h3>
+                    <div class="value small">{{ "{:.2f} ₽".format(stats.cpm) if stats.cpm else '0 ₽' }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Ср. позиция</h3>
+                    <div class="value small">{{ "{:.2f}".format(stats.avg_pos) if stats.avg_pos else '0' }}</div>
+                </div>
+            </div>
+
+            <!-- Статистика по дням -->
+            <div class="stats-section">
+                <h2 style="margin: 0; padding: 20px; border-bottom: 1px solid #eee;">📅 Статистика по дням</h2>
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th class="number">Просмотры</th>
+                            <th class="number">Клики</th>
+                            <th class="number">Заказы</th>
+                            <th class="number">В корзину</th>
+                            <th class="number">Штуки</th>
+                            <th class="number">Отмены</th>
+                            <th class="number">Затраты</th>
+                            <th class="number">Сумма заказов</th>
+                            <th class="number">CTR, %</th>
+                            <th class="number">CR, %</th>
+                            <th class="number">CPC, ₽</th>
+                            <th class="number">CPM, ₽</th>
+                            <th class="number">Позиция</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for day in stats.days %}
+                        <tr>
+                            <td>{{ day.query }}</td>
+                            <td class="number">{{ "{:,}".format(day.views) if day.views else '—' }}</td>
+                            <td class="number">{{ "{:,}".format(day.clicks) if day.clicks else '—' }}</td>
+                            <td class="number">{{ "{:,}".format(day.orders) if day.orders else '—' }}</td>
+                            <td class="number">{{ "{:,}".format(day.atbs) if day.atbs else '—' }}</td>
+                            <td class="number">{{ "{:,}".format(day.shks) if day.shks else '—' }}</td>
+                            <td class="number">{{ "{:,}".format(day.canceled) if day.canceled else '—' }}</td>
+                            <td class="number">{{ "{:,.2f} ₽".format(day.spend) if day.spend else '—' }}</td>
+                            <td class="number">{{ "{:,.2f} ₽".format(day.sum_price) if day.sum_price else '—' }}</td>
+                            <td class="number">{{ "{:.2f}".format(day.ctr) if day.ctr else '—' }}</td>
+                            <td class="number">{{ "{:.2f}".format(day.cr) if day.cr else '—' }}</td>
+                            <td class="number">{{ "{:.2f}".format(day.cpc) if day.cpc else '—' }}</td>
+                            <td class="number">{{ "{:.2f}".format(day.cpm) if day.cpm else '—' }}</td>
+                            <td class="number">{{ "{:.2f}".format(day.avg_pos) if day.avg_pos else '—' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="14" style="text-align: center; padding: 40px; color: #666;">
+                                Нет данных за выбранный период
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Форматирование даты в YYYY-MM-DD
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Установка диапазона дат
+        function setDateRange(range) {
+            const today = new Date();
+            let fromDate, toDate = today;
+
+            switch(range) {
+                case 'today':
+                    fromDate = today;
+                    toDate = today;
+                    break;
+                case 'yesterday':
+                    fromDate = new Date(today);
+                    fromDate.setDate(today.getDate() - 1);
+                    toDate = fromDate;
+                    break;
+                case '7days':
+                    fromDate = new Date(today);
+                    fromDate.setDate(today.getDate() - 6);
+                    toDate = today;
+                    break;
+                case '30days':
+                    fromDate = new Date(today);
+                    fromDate.setDate(today.getDate() - 29);
+                    toDate = today;
+                    break;
+            }
+
+            document.getElementById('from_date').value = formatDate(fromDate);
+            document.getElementById('to_date').value = formatDate(toDate);
+        }
+    </script>
+</body>
+</html>

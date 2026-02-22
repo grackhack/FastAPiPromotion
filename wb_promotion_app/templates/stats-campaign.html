@@ -215,24 +215,12 @@
                     <div class="value">{{ "{:,}".format(stats.total_shks) if stats.total_shks else '0' }}</div>
                 </div>
                 <div class="stat-card">
-                    <h3>Отмены</h3>
-                    <div class="value">{{ "{:,}".format(stats.total_canceled) if stats.total_canceled else '0' }}</div>
-                </div>
-                <div class="stat-card">
                     <h3>Затраты</h3>
                     <div class="value small">{{ "{:,.2f} ₽".format(stats.total_spend) if stats.total_spend else '0 ₽' }}</div>
                 </div>
                 <div class="stat-card">
-                    <h3>Сумма заказов</h3>
-                    <div class="value small">{{ "{:,.2f} ₽".format(stats.total_sum_price) if stats.total_sum_price else '0 ₽' }}</div>
-                </div>
-                <div class="stat-card">
                     <h3>CTR</h3>
                     <div class="value small">{{ "{:.2f}%".format(stats.ctr) if stats.ctr else '0%' }}</div>
-                </div>
-                <div class="stat-card">
-                    <h3>CR</h3>
-                    <div class="value small">{{ "{:.2f}%".format(stats.cr) if stats.cr else '0%' }}</div>
                 </div>
                 <div class="stat-card">
                     <h3>CPC</h3>
@@ -246,57 +234,6 @@
                     <h3>Ср. позиция</h3>
                     <div class="value small">{{ "{:.2f}".format(stats.avg_pos) if stats.avg_pos else '0' }}</div>
                 </div>
-            </div>
-
-            <!-- Статистика по дням -->
-            <div class="stats-section">
-                <h2 style="margin: 0; padding: 20px; border-bottom: 1px solid #eee;">📅 Статистика по дням</h2>
-                <table class="stats-table">
-                    <thead>
-                        <tr>
-                            <th>Дата</th>
-                            <th class="number">Просмотры</th>
-                            <th class="number">Клики</th>
-                            <th class="number">Заказы</th>
-                            <th class="number">В корзину</th>
-                            <th class="number">Штуки</th>
-                            <th class="number">Отмены</th>
-                            <th class="number">Затраты</th>
-                            <th class="number">Сумма заказов</th>
-                            <th class="number">CTR, %</th>
-                            <th class="number">CR, %</th>
-                            <th class="number">CPC, ₽</th>
-                            <th class="number">CPM, ₽</th>
-                            <th class="number">Позиция</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for day in stats.days %}
-                        <tr>
-                            <td>{{ day.query }}</td>
-                            <td class="number">{{ "{:,}".format(day.views) if day.views else '—' }}</td>
-                            <td class="number">{{ "{:,}".format(day.clicks) if day.clicks else '—' }}</td>
-                            <td class="number">{{ "{:,}".format(day.orders) if day.orders else '—' }}</td>
-                            <td class="number">{{ "{:,}".format(day.atbs) if day.atbs else '—' }}</td>
-                            <td class="number">{{ "{:,}".format(day.shks) if day.shks else '—' }}</td>
-                            <td class="number">{{ "{:,}".format(day.canceled) if day.canceled else '—' }}</td>
-                            <td class="number">{{ "{:,.2f} ₽".format(day.spend) if day.spend else '—' }}</td>
-                            <td class="number">{{ "{:,.2f} ₽".format(day.sum_price) if day.sum_price else '—' }}</td>
-                            <td class="number">{{ "{:.2f}".format(day.ctr) if day.ctr else '—' }}</td>
-                            <td class="number">{{ "{:.2f}".format(day.cr) if day.cr else '—' }}</td>
-                            <td class="number">{{ "{:.2f}".format(day.cpc) if day.cpc else '—' }}</td>
-                            <td class="number">{{ "{:.2f}".format(day.cpm) if day.cpm else '—' }}</td>
-                            <td class="number">{{ "{:.2f}".format(day.avg_pos) if day.avg_pos else '—' }}</td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="14" style="text-align: center; padding: 40px; color: #666;">
-                                Нет данных за выбранный период
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
             </div>
 
             <!-- Статистика по запросам -->
