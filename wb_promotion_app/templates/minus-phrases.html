@@ -71,16 +71,28 @@
             font-size: 14px;
         }
         .add-phrase-form {
-            display: flex;
-            gap: 10px;
             margin-top: 15px;
         }
-        .add-phrase-form input {
-            flex: 1;
-            padding: 8px 12px;
+        .add-phrase-form textarea {
+            width: 100%;
+            padding: 12px;
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+            margin-bottom: 10px;
+        }
+        .add-phrase-form textarea:focus {
+            outline: none;
+            border-color: #0066FF;
+            box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.2);
+        }
+        .form-hint {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
         }
         .btn {
             padding: 8px 16px;
@@ -149,7 +161,7 @@
 
         {% if nm_list %}
             {% for nm in nm_list %}
-            <div class="nm-card">
+            <div class="nm-card" data-nm-id="{{ nm.nm_id }}">
                 <div class="nm-header">
                     <h3>📦 Товар {{ nm.nm_id }}</h3>
                     <span class="badge">{{ nm.minus_phrases|length }} минус-фраз</span>
@@ -172,9 +184,15 @@
                         </div>
                     {% endif %}
 
-                    <form class="add-phrase-form" onsubmit="addPhrase(event, {{ nm.nm_id }})">
-                        <input type="text" placeholder="Введите минус-фразу" required>
-                        <button type="submit" class="btn btn-primary">Добавить</button>
+                    <form class="add-phrase-form" onsubmit="addPhrases(event, {{ nm.nm_id }})">
+                        <textarea 
+                            placeholder="Введите минус-фразы, каждую с новой строки&#10;например:&#10;дешевый&#10;бесплатно&#10;б/у"
+                            required
+                        ></textarea>
+                        <div class="form-hint">
+                            💡 Введите несколько фраз, каждую с новой строки. Пустые строки будут пропущены.
+                        </div>
+                        <button type="submit" class="btn btn-primary">Добавить фразы</button>
                     </form>
                 </div>
             </div>
@@ -186,62 +204,195 @@
         {% endif %}
     </div>
 
+    <style>
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    </style>
+
     <script>
-        async function addPhrase(event, nmId) {
+        const campaignId = {{ campaign.id }};
+        
+        // Показ уведомления
+        function showNotification(message, type = 'info') {
+            const colors = {
+                success: { bg: '#4caf50', text: 'white' },
+                error: { bg: '#f44336', text: 'white' },
+                info: { bg: '#2196f3', text: 'white' }
+            };
+            const color = colors[type] || colors.info;
+
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                background: ${color.bg};
+                color: ${color.text};
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+                font-size: 14px;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Загрузка API токена
+        async function loadApiToken() {
+            try {
+                const response = await fetch('/auth/token', {
+                    credentials: 'same-origin'
+                });
+                const data = await response.json();
+                if (data.has_token && data.token) {
+                    return data.token;
+                }
+            } catch (error) {
+                console.error('Error loading token:', error);
+            }
+            return null;
+        }
+
+        // Добавление списка фраз (каждая с новой строки)
+        async function addPhrases(event, nmId) {
             event.preventDefault();
             const form = event.target;
-            const phrase = form.querySelector('input').value.trim();
-            
-            if (!phrase) return;
-            
+            const textarea = form.querySelector('textarea');
+            const text = textarea.value.trim();
+
+            if (!text) {
+                showNotification('Введите хотя бы одну фразу', 'info');
+                return;
+            }
+
+            // Разбиваем текст на строки и фильтруем пустые
+            const phrases = text.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+
+            if (phrases.length === 0) {
+                showNotification('Введите хотя бы одну фразу', 'info');
+                return;
+            }
+
+            const apiToken = await loadApiToken();
+            if (!apiToken) {
+                showNotification('Ошибка: не найден API токен', 'error');
+                return;
+            }
+
             try {
+                // Получаем все текущие минус-фразы из DOM
+                let currentPhrases = getCurrentMinusPhrasesFromDOM(nmId);
+
+                // Добавляем новые фразы (если их ещё нет)
+                let addedCount = 0;
+                phrases.forEach(phrase => {
+                    if (!currentPhrases.includes(phrase)) {
+                        currentPhrases.push(phrase);
+                        addedCount++;
+                    }
+                });
+
+                if (addedCount === 0) {
+                    showNotification('Все эти фразы уже есть в списке', 'info');
+                    return;
+                }
+
+                // Отправляем обновлённый список
                 const response = await fetch('/search-clusters/set-minus-phrases', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-API-Token': apiToken
                     },
                     body: JSON.stringify({
-                        advert_id: {{ campaign.id }},
+                        advert_id: campaignId,
                         nm_id: nmId,
-                        minus_phrases: [phrase]
+                        norm_queries: currentPhrases
                     })
                 });
-                
+
                 if (response.ok) {
-                    location.reload();
+                    showNotification(`Добавлено ${addedCount} фраз(ы)`, 'success');
+                    setTimeout(() => location.reload(), 1000);
                 } else {
-                    alert('Ошибка добавления фразы');
+                    const error = await response.json();
+                    console.error('API error:', error);
+                    showNotification(error.detail || 'Не удалось добавить фразы', 'error');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Ошибка подключения к серверу');
+                showNotification('Ошибка подключения к серверу', 'error');
             }
         }
-        
+
+        // Получаем все текущие минус-фразы для товара из DOM
+        function getCurrentMinusPhrasesFromDOM(nmId) {
+            const phrases = [];
+            // Находим карточку по data-nm-id
+            const card = document.querySelector(`.nm-card[data-nm-id="${nmId}"]`);
+            if (card) {
+                card.querySelectorAll('.minus-phrase-text').forEach(span => {
+                    phrases.push(span.textContent.trim());
+                });
+            }
+            return phrases;
+        }
+
+        // Удаление фразы
         async function removePhrase(nmId, phrase) {
             if (!confirm('Удалить минус-фразу "' + phrase + '"?')) return;
-            
+
+            const apiToken = await loadApiToken();
+            if (!apiToken) {
+                showNotification('Ошибка: не найден API токен', 'error');
+                return;
+            }
+
             try {
+                // Получаем все текущие минус-фразы
+                let currentPhrases = getCurrentMinusPhrasesFromDOM(nmId);
+
+                // Удаляем только эту фразу
+                currentPhrases = currentPhrases.filter(p => p !== phrase);
+
                 const response = await fetch('/search-clusters/set-minus-phrases', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-API-Token': apiToken
                     },
                     body: JSON.stringify({
-                        advert_id: {{ campaign.id }},
+                        advert_id: campaignId,
                         nm_id: nmId,
-                        norm_queries: [] // Пустой список для удаления
+                        norm_queries: currentPhrases
                     })
                 });
-                
+
                 if (response.ok) {
-                    location.reload();
+                    showNotification('Фраза удалена', 'success');
+                    setTimeout(() => location.reload(), 1000);
                 } else {
-                    alert('Ошибка удаления фразы');
+                    const error = await response.json();
+                    showNotification(error.detail || 'Не удалось удалить фразу', 'error');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Ошибка подключения к серверу');
+                showNotification('Ошибка подключения к серверу', 'error');
             }
         }
     </script>
