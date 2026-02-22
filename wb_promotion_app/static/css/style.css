@@ -2528,27 +2528,31 @@ body {
 
 /* Navbar component */
 .navbar {
-    background: linear-gradient(135deg, #cb11ab 0%, #9b11ab 100%);
-    color: white;
-    padding: 15px 20px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 15px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(135deg, #cb11ab 0%, #9b11ab 100%) !important;
+    color: white !important;
+    padding: 15px 20px !important;
+    border-radius: 12px !important;
+    margin-bottom: 20px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 15px !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1000 !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
+}
+
+.navbar, .navbar * {
+    box-sizing: border-box;
 }
 
 .nav-brand a {
-    color: white;
-    text-decoration: none;
-    font-size: 1.4rem;
-    font-weight: 600;
+    color: white !important;
+    text-decoration: none !important;
+    font-size: 1.4rem !important;
+    font-weight: 600 !important;
 }
 
 .nav-brand a:hover {
@@ -2556,56 +2560,58 @@ body {
 }
 
 .nav-links {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+    display: flex !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
 }
 
 .nav-links .nav-link {
-    color: white;
-    text-decoration: none;
-    padding: 8px 14px;
-    border-radius: 8px;
-    transition: background-color 0.3s;
-    font-size: 14px;
-    white-space: nowrap;
+    color: white !important;
+    text-decoration: none !important;
+    padding: 8px 14px !important;
+    border-radius: 8px !important;
+    transition: background-color 0.3s !important;
+    font-size: 14px !important;
+    white-space: nowrap !important;
+    display: inline-block !important;
 }
 
 .nav-links .nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.2) !important;
 }
 
 .nav-links .nav-link.active {
-    background-color: rgba(255, 255, 255, 0.3);
-    font-weight: 600;
+    background-color: rgba(255, 255, 255, 0.3) !important;
+    font-weight: 600 !important;
 }
 
 /* User greeting in header */
 .user-greeting {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(255, 255, 255, 0.2);
-    padding: 8px 15px;
-    border-radius: 20px;
-    font-size: 0.9rem;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    padding: 8px 15px !important;
+    border-radius: 20px !important;
+    font-size: 0.9rem !important;
+    color: white !important;
 }
 
 @media (max-width: 768px) {
     .navbar {
-        padding: 12px 15px;
+        padding: 12px 15px !important;
     }
     .nav-brand a {
-        font-size: 1.2rem;
+        font-size: 1.2rem !important;
     }
     .nav-links {
-        width: 100%;
-        justify-content: center;
+        width: 100% !important;
+        justify-content: center !important;
     }
     .user-greeting {
-        width: 100%;
-        justify-content: center;
-        order: -1;
-        margin-bottom: 10px;
+        width: 100% !important;
+        justify-content: center !important;
+        order: -1 !important;
+        margin-bottom: 10px !important;
     }
 }
