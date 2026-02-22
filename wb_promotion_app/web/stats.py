@@ -268,11 +268,18 @@ async def tasks_page(
 ):
     """Веб-интерфейс управления периодическими задачами"""
     from ..main import templates
+    from fastapi.responses import HTMLResponse, RedirectResponse
+
+    # Если пользователь не авторизован - перенаправляем на вход
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
 
     template = templates.get_template("tasks.html")
-    return template.render(
+    content = template.render(
         request=request,
         user=user,
-        is_authenticated=user is not None,
+        is_authenticated=True,
         current_page='tasks'
     )
+    
+    return HTMLResponse(content=content)
