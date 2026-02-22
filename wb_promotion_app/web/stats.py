@@ -153,3 +153,67 @@ async def minus_phrases_page(
         campaign={"id": campaign_id},
         nm_list=nm_list
     ))
+
+
+@router.get("/stats/campaign/{campaign_id}/nm/{nm_id}")
+async def nm_stats_page(
+    request: Request,
+    campaign_id: int,
+    nm_id: int,
+    wb_client: Any = Depends(get_wb_client_for_user)
+):
+    """Страница полной статистики по товару (использует /adv/v3/fullstats)"""
+    from ..main import templates
+    from ..services.stats_service import StatsService
+    from ..services.wb_service import WBService
+    from ..auth import get_current_user_from_session
+
+    from_date = request.query_params.get("from_date")
+    to_date = request.query_params.get("to_date")
+
+    if not from_date or not to_date:
+        to = datetime.now()
+        from_date = (to - timedelta(days=7)).strftime("%Y-%m-%d")
+        to_date = to.strftime("%Y-%m-%d")
+
+    try:
+        # Получаем полную статистику через новый API с указанием nm_id
+        stats_service = StatsService(wb_client)
+        full_stats = stats_service.get_full_stats(campaign_id, from_date, to_date, nm_id=nm_id)
+
+        # Получаем информацию о кампании
+        campaigns = wb_client.get_campaigns()
+        campaign = next((c for c in campaigns if c.get('id') == campaign_id), None)
+
+        # Получаем минус-фразы
+        wb_service = WBService(wb_client)
+        all_minus_phrases = set()
+        try:
+            phrases = wb_service.get_minus_phrases(campaign_id, nm_id)
+            all_minus_phrases.update(phrases)
+        except:
+            pass
+
+        # Получаем текущего пользователя
+        user = await get_current_user_from_session(request)
+
+    except Exception as e:
+        import logging
+        logging.exception(f"Error loading full stats for campaign {campaign_id}, nm {nm_id}: {e}")
+        return HTMLResponse(f"Ошибка: {str(e)}", status_code=500)
+
+    template = templates.get_template("stats-campaign.html")
+    return HTMLResponse(template.render(
+        request=request,
+        user=user,
+        is_authenticated=user is not None,
+        current_page='stats',
+        campaign=campaign,
+        stats=full_stats,
+        queries=[],
+        from_date=from_date,
+        to_date=to_date,
+        minus_phrases=list(all_minus_phrases),
+        campaign_id=campaign_id,
+        nm_id=nm_id
+    ))

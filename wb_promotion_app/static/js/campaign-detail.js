@@ -136,13 +136,14 @@ function renderNmList() {
 
     campaignData.nm_settings.forEach(nm => {
         const tr = document.createElement('tr');
+        // Ссылка на полную статистику с использованием нового API /adv/v3/fullstats
         tr.innerHTML = `
             <td>${nm.nm_id}</td>
             <td>${nm.name || 'Товар ' + nm.nm_id}</td>
             <td>${nm.bid || '—'} ₽</td>
             <td>
-                <a href="/stats/campaign/${currentCampaignId}/nm/${nm.nm_id}" class="btn btn-small btn-secondary">
-                    📊 Статистика
+                <a href="/stats/campaign/${currentCampaignId}/nm/${nm.nm_id}" class="btn btn-small btn-secondary" target="_blank">
+                    📊 Полная статистика
                 </a>
             </td>
         `;

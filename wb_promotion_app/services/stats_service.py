@@ -58,25 +58,31 @@ class StatsService:
         self,
         campaign_id: int,
         from_date: str,
-        to_date: str
+        to_date: str,
+        nm_id: int = None
     ) -> Dict[str, Any]:
         """
         Получить полную статистику по кампании с группировкой
-        
+
         Args:
             campaign_id: ID кампании
             from_date: Дата начала (YYYY-MM-DD)
             to_date: Дата окончания (YYYY-MM-DD)
-            
+            nm_id: ID товара (опционально, для фильтрации по товару)
+
         Returns:
             Словарь с полной статистикой
         """
+        items = [{"advert_id": campaign_id}]
+        if nm_id:
+            items[0]["nm_id"] = nm_id
+            
         request = FullStatsRequest(
             from_date=from_date,
             to_date=to_date,
-            items=[{"advert_id": campaign_id}]
+            items=items
         )
-        
+
         stats = self.client.get_full_stats(request)
         return self._process_full_stats(stats, campaign_id)
 
