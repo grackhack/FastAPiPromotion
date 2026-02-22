@@ -12,6 +12,7 @@ from ..config import get_db
 from ..models import ScheduledTask, AutoRule, CampaignStatsHistory, User, UserApiToken
 from ..auth import get_current_user_from_session
 from ..tasks import collect_campaign_stats, check_auto_rules, calculate_campaign_metrics
+from ..services.wb_service import WBService
 
 router = APIRouter(prefix="/api/tasks", tags=["Scheduled Tasks"])
 
