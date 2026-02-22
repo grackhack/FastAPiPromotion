@@ -296,6 +296,7 @@
                             <th class="number">Штуки</th>
                             <th class="number">Затраты</th>
                             <th class="number">CTR, %</th>
+                            <th class="number">CR, %</th>
                             <th class="number">CPC, ₽</th>
                             <th class="number">CPM, ₽</th>
                             <th class="number">Позиция</th>
@@ -381,6 +382,7 @@
                             <td class="number">{{ "{:,}".format(item.shks) if item.shks else '—' }}</td>
                             <td class="number">{{ "{:.2f} ₽".format(item.spend) if item.spend else '—' }}</td>
                             <td class="number">{{ "{:.2f}".format(item.ctr) if item.ctr else '—' }}</td>
+                            <td class="number">{{ "{:.2f}".format(item.cr) if item.cr else '—' }}</td>
                             <td class="number">{{ "{:.2f}".format(item.cpc) if item.cpc else '—' }}</td>
                             <td class="number">{{ "{:.2f}".format(item.cpm) if item.cpm else '—' }}</td>
                             <td class="number">{{ "{:.2f}".format(item.avg_pos) if item.avg_pos else '—' }}</td>

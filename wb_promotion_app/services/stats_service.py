@@ -204,6 +204,9 @@ class StatsService:
                         avg_pos = stat.get('avg_pos', 0)
                         spend = stat.get('spend', 0)  # Уже в рублях
                         
+                        # Рассчитываем CR (conversion rate)
+                        cr = round((orders / clicks * 100) if (clicks > 0 and orders > 0) else 0, 2)
+
                         total_views += views
                         total_clicks += clicks
                         total_orders += orders
@@ -213,7 +216,7 @@ class StatsService:
                         total_cpc += cpc
                         total_cpm += cpm
                         total_avg_pos += avg_pos
-                        
+
                         # Добавляем запрос в days_data
                         days_data.append({
                             "query": stat.get('norm_query', 'N/A'),
@@ -223,6 +226,7 @@ class StatsService:
                             "atbs": atbs,
                             "shks": shks,
                             "ctr": ctr,
+                            "cr": cr,
                             "cpc": cpc,
                             "cpm": cpm,
                             "avg_pos": avg_pos,
@@ -241,6 +245,9 @@ class StatsService:
                         avg_pos = self._get_safe_value(stat, 'avg_pos', 0)
                         spend = self._get_safe_value(stat, 'spend', 0)
                         
+                        # Рассчитываем CR (conversion rate)
+                        cr = round((orders / clicks * 100) if (clicks > 0 and orders > 0) else 0, 2)
+
                         total_views += views
                         total_clicks += clicks
                         total_orders += orders
@@ -250,7 +257,7 @@ class StatsService:
                         total_cpc += cpc
                         total_cpm += cpm
                         total_avg_pos += avg_pos
-                        
+
                         days_data.append({
                             "query": self._get_safe_value(stat, 'norm_query', 'N/A'),
                             "views": views,
@@ -259,6 +266,7 @@ class StatsService:
                             "atbs": atbs,
                             "shks": shks,
                             "ctr": ctr,
+                            "cr": cr,
                             "cpc": cpc,
                             "cpm": cpm,
                             "avg_pos": avg_pos,
