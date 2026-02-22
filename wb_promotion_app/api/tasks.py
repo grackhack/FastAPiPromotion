@@ -436,7 +436,12 @@ async def get_phrase_daily_stats(
     db: Session = Depends(get_db)
 ):
     """Получить статистику по фразам по дням"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
     try:
+        logger.info(f"Loading phrase stats for user {user.id}, campaign {campaign_id}, nm {nm_id}")
+        
         # Получаем токен пользователя
         stmt = select(UserApiToken).where(
             UserApiToken.user_id == user.id,
@@ -444,13 +449,21 @@ async def get_phrase_daily_stats(
         ).limit(1)
         user_token = db.execute(stmt).scalar_one_or_none()
         
+        logger.info(f"User token found: {user_token is not None}")
+        
         if not user_token:
-            raise HTTPException(status_code=400, detail="No API token found")
+            logger.error(f"No API token found for user {user.id}")
+            raise HTTPException(status_code=400, detail="No API token found. Please add token in profile.")
         
         # Получаем статистику
         from ..api_client import WBPromotionClient
+        from ..services.wb_service import WBService
+        
+        logger.info(f"Creating WB client with token...")
         wb_client = WBPromotionClient(user_token.token)
         wb_service = WBService(wb_client)
+        
+        logger.info(f"Calling get_normquery_daily_stats...")
         stats = wb_service.get_normquery_daily_stats(
             advert_id=campaign_id,
             nm_id=nm_id,
@@ -458,9 +471,12 @@ async def get_phrase_daily_stats(
             to_date=to_date
         )
         
+        logger.info(f"Stats loaded successfully")
+        
         return stats
         
     except HTTPException:
         raise
     except Exception as e:
+        logger.exception(f"Error loading phrase stats: {e}")
         raise HTTPException(status_code=500, detail=str(e))
