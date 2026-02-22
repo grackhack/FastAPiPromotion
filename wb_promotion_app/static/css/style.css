@@ -2528,8 +2528,8 @@ body {
 
 /* Navbar component */
 .navbar {
-    background: linear-gradient(135deg, #cb11ab 0%, #9b11ab 100%) !important;
-    color: white !important;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+    color: #ffffff !important;
     padding: 15px 20px !important;
     border-radius: 12px !important;
     margin-bottom: 20px !important;
@@ -2541,7 +2541,7 @@ body {
     position: sticky !important;
     top: 0 !important;
     z-index: 1000 !important;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
 }
 
 .navbar, .navbar * {
@@ -2549,14 +2549,16 @@ body {
 }
 
 .nav-brand a {
-    color: white !important;
+    color: #ffffff !important;
     text-decoration: none !important;
     font-size: 1.4rem !important;
     font-weight: 600 !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;
 }
 
 .nav-brand a:hover {
     opacity: 0.9;
+    color: #e94560 !important;
 }
 
 .nav-links {
@@ -2566,23 +2568,28 @@ body {
 }
 
 .nav-links .nav-link {
-    color: white !important;
+    color: #ffffff !important;
     text-decoration: none !important;
     padding: 8px 14px !important;
     border-radius: 8px !important;
-    transition: background-color 0.3s !important;
+    transition: all 0.3s !important;
     font-size: 14px !important;
     white-space: nowrap !important;
     display: inline-block !important;
+    background: rgba(255, 255, 255, 0.1) !important;
 }
 
 .nav-links .nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.2) !important;
+    background-color: #e94560 !important;
+    color: #ffffff !important;
+    transform: translateY(-2px);
 }
 
 .nav-links .nav-link.active {
-    background-color: rgba(255, 255, 255, 0.3) !important;
+    background-color: #e94560 !important;
+    color: #ffffff !important;
     font-weight: 600 !important;
+    box-shadow: 0 2px 8px rgba(233, 69, 96, 0.4);
 }
 
 /* User greeting in header */
@@ -2590,11 +2597,12 @@ body {
     display: flex !important;
     align-items: center !important;
     gap: 8px !important;
-    background: rgba(255, 255, 255, 0.2) !important;
+    background: rgba(233, 69, 96, 0.3) !important;
     padding: 8px 15px !important;
     border-radius: 20px !important;
     font-size: 0.9rem !important;
-    color: white !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(233, 69, 96, 0.5) !important;
 }
 
 @media (max-width: 768px) {
