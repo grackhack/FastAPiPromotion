@@ -602,7 +602,7 @@ class WBPromotionClient:
     ) -> Dict[str, Any]:
         """
         Получить статистику по фразам по дням (API /adv/v1/normquery/stats)
-        
+
         Args:
             advert_id: ID кампании
             nm_id: ID товара
@@ -611,14 +611,27 @@ class WBPromotionClient:
         """
         try:
             url = f"{self.base_url}/adv/v1/normquery/stats"
+            
+            # Формируем payload согласно документации WB API
             payload = {
-                "advertId": advert_id,
-                "nmId": nm_id,
-                "fromDate": from_date,
-                "toDate": to_date
+                "from": from_date,
+                "to": to_date,
+                "items": [
+                    {
+                        "advertId": advert_id,
+                        "nmId": nm_id
+                    }
+                ]
             }
+            
+            # Логируем для отладки
+            self.logger.info(f"get_normquery_daily_stats: url={url}, payload={payload}")
+            
             response = requests.post(url, json=payload, headers=self.headers)
             
+            self.logger.info(f"Response status: {response.status_code}")
+            self.logger.info(f"Response body: {response.text[:500]}")
+
             if response.status_code != 200:
                 try:
                     error_data = response.json()
@@ -626,7 +639,7 @@ class WBPromotionClient:
                 except:
                     error_msg = response.text or f"HTTP {response.status_code}"
                 raise Exception(f"Ошибка API: {error_msg}")
-            
+
             return response.json()
         except Exception as e:
             error_context = "get_normquery_daily_stats"
