@@ -4,7 +4,6 @@
     </div>
     <div class="nav-links">
         <a href="/" class="nav-link{% if current_page == 'index' %} active{% endif %}">Кампании</a>
-        <a href="/campaigns" class="nav-link{% if current_page == 'campaigns' %} active{% endif %}">Все кампании</a>
         {% if is_authenticated %}
         <a href="/profile" class="nav-link{% if current_page == 'profile' %} active{% endif %}">👤 Профиль</a>
         <a href="/logout" class="nav-link">🚪 Выйти</a>
