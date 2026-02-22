@@ -31,7 +31,6 @@ cd "C:\Program Files\PostgreSQL\16\bin"
 
 ### Вариант В: Выполнить SQL скрипт
 ```bash
-cd C:\Users\Admin\PycharmProjects\FastAPIProject1
 psql -U postgres -f create_db.sql
 ```
 
