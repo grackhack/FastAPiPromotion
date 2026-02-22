@@ -62,24 +62,7 @@ body {
     flex-wrap: wrap;
 }
 
-.nav-link {
-    color: white;
-    text-decoration: none;
-    padding: 8px 14px;
-    border-radius: 8px;
-    transition: background-color 0.3s;
-    font-size: 14px;
-    white-space: nowrap;
-}
-
-.nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-}
-
-.nav-link.active {
-    background-color: rgba(255, 255, 255, 0.3);
-    font-weight: 600;
-}
+/* Старые стили .nav-link удалены - теперь используется .navbar .nav-link */
 
 .main {
     background: white;
@@ -2527,99 +2510,99 @@ body {
 }
 
 /* Navbar component */
-.navbar {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
-    color: #ffffff !important;
-    padding: 15px 20px !important;
-    border-radius: 12px !important;
-    margin-bottom: 20px !important;
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    flex-wrap: wrap !important;
-    gap: 15px !important;
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 1000 !important;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+body .navbar {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #ffffff;
+    padding: 15px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
-.navbar, .navbar * {
+body .navbar, body .navbar * {
     box-sizing: border-box;
 }
 
-.nav-brand a {
-    color: #ffffff !important;
-    text-decoration: none !important;
-    font-size: 1.4rem !important;
-    font-weight: 600 !important;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;
+body .navbar .nav-brand a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1.4rem;
+    font-weight: 600;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
 
-.nav-brand a:hover {
+body .navbar .nav-brand a:hover {
     opacity: 0.9;
-    color: #e94560 !important;
+    color: #e94560;
 }
 
-.nav-links {
-    display: flex !important;
-    gap: 8px !important;
-    flex-wrap: wrap !important;
+body .navbar .nav-links {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
-.nav-links .nav-link {
-    color: #ffffff !important;
-    text-decoration: none !important;
-    padding: 8px 14px !important;
-    border-radius: 8px !important;
-    transition: all 0.3s !important;
-    font-size: 14px !important;
-    white-space: nowrap !important;
-    display: inline-block !important;
-    background: rgba(255, 255, 255, 0.1) !important;
+body .navbar .nav-links .nav-link {
+    color: #ffffff;
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    transition: all 0.3s;
+    font-size: 14px;
+    white-space: nowrap;
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.1);
 }
 
-.nav-links .nav-link:hover {
-    background-color: #e94560 !important;
-    color: #ffffff !important;
+body .navbar .nav-links .nav-link:hover {
+    background-color: #e94560;
+    color: #ffffff;
     transform: translateY(-2px);
 }
 
-.nav-links .nav-link.active {
-    background-color: #e94560 !important;
-    color: #ffffff !important;
-    font-weight: 600 !important;
+body .navbar .nav-links .nav-link.active {
+    background-color: #e94560;
+    color: #ffffff;
+    font-weight: 600;
     box-shadow: 0 2px 8px rgba(233, 69, 96, 0.4);
 }
 
 /* User greeting in header */
-.user-greeting {
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    background: rgba(233, 69, 96, 0.3) !important;
-    padding: 8px 15px !important;
-    border-radius: 20px !important;
-    font-size: 0.9rem !important;
-    color: #ffffff !important;
-    border: 1px solid rgba(233, 69, 96, 0.5) !important;
+body .navbar .user-greeting {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(233, 69, 96, 0.3);
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    color: #ffffff;
+    border: 1px solid rgba(233, 69, 96, 0.5);
 }
 
 @media (max-width: 768px) {
-    .navbar {
-        padding: 12px 15px !important;
+    body .navbar {
+        padding: 12px 15px;
     }
-    .nav-brand a {
-        font-size: 1.2rem !important;
+    body .navbar .nav-brand a {
+        font-size: 1.2rem;
     }
-    .nav-links {
-        width: 100% !important;
-        justify-content: center !important;
+    body .navbar .nav-links {
+        width: 100%;
+        justify-content: center;
     }
-    .user-greeting {
-        width: 100% !important;
-        justify-content: center !important;
-        order: -1 !important;
-        margin-bottom: 10px !important;
+    body .navbar .user-greeting {
+        width: 100%;
+        justify-content: center;
+        order: -1;
+        margin-bottom: 10px;
     }
 }
