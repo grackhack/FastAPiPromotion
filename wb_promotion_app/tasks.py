@@ -10,8 +10,6 @@ import logging
 from datetime import datetime, timedelta
 from typing import List, Optional
 
-from taskiq import Depends
-
 from .taskiq_config import taskiq_broker
 from .config import get_db
 from .models import CampaignStatsHistory, AutoRule, UserApiToken
