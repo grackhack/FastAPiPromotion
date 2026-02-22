@@ -155,8 +155,9 @@
         </div>
 
         <div class="nav-tabs">
-            <a href="/stats/campaign/{{ campaign.id }}" class="nav-tab">Статистика</a>
+            <a href="/stats/campaign/{{ campaign.id }}" class="nav-tab">📊 Статистика по фразам</a>
             <a href="/campaigns/{{ campaign.id }}/minus-phrases" class="nav-tab active">Минус-фразы</a>
+            <a href="/campaigns/{{ campaign.id }}/clusters" class="nav-tab">📋 Списки кластеров</a>
         </div>
 
         {% if nm_list %}

@@ -208,3 +208,54 @@ async def nm_stats_page(
         campaign_id=campaign_id,
         nm_id=nm_id
     ))
+
+
+@router.get("/campaigns/{campaign_id}/clusters")
+async def clusters_page(
+    request: Request,
+    campaign_id: int,
+    wb_client: Any = Depends(get_wb_client_for_user)
+):
+    """Страница просмотра списков активных и неактивных кластеров"""
+    from ..main import templates
+    from ..services.wb_service import WBService
+    from ..auth import get_current_user_from_session
+
+    try:
+        # Получаем данные о кампании
+        adverts = wb_client.get_adverts(ids=str(campaign_id))
+        
+        wb_service = WBService(wb_client)
+        nm_list = []
+        
+        if adverts and hasattr(adverts, 'adverts') and adverts.adverts:
+            advert = adverts.adverts[0]
+            # Получаем все nm_id из кампании
+            for nm_setting in advert.nm_settings:
+                nm_id = nm_setting.nm_id
+                
+                # Получаем списки кластеров через API
+                clusters = wb_service.get_search_cluster_list(campaign_id, nm_id)
+                
+                nm_list.append({
+                    "nm_id": nm_id,
+                    "clusters": clusters
+                })
+
+        # Получаем текущего пользователя
+        user = await get_current_user_from_session(request)
+
+    except Exception as e:
+        import logging
+        logging.exception(f"Error loading clusters for campaign {campaign_id}: {e}")
+        return HTMLResponse(f"Ошибка: {str(e)}", status_code=500)
+
+    template = templates.get_template("clusters.html")
+    return HTMLResponse(template.render(
+        request=request,
+        user=user,
+        is_authenticated=user is not None,
+        current_page='clusters',
+        campaign={"id": campaign_id},
+        nm_list=nm_list
+    ))

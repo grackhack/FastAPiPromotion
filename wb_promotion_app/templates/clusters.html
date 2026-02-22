@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Списки кластеров кампании {{ campaign.id }} - Wildberries Promotion</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #0066FF;
+            text-decoration: none;
+            margin-bottom: 15px;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .nm-card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .nm-header {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nm-header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+        .nm-body {
+            padding: 20px;
+        }
+        .cluster-section {
+            margin-bottom: 20px;
+        }
+        .cluster-section h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #666;
+        }
+        .cluster-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .cluster-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        .cluster-item:last-child {
+            border-bottom: none;
+        }
+        .cluster-item.active {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .cluster-item.excluded {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .nav-tab {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            color: #333;
+        }
+        .nav-tab.active {
+            background: #0066FF;
+            color: white;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .badge-danger {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .cluster-info {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+        .cluster-info-item {
+            padding: 8px 15px;
+            background: #f5f5f5;
+            border-radius: 6px;
+        }
+        .cluster-info-item strong {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% include '_nav.html' %}
+
+        <div class="header">
+            <a href="/campaign/{{ campaign.id }}" class="back-link">
+                ← Назад к кампании
+            </a>
+            <h1>📋 Списки поисковых кластеров</h1>
+            <p style="color: #666; margin: 5px 0 0 0;">
+                Кампания #{{ campaign.id }} | Активные и неактивные кластеры
+            </p>
+        </div>
+
+        <div class="nav-tabs">
+            <a href="/stats/campaign/{{ campaign.id }}" class="nav-tab">📊 Статистика по фразам</a>
+            <a href="/campaigns/{{ campaign.id }}/minus-phrases" class="nav-tab">Минус-фразы</a>
+            <a href="/campaigns/{{ campaign.id }}/clusters" class="nav-tab active">📋 Списки кластеров</a>
+        </div>
+
+        {% if nm_list %}
+            {% for nm in nm_list %}
+            <div class="nm-card">
+                <div class="nm-header">
+                    <h3>📦 Товар {{ nm.nm_id }}</h3>
+                    <div>
+                        {% if nm.clusters %}
+                        <span class="badge badge-success">✅ Активных: {{ nm.clusters.active|length }}</span>
+                        <span class="badge badge-danger" style="margin-left: 8px;">🚫 Неактивных: {{ nm.clusters.excluded|length }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="nm-body">
+                    {% if nm.clusters %}
+                    <div class="cluster-info">
+                        <div class="cluster-info-item">
+                            <strong>🟢 Активные:</strong> {{ nm.clusters.active|length }}
+                        </div>
+                        <div class="cluster-info-item">
+                            <strong>🔴 Неактивные:</strong> {{ nm.clusters.excluded|length }}
+                        </div>
+                        <div class="cluster-info-item">
+                            <strong>📊 Всего:</strong> {{ (nm.clusters.active|length) + (nm.clusters.excluded|length) }}
+                        </div>
+                    </div>
+
+                    <!-- Активные кластеры -->
+                    <div class="cluster-section">
+                        <h4>🟢 Активные кластеры ({{ nm.clusters.active|length }})</h4>
+                        {% if nm.clusters.active %}
+                        <ul class="cluster-list">
+                            {% for cluster in nm.clusters.active %}
+                            <li class="cluster-item active">
+                                {{ cluster }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <div class="empty-state">
+                            <p>Нет активных кластеров</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Неактивные кластеры -->
+                    <div class="cluster-section">
+                        <h4>🔴 Неактивные кластеры ({{ nm.clusters.excluded|length }})</h4>
+                        {% if nm.clusters.excluded %}
+                        <ul class="cluster-list">
+                            {% for cluster in nm.clusters.excluded %}
+                            <li class="cluster-item excluded">
+                                {{ cluster }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <div class="empty-state">
+                            <p>Нет неактивных кластеров</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <p>Нет данных о кластерах для этого товара</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>Нет товаров в кампании</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

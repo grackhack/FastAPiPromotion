@@ -107,6 +107,38 @@ class WBService:
             return self.client.set_minus_phrases(advert_id, nm_id, phrases)
         except Exception as e:
             raise Exception(f"Ошибка установки минус-фраз: {str(e)}")
+
+    def get_search_cluster_list(
+        self,
+        advert_id: int,
+        nm_id: int
+    ) -> Dict[str, Any]:
+        """Получить списки активных и неактивных поисковых кластеров"""
+        try:
+            result = self.client.get_search_cluster_list(advert_id, nm_id)
+            
+            # Извлекаем списки из ответа
+            clusters = {
+                "active": [],
+                "excluded": []
+            }
+            
+            if isinstance(result, list):
+                for item in result:
+                    if isinstance(item, dict):
+                        if item.get('advert_id') == advert_id and item.get('nm_id') == nm_id:
+                            clusters["active"] = item.get('active', [])
+                            clusters["excluded"] = item.get('excluded', [])
+                            break
+                    else:
+                        if getattr(item, 'advert_id', None) == advert_id and getattr(item, 'nm_id', None) == nm_id:
+                            clusters["active"] = getattr(item, 'active', [])
+                            clusters["excluded"] = getattr(item, 'excluded', [])
+                            break
+            
+            return clusters
+        except Exception as e:
+            raise Exception(f"Ошибка загрузки списков кластеров: {str(e)}")
     
     def get_search_clusters(
         self,
