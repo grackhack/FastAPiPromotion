@@ -289,9 +289,141 @@ class StatsService:
         }
 
     def _process_full_stats(self, stats: Any, campaign_id: int) -> Dict[str, Any]:
-        """Обработать полную статистику"""
-        # Аналогично _process_stats но с дополнительной группировкой
-        return self._process_stats(stats, campaign_id)
+        """
+        Обработать полную статистику из /adv/v3/fullstats
+        
+        API возвращает массив кампаний:
+        [
+            {
+                "advertId": 123,
+                "days": [
+                    {
+                        "date": "2024-01-01T...",
+                        "apps": [
+                            {
+                                "appType": 1,
+                                "nms": [
+                                    {
+                                        "nmId": 456,
+                                        "name": "Товар",
+                                        "views": 100,
+                                        "clicks": 10,
+                                        ...
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+        """
+        # API возвращает массив кампаний
+        if not stats or not isinstance(stats, list) or len(stats) == 0:
+            return {
+                "campaign_id": campaign_id,
+                "total_views": 0,
+                "total_clicks": 0,
+                "total_orders": 0,
+                "total_atbs": 0,
+                "total_shks": 0,
+                "total_spend": 0,
+                "ctr": 0,
+                "cpc": 0,
+                "cpm": 0,
+                "avg_pos": 0,
+                "days": []
+            }
+        
+        # Берём первую кампанию (запрашивали одну)
+        campaign = stats[0] if isinstance(stats, list) else stats
+        
+        # Агрегируем статистику по всем дням и товарам
+        total_views = 0
+        total_clicks = 0
+        total_orders = 0
+        total_atbs = 0
+        total_shks = 0
+        total_spend = 0
+        total_cpc = 0
+        total_cpm = 0
+        total_avg_pos = 0
+        days_data = []
+        
+        days = campaign.get("days", []) if isinstance(campaign, dict) else getattr(campaign, 'days', [])
+        
+        for day in days:
+            if isinstance(day, dict):
+                day_views = day.get('views', 0)
+                day_clicks = day.get('clicks', 0)
+                day_orders = day.get('orders', 0)
+                day_atbs = day.get('atbs', 0)
+                day_shks = day.get('shks', 0)
+                day_sum = day.get('sum', 0)
+                day_cpc = day.get('cpc', 0)
+                day_cpm = day.get('cpm', 0)
+                day_ctr = day.get('ctr', 0)
+                day_avg_pos = day.get('avg_pos', 0)
+            else:
+                day_views = getattr(day, 'views', 0)
+                day_clicks = getattr(day, 'clicks', 0)
+                day_orders = getattr(day, 'orders', 0)
+                day_atbs = getattr(day, 'atbs', 0)
+                day_shks = getattr(day, 'shks', 0)
+                day_sum = getattr(day, 'sum', 0)
+                day_cpc = getattr(day, 'cpc', 0)
+                day_cpm = getattr(day, 'cpm', 0)
+                day_ctr = getattr(day, 'ctr', 0)
+                day_avg_pos = getattr(day, 'avg_pos', 0)
+            
+            total_views += day_views
+            total_clicks += day_clicks
+            total_orders += day_orders
+            total_atbs += day_atbs
+            total_shks += day_shks
+            total_spend += day_sum
+            total_cpc += day_cpc
+            total_cpm += day_cpm
+            total_avg_pos += day_avg_pos
+            
+            # Добавляем день в данные (используем дату как query для совместимости с шаблоном)
+            day_date = day.get('date', '') if isinstance(day, dict) else getattr(day, 'date', '')
+            days_data.append({
+                "query": str(day_date)[:10] if day_date else 'N/A',
+                "views": day_views,
+                "clicks": day_clicks,
+                "orders": day_orders,
+                "atbs": day_atbs,
+                "shks": day_shks,
+                "ctr": day_ctr,
+                "cpc": day_cpc,
+                "cpm": day_cpm,
+                "avg_pos": day_avg_pos,
+                "spend": day_sum,
+            })
+        
+        # Считаем средние значения
+        count = len(days_data) if days_data else 1
+        avg_cpc = round(total_cpc / count, 2) if count > 0 else 0
+        avg_cpm = round(total_cpm / count, 2) if count > 0 else 0
+        avg_avg_pos = round(total_avg_pos / count, 2) if count > 0 else 0
+        ctr = round((total_clicks / total_views * 100) if total_views > 0 else 0, 2)
+        cpc = round(total_spend / total_clicks if total_clicks > 0 else 0, 2)
+        
+        return {
+            "campaign_id": campaign_id,
+            "total_views": total_views,
+            "total_clicks": total_clicks,
+            "total_orders": total_orders,
+            "total_atbs": total_atbs,
+            "total_shks": total_shks,
+            "total_spend": total_spend,
+            "ctr": ctr,
+            "cpc": cpc,
+            "cpm": avg_cpm,
+            "avg_pos": avg_avg_pos,
+            "days": days_data
+        }
 
     def _process_norm_stats(self, stats: Any) -> Dict[str, Any]:
         """Обработать статистику по запросам"""
