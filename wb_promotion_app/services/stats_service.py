@@ -506,7 +506,7 @@ class StatsService:
         """Обработать статистику по запросам"""
         # API возвращает dict: {"stats": [{"advert_id": X, "nm_id": Y, "stats": [...]}]}
         stats_list = stats.get("stats") if isinstance(stats, dict) else None
-        
+
         if not stats_list:
             return {"queries": []}
 
@@ -516,20 +516,46 @@ class StatsService:
             if item_stats:
                 for stat in item_stats:
                     if isinstance(stat, dict):
+                        # Это статистика по поисковому запросу
+                        views = stat.get('views', 0)
+                        clicks = stat.get('clicks', 0)
+                        orders = stat.get('orders', 0)
+                        
                         query_data = {
                             "query": stat.get('norm_query', 'N/A'),
-                            "views": stat.get('views', 0),
-                            "clicks": stat.get('clicks', 0),
-                            "orders": stat.get('orders', 0),
+                            "views": views,
+                            "clicks": clicks,
+                            "orders": orders,
+                            "atbs": stat.get('atbs', 0),
+                            "shks": stat.get('shks', 0),
+                            "spend": stat.get('spend', 0),
                             "ctr": stat.get('ctr', 0),
+                            "cpc": stat.get('cpc', 0),
+                            "cpm": stat.get('cpm', 0),
+                            "avg_pos": stat.get('avg_pos', 0),
+                            # Рассчитываем CR (conversion rate)
+                            "cr": round((orders / clicks * 100) if (clicks > 0 and orders > 0) else 0, 2),
                         }
                     else:
+                        # Pydantic модель
+                        views = self._get_safe_value(stat, 'views', 0)
+                        clicks = self._get_safe_value(stat, 'clicks', 0)
+                        orders = self._get_safe_value(stat, 'orders', 0)
+                        
                         query_data = {
                             "query": self._get_safe_value(stat, 'norm_query', 'N/A'),
-                            "views": self._get_safe_value(stat, 'views', 0),
-                            "clicks": self._get_safe_value(stat, 'clicks', 0),
-                            "orders": self._get_safe_value(stat, 'orders', 0),
+                            "views": views,
+                            "clicks": clicks,
+                            "orders": orders,
+                            "atbs": self._get_safe_value(stat, 'atbs', 0),
+                            "shks": self._get_safe_value(stat, 'shks', 0),
+                            "spend": self._get_safe_value(stat, 'spend', 0),
                             "ctr": self._get_safe_value(stat, 'ctr', 0),
+                            "cpc": self._get_safe_value(stat, 'cpc', 0),
+                            "cpm": self._get_safe_value(stat, 'cpm', 0),
+                            "avg_pos": self._get_safe_value(stat, 'avg_pos', 0),
+                            # Рассчитываем CR (conversion rate)
+                            "cr": round((orders / clicks * 100) if (clicks > 0 and orders > 0) else 0, 2),
                         }
                     queries.append(query_data)
 
