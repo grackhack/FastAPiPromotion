@@ -305,6 +305,22 @@
     <script>
         const campaignId = {{ campaign_id }};
         const nmId = {{ nm_id }};
+        let apiToken = null;
+        
+        // Загружаем API токен при загрузке страницы
+        async function loadApiToken() {
+            try {
+                const response = await fetch('/auth/token', {
+                    credentials: 'same-origin'
+                });
+                const data = await response.json();
+                if (data.has_token && data.token) {
+                    apiToken = data.token;
+                }
+            } catch (error) {
+                console.error('Error loading token:', error);
+            }
+        }
         
         // Показ уведомления
         function showNotification(message, type = 'info') {
@@ -405,18 +421,23 @@
         
         async function addToMinus(query) {
             showConfirm('Добавить фразу "' + query + '" в минус-фразы?', async () => {
+                if (!apiToken) {
+                    showNotification('Ошибка: не найден API токен', 'error');
+                    return;
+                }
+                
                 try {
                     const response = await fetch('/search-clusters/set-minus-phrases', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'X-API-Token': apiToken
                         },
                         body: JSON.stringify({
                             advert_id: campaignId,
                             nm_id: nmId,
                             norm_queries: [query]
-                        }),
-                        credentials: 'same-origin'
+                        })
                     });
                     
                     if (response.ok) {
@@ -435,18 +456,23 @@
         
         async function removeFromMinus(query) {
             showConfirm('Удалить фразу "' + query + '" из минус-фраз?', async () => {
+                if (!apiToken) {
+                    showNotification('Ошибка: не найден API токен', 'error');
+                    return;
+                }
+                
                 try {
                     const response = await fetch('/search-clusters/set-minus-phrases', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'X-API-Token': apiToken
                         },
                         body: JSON.stringify({
                             advert_id: campaignId,
                             nm_id: nmId,
                             norm_queries: []
-                        }),
-                        credentials: 'same-origin'
+                        })
                     });
                     
                     if (response.ok) {
@@ -462,6 +488,9 @@
                 }
             });
         }
+        
+        // Загружаем токен при загрузке страницы
+        loadApiToken();
     </script>
 
     <style>
