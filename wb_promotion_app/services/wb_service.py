@@ -154,7 +154,36 @@ class WBService:
             return clusters
         except Exception as e:
             raise Exception(f"Ошибка загрузки списков кластеров: {str(e)}")
-    
+
+    def get_normquery_daily_stats(
+        self,
+        advert_id: int,
+        nm_id: int,
+        from_date: str,
+        to_date: str
+    ) -> Dict[str, Any]:
+        """
+        Получить статистику по фразам по дням (API /adv/v1/normquery/stats)
+        
+        Args:
+            advert_id: ID кампании
+            nm_id: ID товара
+            from_date: Дата начала (YYYY-MM-DD)
+            to_date: Дата окончания (YYYY-MM-DD)
+        
+        Returns:
+            Статистика по дням и фразам
+        """
+        try:
+            return self.client.get_normquery_daily_stats(
+                advert_id=advert_id,
+                nm_id=nm_id,
+                from_date=from_date,
+                to_date=to_date
+            )
+        except Exception as e:
+            raise Exception(f"Ошибка загрузки статистики по фразам: {str(e)}")
+
     def get_search_clusters(
         self,
         advert_id: int,
