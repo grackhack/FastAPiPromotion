@@ -44,24 +44,31 @@ psql -U postgres -d wb_promotion_app -h localhost
 # Если запросит пароль, введите пароль пользователя postgres
 ```
 
-## 4. Запуск приложения
-
-```bash
-# Установка зависимостей (если не сделано)
-pip install -e .
-
-# Запуск сервера
-uvicorn wb_promotion_app.main:app --reload --host 0.0.0.0 --port 8000
-
-# Или через скрипт
-python wb_promotion_app/run_server.py
-```
-
-## 5. Применение миграций (если есть)
+## 4. Инициализация базы данных (создание таблиц)
 
 ```bash
 # Из корня проекта
-alembic upgrade head
+.venv\Scripts\python.exe scripts\init_db.py
+
+# Или через Python напрямую
+python scripts\init_db.py
+```
+
+Это создаст таблицы:
+- `users` - пользователи
+- `user_api_tokens` - API токены
+
+## 5. Запуск приложения
+
+```bash
+# Установка зависимостей (если не сделано)
+.venv\Scripts\pip.exe install -e .
+
+# Запуск сервера
+.venv\Scripts\uvicorn.exe wb_promotion_app.main:app --reload --host 0.0.0.0 --port 8000
+
+# Или через скрипт
+.venv\Scripts\python.exe wb_promotion_app/run_server.py
 ```
 
 ## 6. Проверка работы
