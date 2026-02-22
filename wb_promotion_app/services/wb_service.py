@@ -121,22 +121,34 @@ class WBService:
             result = self.client.get_search_cluster_list(items)
             
             # Извлекаем списки из ответа
+            # API возвращает: {"items": [{"advertId": X, "nmId": Y, "normQueries": {"active": [...], "excluded": [...]}}]}
             clusters = {
                 "active": [],
                 "excluded": []
             }
             
-            if isinstance(result, list):
-                for item in result:
+            # Получаем items из ответа
+            items_result = None
+            if isinstance(result, dict):
+                items_result = result.get('items', [])
+            elif isinstance(result, list):
+                items_result = result
+            
+            if items_result:
+                for item in items_result:
                     if isinstance(item, dict):
-                        if item.get('advert_id') == advert_id and item.get('nm_id') == nm_id:
-                            clusters["active"] = item.get('active', [])
-                            clusters["excluded"] = item.get('excluded', [])
+                        if item.get('advertId') == advert_id and item.get('nmId') == nm_id:
+                            norm_queries = item.get('normQueries', {})
+                            if isinstance(norm_queries, dict):
+                                clusters["active"] = norm_queries.get('active', [])
+                                clusters["excluded"] = norm_queries.get('excluded', [])
                             break
                     else:
-                        if getattr(item, 'advert_id', None) == advert_id and getattr(item, 'nm_id', None) == nm_id:
-                            clusters["active"] = getattr(item, 'active', [])
-                            clusters["excluded"] = getattr(item, 'excluded', [])
+                        if getattr(item, 'advertId', None) == advert_id and getattr(item, 'nmId', None) == nm_id:
+                            norm_queries = getattr(item, 'normQueries', {})
+                            if isinstance(norm_queries, dict):
+                                clusters["active"] = getattr(norm_queries, 'active', [])
+                                clusters["excluded"] = getattr(norm_queries, 'excluded', [])
                             break
             
             return clusters
