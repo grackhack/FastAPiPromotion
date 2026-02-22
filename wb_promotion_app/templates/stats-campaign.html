@@ -622,8 +622,18 @@
                     showNotification('Ошибка: не найден API токен', 'error');
                     return;
                 }
-                
+
                 try {
+                    // Получаем все текущие минус-фразы из DOM
+                    let currentPhrases = getCurrentMinusPhrasesFromDOM();
+
+                    console.log('Current phrases:', currentPhrases);
+
+                    // Удаляем только ту фразу, которую выбрали
+                    currentPhrases = currentPhrases.filter(p => p !== query);
+
+                    console.log('Phrases after remove:', currentPhrases);
+
                     const response = await fetch('/search-clusters/set-minus-phrases', {
                         method: 'POST',
                         headers: {
@@ -633,10 +643,10 @@
                         body: JSON.stringify({
                             advert_id: campaignId,
                             nm_id: nmId,
-                            norm_queries: []
+                            norm_queries: currentPhrases
                         })
                     });
-                    
+
                     if (response.ok) {
                         showNotification('Фраза "' + query + '" удалена из минус-фраз', 'success');
                         setTimeout(() => location.reload(), 1000);
