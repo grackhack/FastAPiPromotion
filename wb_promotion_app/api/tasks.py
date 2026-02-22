@@ -1,7 +1,7 @@
 """
 API endpoints для управления периодическими задачами и авто-правилами
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from datetime import datetime
@@ -430,8 +430,8 @@ async def trigger_metrics_calculation(
 async def get_phrase_daily_stats(
     campaign_id: int,
     nm_id: int,
-    from_date: str,
-    to_date: str,
+    from_date: str = Query(..., description="Дата начала в формате YYYY-MM-DD"),
+    to_date: str = Query(..., description="Дата окончания в формате YYYY-MM-DD"),
     user: User = Depends(get_current_user_from_session),
     db: Session = Depends(get_db)
 ):
@@ -440,7 +440,9 @@ async def get_phrase_daily_stats(
     logger = logging.getLogger(__name__)
     
     try:
-        logger.info(f"Loading phrase stats for user {user.id}, campaign {campaign_id}, nm {nm_id}, from {from_date}, to {to_date}")
+        logger.info(f"Phrase stats request: campaign={campaign_id}, nm={nm_id}, from={from_date}, to={to_date}")
+        logger.info(f"from_date type: {type(from_date)}, value: {repr(from_date)}")
+        logger.info(f"to_date type: {type(to_date)}, value: {repr(to_date)}")
         
         # Проверяем формат дат
         if not from_date or not to_date:
@@ -458,16 +460,15 @@ async def get_phrase_daily_stats(
         
         # Получаем статистику
         from ..api_client import WBPromotionClient
-        from ..services.wb_service import WBService
         
         wb_client = WBPromotionClient(user_token.token)
         
-        # Вызываем напрямую API client, минуя WBService
+        # Вызываем напрямую API client
         stats = wb_client.get_normquery_daily_stats(
             advert_id=campaign_id,
             nm_id=nm_id,
-            from_date=from_date,
-            to_date=to_date
+            from_date=str(from_date),
+            to_date=str(to_date)
         )
         
         return stats
