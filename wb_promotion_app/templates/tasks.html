@@ -474,14 +474,25 @@
 
         async function loadCampaigns() {
             try {
-                const response = await fetch('/api/campaigns/list');
-                const campaigns = await response.json();
+                // Используем веб-роут вместо API с токеном
+                const response = await fetch('/api/campaigns');
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        // Нет токена - оставляем пустой список
+                        return;
+                    }
+                    throw new Error('Failed to load campaigns');
+                }
+                
+                const data = await response.json();
+                const campaigns = data.campaigns || data.adverts || [];
                 
                 const select = document.getElementById('historyCampaign');
                 campaigns.forEach(campaign => {
                     const option = document.createElement('option');
-                    option.value = campaign.id;
-                    option.textContent = `#${campaign.id} ${campaign.name || ''}`;
+                    option.value = campaign.id || campaign.advertId;
+                    option.textContent = `#${campaign.id || campaign.advertId} ${campaign.name || ''}`;
                     select.appendChild(option);
                 });
             } catch (error) {
