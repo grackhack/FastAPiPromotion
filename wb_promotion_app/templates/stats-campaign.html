@@ -306,64 +306,181 @@
         const campaignId = {{ campaign_id }};
         const nmId = {{ nm_id }};
         
-        async function addToMinus(query) {
-            if (!confirm('Добавить фразу "' + query + '" в минус-фразы?')) return;
+        // Показ уведомления
+        function showNotification(message, type = 'info') {
+            const colors = {
+                success: { bg: '#4caf50', text: 'white' },
+                error: { bg: '#f44336', text: 'white' },
+                info: { bg: '#2196f3', text: 'white' }
+            };
+            const color = colors[type] || colors.info;
             
-            try {
-                const response = await fetch('/search-clusters/set-minus-phrases', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        advert_id: campaignId,
-                        nm_id: nmId,
-                        norm_queries: [query]
-                    })
-                });
-                
-                if (response.ok) {
-                    location.reload();
-                } else {
-                    const error = await response.json();
-                    alert('Ошибка: ' + (error.detail || 'Не удалось добавить фразу'));
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                background: ${color.bg};
+                color: ${color.text};
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+                font-size: 14px;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        // Модальное окно подтверждения
+        function showConfirm(message, onConfirm) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10001;
+                animation: fadeIn 0.2s ease;
+            `;
+            
+            modal.innerHTML = `
+                <div style="
+                    background: white;
+                    padding: 25px;
+                    border-radius: 12px;
+                    max-width: 400px;
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+                    animation: slideIn 0.3s ease;
+                ">
+                    <p style="margin: 0 0 20px 0; font-size: 16px; color: #333;">${message}</p>
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button id="cancelBtn" style="
+                            padding: 10px 20px;
+                            border: 1px solid #ddd;
+                            background: #f5f5f5;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 14px;
+                        ">Отмена</button>
+                        <button id="confirmBtn" style="
+                            padding: 10px 20px;
+                            border: none;
+                            background: #2196f3;
+                            color: white;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 14px;
+                        ">Подтвердить</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            modal.querySelector('#cancelBtn').onclick = () => {
+                modal.style.animation = 'fadeOut 0.2s ease';
+                setTimeout(() => modal.remove(), 200);
+            };
+            
+            modal.querySelector('#confirmBtn').onclick = () => {
+                modal.style.animation = 'fadeOut 0.2s ease';
+                setTimeout(() => {
+                    modal.remove();
+                    onConfirm();
+                }, 200);
+            };
+        }
+        
+        async function addToMinus(query) {
+            showConfirm('Добавить фразу "' + query + '" в минус-фразы?', async () => {
+                try {
+                    const response = await fetch('/search-clusters/set-minus-phrases', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            advert_id: campaignId,
+                            nm_id: nmId,
+                            norm_queries: [query]
+                        }),
+                        credentials: 'same-origin'
+                    });
+                    
+                    if (response.ok) {
+                        showNotification('Фраза "' + query + '" добавлена в минус-фразы', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        const error = await response.json();
+                        showNotification(error.detail || 'Не удалось добавить фразу', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showNotification('Ошибка подключения к серверу', 'error');
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Ошибка подключения к серверу');
-            }
+            });
         }
         
         async function removeFromMinus(query) {
-            if (!confirm('Удалить фразу "' + query + '" из минус-фраз?')) return;
-            
-            try {
-                const response = await fetch('/search-clusters/set-minus-phrases', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        advert_id: campaignId,
-                        nm_id: nmId,
-                        norm_queries: []
-                    })
-                });
-                
-                if (response.ok) {
-                    location.reload();
-                } else {
-                    const error = await response.json();
-                    alert('Ошибка: ' + (error.detail || 'Не удалось удалить фразу'));
+            showConfirm('Удалить фразу "' + query + '" из минус-фраз?', async () => {
+                try {
+                    const response = await fetch('/search-clusters/set-minus-phrases', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            advert_id: campaignId,
+                            nm_id: nmId,
+                            norm_queries: []
+                        }),
+                        credentials: 'same-origin'
+                    });
+                    
+                    if (response.ok) {
+                        showNotification('Фраза "' + query + '" удалена из минус-фраз', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        const error = await response.json();
+                        showNotification(error.detail || 'Не удалось удалить фразу', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showNotification('Ошибка подключения к серверу', 'error');
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Ошибка подключения к серверу');
-            }
+            });
         }
     </script>
 
     <style>
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
         .minus-phrase-row {
             background-color: #ffebee !important;
         }
