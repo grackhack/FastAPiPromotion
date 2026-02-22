@@ -248,9 +248,9 @@
                 </div>
                 <div style="margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 8px; font-size: 13px;">
                     <strong>📊 Метрики:</strong>
-                    <span style="display: inline-block; margin-left: 10px; padding: 3px 8px; background: #e8f5e9; color: #2e7d32; border-radius: 4px;">💰 CPC ≤5₽</span>
-                    <span style="display: inline-block; margin-left: 5px; padding: 3px 8px; background: #fff3e0; color: #ef6c00; border-radius: 4px;">👁 CTR ≥5%</span>
-                    <span style="display: inline-block; margin-left: 5px; padding: 3px 8px; background: #e3f2fd; color: #1976d2; border-radius: 4px;">🎯 Заказы >0</span>
+                    <span style="display: inline-block; margin-left: 10px; padding: 3px 8px; background: #e8f5e9; color: #2e7d32; border-radius: 4px;">🟢 CTR ≥5%</span>
+                    <span style="display: inline-block; margin-left: 5px; padding: 3px 8px; background: #e3f2fd; color: #1976d2; border-radius: 4px;">🎯 CR ≥3%</span>
+                    <span style="display: inline-block; margin-left: 5px; padding: 3px 8px; background: #fff3e0; color: #ef6c00; border-radius: 4px;">💰 CPC ≤20₽</span>
                 </div>
                 <table class="stats-table">
                     <thead>
@@ -276,14 +276,7 @@
                         {# Расчёт метрик #}
                         {% set ctr_val = item.ctr if item.ctr else 0 %}
                         {% set cpc_val = item.cpc if item.cpc else 0 %}
-                        {% set has_orders = item.orders and item.orders > 0 %}
-                        
-                        {# Оценка CPC #}
-                        {% if cpc_val <= 5 %}
-                            {% set cpc_good = true %}
-                        {% else %}
-                            {% set cpc_good = false %}
-                        {% endif %}
+                        {% set cr_val = (item.orders / item.clicks * 100) if (item.clicks and item.clicks > 0 and item.orders and item.orders > 0) else 0 %}
                         
                         {# Оценка CTR #}
                         {% if ctr_val >= 5 %}
@@ -292,13 +285,27 @@
                             {% set ctr_good = false %}
                         {% endif %}
                         
+                        {# Оценка CR #}
+                        {% if cr_val >= 3 %}
+                            {% set cr_good = true %}
+                        {% else %}
+                            {% set cr_good = false %}
+                        {% endif %}
+                        
+                        {# Оценка CPC #}
+                        {% if cpc_val <= 20 %}
+                            {% set cpc_good = true %}
+                        {% else %}
+                            {% set cpc_good = false %}
+                        {% endif %}
+                        
                         {# Комплексная оценка #}
                         {% set good_count = 0 %}
-                        {% if cpc_good %}{% set good_count = good_count + 1 %}{% endif %}
                         {% if ctr_good %}{% set good_count = good_count + 1 %}{% endif %}
-                        {% if has_orders %}{% set good_count = good_count + 1 %}{% endif %}
+                        {% if cr_good %}{% set good_count = good_count + 1 %}{% endif %}
+                        {% if cpc_good %}{% set good_count = good_count + 1 %}{% endif %}
                         
-                        {# Определение цвета #}
+                        {# Определение цвета и метки #}
                         {% if good_count >= 3 %}
                             {% set eff_color = '#e8f5e9' %}
                             {% set eff_label = '✅ Отлично' %}
@@ -325,7 +332,9 @@
                                 {% if is_minus %}
                                 <span style="color: #d32f2f; font-size: 12px; margin-left: 5px;">🚫 В минусах</span>
                                 {% endif %}
-                                <span style="font-size: 11px; color: {{ eff_text }}; margin-left: 8px; padding: 2px 6px; background: {{ eff_color }}; border-radius: 4px; border: 1px solid {{ eff_text }};">{{ eff_label }}</span>
+                                <span style="font-size: 11px; color: {{ eff_text }}; margin-left: 8px; padding: 2px 6px; background: {{ eff_color }}; border-radius: 4px; border: 1px solid {{ eff_text }};" title="CTR: {{ '✓' if ctr_good else '✗' }}, CR: {{ '✓' if cr_good else '✗' }}, CPC: {{ '✓' if cpc_good else '✗' }}">
+                                    {{ eff_label }}
+                                </span>
                             </td>
                             <td class="number">{{ "{:,}".format(item.views) if item.views else '—' }}</td>
                             <td class="number">{{ "{:,}".format(item.clicks) if item.clicks else '—' }}</td>
