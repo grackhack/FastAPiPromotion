@@ -246,6 +246,13 @@
                         <span style="margin-left: 15px; color: #388e3c;">●</span> Активные
                     </div>
                 </div>
+                <div style="margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 8px; font-size: 13px;">
+                    <strong>📊 Эффективность:</strong>
+                    <span style="display: inline-block; margin-left: 10px; padding: 3px 8px; background: #e8f5e9; color: #2e7d32; border-radius: 4px;">✓ Отлично (≥80)</span>
+                    <span style="display: inline-block; margin-left: 5px; padding: 3px 8px; background: #fff3e0; color: #ef6c00; border-radius: 4px;">✓ Нормально (60-79)</span>
+                    <span style="display: inline-block; margin-left: 5px; padding: 3px 8px; background: #fff8e1; color: #f9a825; border-radius: 4px;">✓ Средне (40-59)</span>
+                    <span style="display: inline-block; margin-left: 5px; padding: 3px 8px; background: #ffebee; color: #c62828; border-radius: 4px;">✗ Плохо (<40)</span>
+                </div>
                 <table class="stats-table">
                     <thead>
                         <tr>
@@ -266,11 +273,53 @@
                     <tbody>
                         {% for item in stats.days %}
                         {% set is_minus = item.query in minus_phrases %}
-                        <tr class="{{ 'minus-phrase-row' if is_minus else '' }}" data-query="{{ item.query }}">
+                        {% set eff = namespace(cr=0, cpa=0, roi=0, score=50) %}
+                        {% set _ = eff.update({
+                            'cr': ((item.orders / item.clicks * 100) if item.clicks > 0 and item.orders else 0)|round(2),
+                            'cpa': ((item.spend / item.orders) if item.orders > 0 else 0)|round(2),
+                            'roi': 0
+                        }) %}
+                        {% set score = 0 %}
+                        {% if item.ctr >= 10 %}{% set score = score + 25 %}
+                        {% elif item.ctr >= 5 %}{% set score = score + 20 %}
+                        {% elif item.ctr >= 3 %}{% set score = score + 15 %}
+                        {% elif item.ctr >= 1 %}{% set score = score + 10 %}
+                        {% else %}{% set score = score + 5 %}{% endif %}
+                        
+                        {% if eff.cr >= 10 %}{% set score = score + 25 %}
+                        {% elif eff.cr >= 5 %}{% set score = score + 20 %}
+                        {% elif eff.cr >= 2 %}{% set score = score + 15 %}
+                        {% elif eff.cr >= 1 %}{% set score = score + 10 %}
+                        {% else %}{% set score = score + 5 %}{% endif %}
+                        
+                        {% if item.cpc <= 5 %}{% set score = score + 25 %}
+                        {% elif item.cpc <= 10 %}{% set score = score + 20 %}
+                        {% elif item.cpc <= 20 %}{% set score = score + 15 %}
+                        {% elif item.cpc <= 50 %}{% set score = score + 10 %}
+                        {% else %}{% set score = score + 5 %}{% endif %}
+                        
+                        {% if eff.cpa == 0 and item.orders == 0 %}{% set score = score + 10 %}
+                        {% elif eff.cpa <= 100 %}{% set score = score + 25 %}
+                        {% elif eff.cpa <= 300 %}{% set score = score + 20 %}
+                        {% elif eff.cpa <= 500 %}{% set score = score + 15 %}
+                        {% else %}{% set score = score + 10 %}{% endif %}
+                        
+                        {% if score >= 80 %}{% set eff_color = '#e8f5e9' %}{% set eff_label = 'Отлично' %}{% set eff_text = '#2e7d32' %}
+                        {% elif score >= 60 %}{% set eff_color = '#fff3e0' %}{% set eff_label = 'Нормально' %}{% set eff_text = '#ef6c00' %}
+                        {% elif score >= 40 %}{% set eff_color = '#fff8e1' %}{% set eff_label = 'Средне' %}{% set eff_text = '#f9a825' %}
+                        {% else %}{% set eff_color = '#ffebee' %}{% set eff_label = 'Плохо' %}{% set eff_text = '#c62828' %}{% endif %}
+                        
+                        <tr class="{{ 'minus-phrase-row' if is_minus else '' }}" 
+                            data-query="{{ item.query }}"
+                            data-score="{{ score }}"
+                            style="{{ 'background-color: ' + eff_color + ' !important;' if not is_minus else '' }}">
                             <td>
                                 {{ item.query }}
                                 {% if is_minus %}
                                 <span style="color: #d32f2f; font-size: 12px; margin-left: 5px;">🚫</span>
+                                {% endif %}
+                                {% if not is_minus %}
+                                <span style="font-size: 11px; color: {{ eff_text }}; margin-left: 8px; padding: 2px 6px; background: {{ eff_color }}; border-radius: 4px;">{{ eff_label }}</span>
                                 {% endif %}
                             </td>
                             <td class="number">{{ "{:,}".format(item.views) if item.views else '—' }}</td>
@@ -320,6 +369,79 @@
             } catch (error) {
                 console.error('Error loading token:', error);
             }
+        }
+        
+        // Расчёт эффективности запроса
+        function calculateEfficiency(item) {
+            const { views, clicks, orders, spend, ctr, cpc } = item;
+            
+            // CTR (уже есть)
+            const ctrValue = ctr || 0;
+            
+            // Конверсия (CR) = Заказы / Клики
+            const cr = clicks > 0 ? (orders / clicks * 100) : 0;
+            
+            // CPC (уже есть)
+            const cpcValue = cpc || 0;
+            
+            // Стоимость заказа (CPA) = Затраты / Заказы
+            const cpa = orders > 0 ? (spend / orders) : 0;
+            
+            // ROI (возврат инвестиций) - упрощённо
+            // Если есть заказы и затраты не слишком высокие - хорошо
+            let roi = 0;
+            if (orders > 0 && spend > 0) {
+                // Предполагаем среднюю цену товара ~1000₽ для расчёта
+                const avgPrice = 1000;
+                const revenue = orders * avgPrice;
+                roi = ((revenue - spend) / spend * 100);
+            }
+            
+            // Комплексная оценка эффективности (0-100)
+            let score = 0;
+            
+            // CTR вклад (макс 25 баллов)
+            if (ctrValue >= 10) score += 25;
+            else if (ctrValue >= 5) score += 20;
+            else if (ctrValue >= 3) score += 15;
+            else if (ctrValue >= 1) score += 10;
+            else score += 5;
+            
+            // CR вклад (макс 25 баллов)
+            if (cr >= 10) score += 25;
+            else if (cr >= 5) score += 20;
+            else if (cr >= 2) score += 15;
+            else if (cr >= 1) score += 10;
+            else score += 5;
+            
+            // CPC вклад (макс 25 баллов) - чем меньше тем лучше
+            if (cpcValue <= 5) score += 25;
+            else if (cpcValue <= 10) score += 20;
+            else if (cpcValue <= 20) score += 15;
+            else if (cpcValue <= 50) score += 10;
+            else score += 5;
+            
+            // CPA вклад (макс 25 баллов)
+            if (cpa === 0 && orders === 0) score += 10; // Нет заказов - нейтрально
+            else if (cpa <= 100) score += 25;
+            else if (cpa <= 300) score += 20;
+            else if (cpa <= 500) score += 15;
+            else score += 10;
+            
+            return {
+                cr: cr.toFixed(2),
+                cpa: cpa.toFixed(2),
+                roi: roi.toFixed(0),
+                score: score
+            };
+        }
+        
+        // Получение цвета эффективности
+        function getEfficiencyColor(score) {
+            if (score >= 80) return { bg: '#e8f5e9', text: '#2e7d32', label: 'Отлично' };
+            if (score >= 60) return { bg: '#fff3e0', text: '#ef6c00', label: 'Нормально' };
+            if (score >= 40) return { bg: '#fff8e1', text: '#f9a825', label: 'Средне' };
+            return { bg: '#ffebee', text: '#c62828', label: 'Плохо' };
         }
         
         // Получаем все текущие минус-фразы из DOM
