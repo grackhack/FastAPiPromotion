@@ -229,10 +229,20 @@
                 if (!response.ok) throw new Error('Failed to load campaign');
 
                 const data = await response.json();
-                const campaigns = data.campaigns || data.adverts || [];
                 
-                if (campaigns.length > 0) {
-                    const campaign = campaigns[0];
+                // Пробуем разные форматы ответа
+                let campaign = null;
+                if (Array.isArray(data)) {
+                    campaign = data[0];
+                } else if (data.campaigns && Array.isArray(data.campaigns)) {
+                    campaign = data.campaigns[0];
+                } else if (data.adverts && Array.isArray(data.adverts)) {
+                    campaign = data.adverts[0];
+                } else if (data.id) {
+                    campaign = data;
+                }
+                
+                if (campaign) {
                     campaignName = campaign.name || `Кампания #${currentCampaignId}`;
                     
                     // Находим товар
@@ -243,12 +253,18 @@
                     // Отображаем
                     document.getElementById('campaignDisplay').value = `#${currentCampaignId} ${campaignName}`;
                     document.getElementById('nmDisplay').value = `#${currentNmId} ${nmName}`;
-                    
-                    // Автоматически загружаем статистику
-                    loadStats();
+                } else {
+                    // Кампания не найдена, просто показываем ID
+                    document.getElementById('campaignDisplay').value = `#${currentCampaignId}`;
+                    document.getElementById('nmDisplay').value = `#${currentNmId}`;
                 }
+                
+                // Автоматически загружаем статистику
+                loadStats();
+                
             } catch (error) {
                 console.error('Error loading campaign:', error);
+                // При ошибке просто показываем ID и загружаем статистику
                 document.getElementById('campaignDisplay').value = `#${currentCampaignId}`;
                 document.getElementById('nmDisplay').value = `#${currentNmId}`;
                 loadStats();
