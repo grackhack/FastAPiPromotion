@@ -145,124 +145,13 @@ function renderNmList() {
                 <a href="/stats/campaign/${currentCampaignId}/nm/${nm.nm_id}" class="btn btn-small btn-secondary" target="_blank" style="margin-right: 5px;">
                     📊 Полная статистика
                 </a>
-                <button class="btn btn-small btn-secondary" onclick="showPhraseStats(${nm.nm_id})">
+                <a href="/phrase-stats?campaign=${currentCampaignId}&nm=${nm.nm_id}" class="btn btn-small btn-secondary">
                     📈 По фразам
-                </button>
+                </a>
             </td>
         `;
         tbody.appendChild(tr);
     });
-}
-
-// Показать статистику по фразам
-function showPhraseStats(nmId) {
-    const modal = document.getElementById('phraseStatsModal');
-    modal.style.display = 'flex';
-    
-    // Сохраняем nm_id для использования при загрузке
-    window.currentPhraseStatsNmId = nmId;
-    
-    // Устанавливаем даты (последние 7 дней)
-    const today = new Date();
-    const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-    
-    document.getElementById('phraseFromDate').value = lastWeek.toISOString().split('T')[0];
-    document.getElementById('phraseToDate').value = today.toISOString().split('T')[0];
-}
-
-// Закрыть модальное окно статистики
-function closePhraseStatsModal() {
-    document.getElementById('phraseStatsModal').style.display = 'none';
-}
-
-// Загрузить статистику по фразам
-async function loadPhraseStats() {
-    const campaignId = currentCampaignId;
-    const nmId = window.currentPhraseStatsNmId;
-    const fromDate = document.getElementById('phraseFromDate').value;
-    const toDate = document.getElementById('phraseToDate').value;
-
-    const loading = document.getElementById('phraseStatsLoading');
-    const content = document.getElementById('phraseStatsContent');
-    
-    loading.style.display = 'block';
-    content.style.display = 'none';
-
-    try {
-        const url = `/api/tasks/phrase-daily-stats?campaign_id=${campaignId}&nm_id=${nmId}&from_date=${fromDate}&to_date=${toDate}`;
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || 'Ошибка загрузки');
-        }
-
-        const data = await response.json();
-        const items = data.items || [];
-
-        const tbody = document.getElementById('phraseStatsBody');
-        
-        if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px;">Нет данных</td></tr>';
-        } else {
-            // Агрегируем данные
-            let rows = [];
-            items.forEach(item => {
-                const dailyStats = item.dailyStats || [];
-                
-                dailyStats.forEach(day => {
-                    const stat = day.stat;
-                    rows.push({
-                        date: day.date,
-                        query: stat.normQuery,
-                        views: stat.views,
-                        clicks: stat.clicks,
-                        orders: stat.orders,
-                        ctr: stat.ctr,
-                        cpc: stat.cpc,
-                        spend: stat.spend,
-                        avgPos: stat.avgPos
-                    });
-                });
-            });
-
-            // Сортируем по дате и просмотрам
-            rows.sort((a, b) => {
-                if (b.date !== a.date) return b.date.localeCompare(a.date);
-                return b.views - a.views;
-            });
-
-            tbody.innerHTML = rows.map(row => `
-                <tr>
-                    <td>${row.date}</td>
-                    <td>${row.query}</td>
-                    <td class="number">${row.views.toLocaleString()}</td>
-                    <td class="number">${row.clicks.toLocaleString()}</td>
-                    <td class="number">${row.orders.toLocaleString()}</td>
-                    <td class="number">${row.ctr.toFixed(2)}%</td>
-                    <td class="number">${row.cpc.toFixed(2)} ₽</td>
-                    <td class="number">${row.spend.toFixed(2)} ₽</td>
-                    <td class="number">${row.avgPos.toFixed(2)}</td>
-                </tr>
-            `).join('');
-        }
-
-        content.style.display = 'block';
-        
-    } catch (error) {
-        console.error('Error loading phrase stats:', error);
-        alert('Ошибка: ' + error.message);
-    } finally {
-        loading.style.display = 'none';
-    }
-}
-
-// Закрытие модального окна по клику вне
-window.onclick = function(event) {
-    const modal = document.getElementById('phraseStatsModal');
-    if (event.target === modal) {
-        modal.style.display = 'none';
-    }
 }
 
 // Вспомогательные функции

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Статистика по фразам - Wildberries Promotion</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .stats-page {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .filters-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+        }
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            font-size: 13px;
+            box-sizing: border-box;
+        }
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .stats-table-container {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .stats-table th,
+        .stats-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap;
+        }
+        .stats-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+        .stats-table td.number {
+            text-align: right;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+        .stats-table tr:hover {
+            background: #f8fafc;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .summary-card {
+            background: #f8fafc;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+        }
+        .summary-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e40af;
+        }
+        .summary-card .label {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% include '_nav.html' %}
+
+        <div class="stats-page">
+            <div class="filters-card">
+                <h2 style="margin: 0 0 20px 0; font-size: 18px; color: #1e293b;">📈 Статистика по фразам по дням</h2>
+                
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label>Кампания</label>
+                        <select id="campaignSelect" onchange="loadCampaignCampaigns()">
+                            <option value="">Выберите кампанию</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Товар (NM ID)</label>
+                        <select id="nmSelect" disabled>
+                            <option value="">Сначала выберите кампанию</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>С даты</label>
+                        <input type="date" id="fromDate" value="2026-02-15">
+                    </div>
+                    <div class="filter-group">
+                        <label>По дату</label>
+                        <input type="date" id="toDate" value="2026-02-22">
+                    </div>
+                </div>
+
+                <div class="filter-actions">
+                    <button class="btn btn-secondary" onclick="resetFilters()">🔄 Сбросить</button>
+                    <button class="btn btn-primary" onclick="loadStats()">📊 Загрузить статистику</button>
+                </div>
+            </div>
+
+            <!-- Сводные показатели -->
+            <div id="summaryCards" class="summary-cards" style="display: none;">
+                <div class="summary-card">
+                    <div class="value" id="totalViews">0</div>
+                    <div class="label">Просмотры</div>
+                </div>
+                <div class="summary-card">
+                    <div class="value" id="totalClicks">0</div>
+                    <div class="label">Клики</div>
+                </div>
+                <div class="summary-card">
+                    <div class="value" id="totalOrders">0</div>
+                    <div class="label">Заказы</div>
+                </div>
+                <div class="summary-card">
+                    <div class="value" id="avgCtr">0%</div>
+                    <div class="label">Средний CTR</div>
+                </div>
+                <div class="summary-card">
+                    <div class="value" id="avgCpc">0₽</div>
+                    <div class="label">Средний CPC</div>
+                </div>
+                <div class="summary-card">
+                    <div class="value" id="totalSpend">0₽</div>
+                    <div class="label">Затраты</div>
+                </div>
+            </div>
+
+            <!-- Таблица -->
+            <div class="stats-table-container">
+                <div id="loadingState" class="empty-state" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Загрузка статистики...</p>
+                </div>
+                <div id="emptyState" class="empty-state">
+                    <p>Выберите кампанию, товар и период, затем нажмите "Загрузить статистику"</p>
+                </div>
+                <table class="stats-table" id="statsTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Фраза</th>
+                            <th class="number">Просмотры</th>
+                            <th class="number">Клики</th>
+                            <th class="number">Заказы</th>
+                            <th class="number">CTR, %</th>
+                            <th class="number">CPC, ₽</th>
+                            <th class="number">CPM, ₽</th>
+                            <th class="number">Затраты, ₽</th>
+                            <th class="number">Позиция</th>
+                        </tr>
+                    </thead>
+                    <tbody id="statsBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentCampaignId = null;
+        let campaignNms = {};
+
+        // Загрузка при инициализации
+        document.addEventListener('DOMContentLoaded', function() {
+            // Проверяем параметры из URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const campaignFromUrl = urlParams.get('campaign');
+            const nmFromUrl = urlParams.get('nm');
+            
+            if (campaignFromUrl) {
+                document.getElementById('campaignSelect').value = campaignFromUrl;
+                loadCampaignCampaigns().then(() => {
+                    if (nmFromUrl) {
+                        document.getElementById('nmSelect').value = nmFromUrl;
+                    }
+                    loadStats();
+                });
+            } else {
+                loadCampaigns();
+            }
+        });
+
+        // Загрузка списка кампаний
+        async function loadCampaigns() {
+            try {
+                const response = await fetch('/api/campaigns');
+                if (!response.ok) return;
+
+                const data = await response.json();
+                const campaigns = data.campaigns || data.adverts || [];
+
+                const select = document.getElementById('campaignSelect');
+                campaigns.forEach(campaign => {
+                    const id = campaign.id || campaign.advertId;
+                    const name = campaign.name || '';
+                    const option = document.createElement('option');
+                    option.value = id;
+                    option.textContent = `#${id} ${name}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading campaigns:', error);
+            }
+        }
+
+        // Загрузка товаров кампании
+        async function loadCampaignCampaigns() {
+            const campaignId = document.getElementById('campaignSelect').value;
+            const nmSelect = document.getElementById('nmSelect');
+            
+            if (!campaignId) {
+                nmSelect.disabled = true;
+                nmSelect.innerHTML = '<option value="">Сначала выберите кампанию</option>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/campaigns?ids=${campaignId}`);
+                if (!response.ok) return;
+
+                const data = await response.json();
+                const campaigns = data.campaigns || data.adverts || [];
+                
+                if (campaigns.length > 0) {
+                    const campaign = campaigns[0];
+                    const nmSettings = campaign.nm_settings || [];
+                    
+                    campaignNms[campaignId] = nmSettings;
+                    
+                    nmSelect.disabled = false;
+                    nmSelect.innerHTML = '<option value="">Выберите товар</option>';
+                    
+                    nmSettings.forEach(nm => {
+                        const option = document.createElement('option');
+                        option.value = nm.nm_id;
+                        option.textContent = `${nm.name || 'Товар ' + nm.nm_id} (#${nm.nm_id})`;
+                        nmSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading campaign details:', error);
+            }
+        }
+
+        // Загрузка статистики
+        async function loadStats() {
+            const campaignId = document.getElementById('campaignSelect').value;
+            const nmId = document.getElementById('nmSelect').value;
+            const fromDate = document.getElementById('fromDate').value;
+            const toDate = document.getElementById('toDate').value;
+
+            if (!campaignId || !nmId) {
+                alert('Выберите кампанию и товар');
+                return;
+            }
+
+            const loading = document.getElementById('loadingState');
+            const empty = document.getElementById('emptyState');
+            const table = document.getElementById('statsTable');
+            const summary = document.getElementById('summaryCards');
+            
+            loading.style.display = 'block';
+            empty.style.display = 'none';
+            table.style.display = 'none';
+            summary.style.display = 'none';
+
+            try {
+                const url = `/api/tasks/phrase-daily-stats?campaign_id=${campaignId}&nm_id=${nmId}&from_date=${fromDate}&to_date=${toDate}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Ошибка загрузки');
+                }
+
+                const data = await response.json();
+                const items = data.items || [];
+
+                const tbody = document.getElementById('statsBody');
+                
+                if (items.length === 0) {
+                    empty.innerHTML = '<p>Нет данных за выбранный период</p>';
+                    empty.style.display = 'block';
+                } else {
+                    // Агрегируем данные
+                    let rows = [];
+                    let totalViews = 0, totalClicks = 0, totalOrders = 0, totalSpend = 0;
+                    let totalCtr = 0, totalCpc = 0, count = 0;
+
+                    items.forEach(item => {
+                        const dailyStats = item.dailyStats || [];
+                        
+                        dailyStats.forEach(day => {
+                            const stat = day.stat;
+                            rows.push({
+                                date: day.date,
+                                query: stat.normQuery,
+                                views: stat.views,
+                                clicks: stat.clicks,
+                                orders: stat.orders,
+                                ctr: stat.ctr,
+                                cpc: stat.cpc,
+                                cpm: stat.cpm,
+                                spend: stat.spend,
+                                avgPos: stat.avgPos
+                            });
+
+                            totalViews += stat.views;
+                            totalClicks += stat.clicks;
+                            totalOrders += stat.orders;
+                            totalSpend += stat.spend;
+                            if (stat.ctr > 0) totalCtr += stat.ctr;
+                            if (stat.cpc > 0) totalCpc += stat.cpc;
+                            count++;
+                        });
+                    });
+
+                    // Сортируем по дате и просмотрам
+                    rows.sort((a, b) => {
+                        if (b.date !== a.date) return b.date.localeCompare(a.date);
+                        return b.views - a.views;
+                    });
+
+                    tbody.innerHTML = rows.map(row => `
+                        <tr>
+                            <td>${row.date}</td>
+                            <td>${row.query}</td>
+                            <td class="number">${row.views.toLocaleString()}</td>
+                            <td class="number">${row.clicks.toLocaleString()}</td>
+                            <td class="number">${row.orders.toLocaleString()}</td>
+                            <td class="number">${row.ctr.toFixed(2)}</td>
+                            <td class="number">${row.cpc.toFixed(2)}</td>
+                            <td class="number">${row.cpm.toFixed(2)}</td>
+                            <td class="number">${row.spend.toFixed(2)}</td>
+                            <td class="number">${row.avgPos.toFixed(2)}</td>
+                        </tr>
+                    `).join('');
+
+                    // Обновляем сводные показатели
+                    document.getElementById('totalViews').textContent = totalViews.toLocaleString();
+                    document.getElementById('totalClicks').textContent = totalClicks.toLocaleString();
+                    document.getElementById('totalOrders').textContent = totalOrders.toLocaleString();
+                    document.getElementById('avgCtr').textContent = (totalCtr / Math.max(count, 1)).toFixed(2) + '%';
+                    document.getElementById('avgCpc').textContent = (totalCpc / Math.max(count, 1)).toFixed(2) + ' ₽';
+                    document.getElementById('totalSpend').textContent = totalSpend.toFixed(2) + ' ₽';
+
+                    table.style.display = 'table';
+                    summary.style.display = 'grid';
+                }
+                
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                empty.innerHTML = '<p>Ошибка: ' + error.message + '</p>';
+                empty.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Сброс фильтров
+        function resetFilters() {
+            document.getElementById('campaignSelect').value = '';
+            document.getElementById('nmSelect').value = '';
+            document.getElementById('nmSelect').disabled = true;
+            document.getElementById('fromDate').value = '2026-02-15';
+            document.getElementById('toDate').value = '2026-02-22';
+            
+            document.getElementById('emptyState').innerHTML = '<p>Выберите кампанию, товар и период, затем нажмите "Загрузить статистику"</p>';
+            document.getElementById('emptyState').style.display = 'block';
+            document.getElementById('statsTable').style.display = 'none';
+            document.getElementById('summaryCards').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

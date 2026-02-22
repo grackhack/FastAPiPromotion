@@ -70,52 +70,6 @@
         </footer>
     </div>
 
-    <!-- Модальное окно статистики по фразам -->
-    <div id="phraseStatsModal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 900px;">
-            <div class="modal-header">
-                <h3>📈 Статистика по фразам по дням</h3>
-                <button class="modal-close" onclick="closePhraseStatsModal()">&times;</button>
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px;">
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label>С даты</label>
-                    <input type="date" id="phraseFromDate" value="2026-02-01">
-                </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label>По дату</label>
-                    <input type="date" id="phraseToDate" value="2026-02-28">
-                </div>
-            </div>
-            <div style="margin-bottom: 20px;">
-                <button class="btn btn-primary" onclick="loadPhraseStats()">📊 Загрузить статистику</button>
-            </div>
-            <div id="phraseStatsLoading" style="display: none; text-align: center; padding: 40px;">
-                <div class="spinner"></div>
-                <p>Загрузка статистики...</p>
-            </div>
-            <div id="phraseStatsContent" style="display: none;">
-                <table class="history-table">
-                    <thead>
-                        <tr>
-                            <th>Дата</th>
-                            <th>Фраза</th>
-                            <th class="number">Просмотры</th>
-                            <th class="number">Клики</th>
-                            <th class="number">Заказы</th>
-                            <th class="number">CTR</th>
-                            <th class="number">CPC</th>
-                            <th class="number">Затраты</th>
-                            <th class="number">Позиция</th>
-                        </tr>
-                    </thead>
-                    <tbody id="phraseStatsBody">
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
     <!-- Данные кампании для JS -->
     <script id="campaign-data" type="application/json">
         {{ campaign_json | safe }}

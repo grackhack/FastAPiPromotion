@@ -283,3 +283,27 @@ async def tasks_page(
     )
     
     return HTMLResponse(content=content)
+
+
+@router.get("/phrase-stats")
+async def phrase_stats_page(
+    request: Request,
+    user: Any = Depends(get_current_user_from_session)
+):
+    """Страница статистики по фразам по дням"""
+    from ..main import templates
+    from fastapi.responses import HTMLResponse, RedirectResponse
+
+    # Если пользователь не авторизован - перенаправляем на вход
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+
+    template = templates.get_template("phrase-stats.html")
+    content = template.render(
+        request=request,
+        user=user,
+        is_authenticated=True,
+        current_page='phrase_stats'
+    )
+    
+    return HTMLResponse(content=content)
