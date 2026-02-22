@@ -124,6 +124,20 @@ class StatsService:
         """
         Обработать статистику по поисковым запросам (normquery stats).
         API возвращает: {"stats": [{"advert_id": X, "nm_id": Y, "stats": [norm_query_stats...]}]}
+        
+        Поля API:
+        - views: Показы
+        - clicks: Клики
+        - orders: Заказы
+        - atbs: Добавления в корзину
+        - cpc: Стоимость клика (копейки)
+        - cpm: Стоимость 1000 показов (копейки)
+        - ctr: CTR (%)
+        - avg_pos: Средняя позиция
+        - norm_query: Поисковый запрос
+        - sum: Выручка (копейки) - если есть
+        - shks: Количество штук - если есть
+        - spend: Затраты (копейки) - если есть
         """
         stats_list = stats.get("stats") if isinstance(stats, dict) else None
 
@@ -134,8 +148,12 @@ class StatsService:
                 "total_clicks": 0,
                 "total_orders": 0,
                 "total_revenue": 0,
+                "total_atbs": 0,
+                "total_spend": 0,
                 "ctr": 0,
                 "cpc": 0,
+                "cpm": 0,
+                "avg_pos": 0,
                 "days": []
             }
 
@@ -144,6 +162,11 @@ class StatsService:
         total_clicks = 0
         total_orders = 0
         total_revenue = 0
+        total_atbs = 0
+        total_spend = 0
+        total_cpc = 0
+        total_cpm = 0
+        total_avg_pos = 0
         days_data = []  # Для normquery stats это будут запросы
 
         for item in stats_list:
@@ -155,12 +178,24 @@ class StatsService:
                         views = stat.get('views', 0)
                         clicks = stat.get('clicks', 0)
                         orders = stat.get('orders', 0)
+                        atbs = stat.get('atbs', 0)
+                        cpc = stat.get('cpc', 0)
+                        cpm = stat.get('cpm', 0)
+                        ctr = stat.get('ctr', 0)
+                        avg_pos = stat.get('avg_pos', 0)
                         revenue = stat.get('sum', 0) or stat.get('revenue', 0)
+                        spend = stat.get('spend', 0)
+                        shks = stat.get('shks', 0)
                         
                         total_views += views
                         total_clicks += clicks
                         total_orders += orders
+                        total_atbs += atbs
                         total_revenue += revenue
+                        total_spend += spend
+                        total_cpc += cpc
+                        total_cpm += cpm
+                        total_avg_pos += avg_pos
                         
                         # Добавляем запрос в days_data (для совместимости с шаблоном)
                         days_data.append({
@@ -168,35 +203,61 @@ class StatsService:
                             "views": views,
                             "clicks": clicks,
                             "orders": orders,
+                            "atbs": atbs,
                             "revenue": revenue,
-                            "ctr": stat.get('ctr', 0),
-                            "cpc": stat.get('cpc', 0),
+                            "spend": spend,
+                            "shks": shks,
+                            "ctr": ctr,
+                            "cpc": cpc,
+                            "cpm": cpm,
+                            "avg_pos": avg_pos,
                         })
                     else:
                         # Pydantic модель
                         views = self._get_safe_value(stat, 'views', 0)
                         clicks = self._get_safe_value(stat, 'clicks', 0)
                         orders = self._get_safe_value(stat, 'orders', 0)
+                        atbs = self._get_safe_value(stat, 'atbs', 0)
+                        cpc = self._get_safe_value(stat, 'cpc', 0)
+                        cpm = self._get_safe_value(stat, 'cpm', 0)
+                        ctr = self._get_safe_value(stat, 'ctr', 0)
+                        avg_pos = self._get_safe_value(stat, 'avg_pos', 0)
                         revenue = self._get_safe_value(stat, 'sum', 0) or self._get_safe_value(stat, 'revenue', 0)
+                        spend = self._get_safe_value(stat, 'spend', 0)
+                        shks = self._get_safe_value(stat, 'shks', 0)
                         
                         total_views += views
                         total_clicks += clicks
                         total_orders += orders
+                        total_atbs += atbs
                         total_revenue += revenue
+                        total_spend += spend
+                        total_cpc += cpc
+                        total_cpm += cpm
+                        total_avg_pos += avg_pos
                         
                         days_data.append({
                             "query": self._get_safe_value(stat, 'norm_query', 'N/A'),
                             "views": views,
                             "clicks": clicks,
                             "orders": orders,
+                            "atbs": atbs,
                             "revenue": revenue,
-                            "ctr": self._get_safe_value(stat, 'ctr', 0),
-                            "cpc": self._get_safe_value(stat, 'cpc', 0),
+                            "spend": spend,
+                            "shks": shks,
+                            "ctr": ctr,
+                            "cpc": cpc,
+                            "cpm": cpm,
+                            "avg_pos": avg_pos,
                         })
 
         # Считаем средние значения
+        count = len(days_data) if days_data else 1
+        avg_cpc = round(total_cpc / count, 2)
+        avg_cpm = round(total_cpm / count, 2)
+        avg_avg_pos = round(total_avg_pos / count, 2)
         ctr = round((total_clicks / total_views * 100) if total_views > 0 else 0, 2)
-        cpc = round(total_revenue / total_clicks if total_clicks > 0 else 0, 2)
+        cpc = round(total_spend / total_clicks if total_clicks > 0 else 0, 2)
 
         return {
             "campaign_id": campaign_id,
@@ -204,8 +265,13 @@ class StatsService:
             "total_clicks": total_clicks,
             "total_orders": total_orders,
             "total_revenue": total_revenue,
+            "total_atbs": total_atbs,
+            "total_spend": total_spend,
+            "total_shks": 0,  # Агрегация штук не имеет смысла
             "ctr": ctr,
             "cpc": cpc,
+            "cpm": avg_cpm,
+            "avg_pos": avg_avg_pos,
             "days": days_data
         }
 

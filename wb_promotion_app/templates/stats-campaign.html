@@ -197,19 +197,27 @@
             <div class="stats-summary">
                 <div class="stat-card">
                     <h3>Просмотры</h3>
-                    <div class="value">{{ "{:,}".format(stats.total_views) }}</div>
+                    <div class="value">{{ "{:,}".format(stats.total_views) if stats.total_views else '0' }}</div>
                 </div>
                 <div class="stat-card">
                     <h3>Клики</h3>
-                    <div class="value">{{ "{:,}".format(stats.total_clicks) }}</div>
+                    <div class="value">{{ "{:,}".format(stats.total_clicks) if stats.total_clicks else '0' }}</div>
                 </div>
                 <div class="stat-card">
                     <h3>Заказы</h3>
-                    <div class="value">{{ "{:,}".format(stats.total_orders) }}</div>
+                    <div class="value">{{ "{:,}".format(stats.total_orders) if stats.total_orders else '0' }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Добавления в корзину</h3>
+                    <div class="value">{{ "{:,}".format(stats.total_atbs) if stats.total_atbs else '0' }}</div>
                 </div>
                 <div class="stat-card">
                     <h3>Выручка</h3>
-                    <div class="value small">{{ "{:,.0f} ₽".format(stats.total_revenue) }}</div>
+                    <div class="value small">{{ "{:,.0f} ₽".format(stats.total_revenue / 100) if stats.total_revenue else '0 ₽' }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Затраты</h3>
+                    <div class="value small">{{ "{:,.0f} ₽".format(stats.total_spend / 100) if stats.total_spend else '0 ₽' }}</div>
                 </div>
                 <div class="stat-card">
                     <h3>CTR</h3>
@@ -217,7 +225,15 @@
                 </div>
                 <div class="stat-card">
                     <h3>CPC</h3>
-                    <div class="value small">{{ stats.cpc }} ₽</div>
+                    <div class="value small">{{ "{:.2f} ₽".format(stats.cpc) if stats.cpc else '0 ₽' }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>CPM</h3>
+                    <div class="value small">{{ "{:.2f} ₽".format(stats.cpm / 100) if stats.cpm else '0 ₽' }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Средняя позиция</h3>
+                    <div class="value small">{{ "{:.2f}".format(stats.avg_pos) if stats.avg_pos else '0' }}</div>
                 </div>
             </div>
 
@@ -231,9 +247,13 @@
                             <th class="number">Просмотры</th>
                             <th class="number">Клики</th>
                             <th class="number">Заказы</th>
+                            <th class="number">В корзину</th>
                             <th class="number">Выручка</th>
+                            <th class="number">Затраты</th>
                             <th class="number">CTR, %</th>
                             <th class="number">CPC, ₽</th>
+                            <th class="number">CPM, ₽</th>
+                            <th class="number">Позиция</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -243,9 +263,13 @@
                             <td class="number">{{ "{:,}".format(item.views) if item.views else '—' }}</td>
                             <td class="number">{{ "{:,}".format(item.clicks) if item.clicks else '—' }}</td>
                             <td class="number">{{ "{:,}".format(item.orders) if item.orders else '—' }}</td>
-                            <td class="number">{{ "{:,.0f}".format(item.revenue) if item.revenue else '—' }} ₽</td>
-                            <td class="number">{{ item.ctr if item.ctr else '—' }}</td>
-                            <td class="number">{{ item.cpc if item.cpc else '—' }} ₽</td>
+                            <td class="number">{{ "{:,}".format(item.atbs) if item.atbs else '—' }}</td>
+                            <td class="number">{{ "{:,.0f} ₽".format(item.revenue / 100) if item.revenue else '—' }}</td>
+                            <td class="number">{{ "{:,.0f} ₽".format(item.spend / 100) if item.spend else '—' }}</td>
+                            <td class="number">{{ "{:.2f}".format(item.ctr) if item.ctr else '—' }}</td>
+                            <td class="number">{{ "{:.2f}".format(item.cpc / 100) if item.cpc else '—' }}</td>
+                            <td class="number">{{ "{:.2f}".format(item.cpm / 100) if item.cpm else '—' }}</td>
+                            <td class="number">{{ "{:.2f}".format(item.avg_pos) if item.avg_pos else '—' }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
