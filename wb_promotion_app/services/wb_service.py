@@ -115,7 +115,10 @@ class WBService:
     ) -> Dict[str, Any]:
         """Получить списки активных и неактивных поисковых кластеров"""
         try:
-            result = self.client.get_search_cluster_list(advert_id, nm_id)
+            # Создаём запрос с одним элементом
+            from ..schemas import MinusPhraseRequest
+            items = [MinusPhraseRequest(advert_id=advert_id, nm_id=nm_id)]
+            result = self.client.get_search_cluster_list(items)
             
             # Извлекаем списки из ответа
             clusters = {
