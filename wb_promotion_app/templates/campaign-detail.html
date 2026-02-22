@@ -39,14 +39,6 @@
         </nav>
 
         <main class="main">
-            <!-- Debug информация -->
-            {% if debug_info %}
-            <div class="debug-info" style="background: #e3f2fd; border: 1px solid #2196f3; padding: 15px; margin-bottom: 20px; border-radius: 8px; font-family: monospace; font-size: 12px;">
-                <h4 style="color: #1976d2; margin: 0 0 10px 0;">🔍 Debug Info</h4>
-                <pre style="margin: 0; overflow-x: auto;">{{ debug_info | tojson(indent=2) }}</pre>
-            </div>
-            {% endif %}
-
             <div class="campaign-header">
                 <a href="/" class="btn btn-secondary">← Назад к списку</a>
                 <h2 style="margin: 0;">Кампания #<span id="campaignId">{{ campaign_id }}</span></h2>

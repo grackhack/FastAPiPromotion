@@ -101,38 +101,24 @@ async def campaign_detail_page(
     wb: Optional[WBService] = Depends(get_wb_client_optional)
 ):
     """Страница кампании"""
-    from ..main import templates, DEBUG
+    from ..main import templates
     import logging
-    
+
     logger = logging.getLogger(__name__)
-    
+
     campaign = None
     error = None
-    debug_info = {}
 
     # Если нет авторизации или токена - показываем ошибку
     if not user or not wb:
         error = "Необходимо войти и добавить WB API токен"
-        debug_info = {
-            "user": user is not None,
-            "wb": wb is not None,
-            "user_id": user.id if user else None,
-            "campaign_id": campaign_id
-        }
         logger.warning(f"Campaign {campaign_id}: user={user is not None}, wb={wb is not None}")
     else:
         try:
             logger.info(f"Campaign {campaign_id}: Загрузка кампании...")
             campaigns = wb.get_campaigns(ids=str(campaign_id))
             logger.info(f"Campaign {campaign_id}: Найдено кампаний: {len(campaigns)}")
-            
-            debug_info = {
-                "user_id": user.id,
-                "campaign_id": campaign_id,
-                "campaigns_found": len(campaigns),
-                "campaign_ids": [c.get("id") for c in campaigns] if campaigns else []
-            }
-            
+
             campaign = campaigns[0] if campaigns else None
 
             if not campaign:
@@ -140,12 +126,6 @@ async def campaign_detail_page(
                 logger.warning(f"Campaign {campaign_id}: Кампания не найдена")
         except Exception as e:
             error = str(e)
-            debug_info = {
-                "user_id": user.id,
-                "campaign_id": campaign_id,
-                "exception": str(e),
-                "exception_type": type(e).__name__
-            }
             logger.exception(f"Campaign {campaign_id} error: {e}")
 
     template = templates.get_template("campaign-detail.html")
@@ -155,6 +135,5 @@ async def campaign_detail_page(
         campaign_json=json.dumps(campaign, cls=DateTimeEncoder) if campaign else '{}',
         campaign_id=campaign_id,
         campaign_data=campaign if campaign else {},
-        error=error,
-        debug_info=debug_info if DEBUG else None
+        error=error
     )
