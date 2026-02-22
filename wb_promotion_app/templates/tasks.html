@@ -59,6 +59,69 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Статистика по фразам по дням -->
+            <div class="section-header" style="margin-top: 40px;">
+                <h2 class="section-title">📈 Статистика по фразам по дням</h2>
+                <button class="btn btn-primary" onclick="showPhraseStatsModal()">📊 Показать статистику</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно статистики по фразам -->
+    <div id="phraseStatsModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h3>📈 Статистика по фразам по дням</h3>
+                <button class="modal-close" onclick="closeModal('phraseStatsModal')">&times;</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Кампания</label>
+                    <input type="number" id="phraseCampaignId" placeholder="ID кампании">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Товар (NM)</label>
+                    <input type="number" id="phraseNmId" placeholder="ID товара">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-primary" onclick="loadPhraseStats()" style="width: 100%; height: 36px;">Загрузить</button>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>С даты</label>
+                    <input type="date" id="phraseFromDate" value="2026-02-01">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>По дату</label>
+                    <input type="date" id="phraseToDate" value="2026-02-28">
+                </div>
+            </div>
+            <div id="phraseStatsLoading" style="display: none; text-align: center; padding: 40px;">
+                <div class="spinner"></div>
+                <p>Загрузка статистики...</p>
+            </div>
+            <div id="phraseStatsContent" style="display: none;">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Фраза</th>
+                            <th class="number">Просмотры</th>
+                            <th class="number">Клики</th>
+                            <th class="number">Заказы</th>
+                            <th class="number">CTR</th>
+                            <th class="number">CPC</th>
+                            <th class="number">Затраты</th>
+                            <th class="number">Позиция</th>
+                        </tr>
+                    </thead>
+                    <tbody id="phraseStatsBody">
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -509,8 +572,100 @@
             document.getElementById('createRuleModal').style.display = 'flex';
         }
 
+        function showPhraseStatsModal() {
+            document.getElementById('phraseStatsModal').style.display = 'flex';
+        }
+
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
+        }
+
+        async function loadPhraseStats() {
+            const campaignId = document.getElementById('phraseCampaignId').value;
+            const nmId = document.getElementById('phraseNmId').value;
+            const fromDate = document.getElementById('phraseFromDate').value;
+            const toDate = document.getElementById('phraseToDate').value;
+
+            if (!campaignId || !nmId) {
+                alert('Введите ID кампании и ID товара');
+                return;
+            }
+
+            const loading = document.getElementById('phraseStatsLoading');
+            const content = document.getElementById('phraseStatsContent');
+            
+            loading.style.display = 'block';
+            content.style.display = 'none';
+
+            try {
+                const url = `/api/tasks/phrase-daily-stats?campaign_id=${campaignId}&nm_id=${nmId}&from_date=${fromDate}&to_date=${toDate}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Ошибка загрузки');
+                }
+
+                const data = await response.json();
+                const items = data.items || [];
+
+                const tbody = document.getElementById('phraseStatsBody');
+                
+                if (items.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px;">Нет данных</td></tr>';
+                } else {
+                    // Агрегируем данные по кампаниям и товарам
+                    let rows = [];
+                    items.forEach(item => {
+                        const advertId = item.advertId;
+                        const nmId = item.nmId;
+                        const dailyStats = item.dailyStats || [];
+                        
+                        dailyStats.forEach(day => {
+                            const stat = day.stat;
+                            rows.push({
+                                date: day.date,
+                                query: stat.normQuery,
+                                views: stat.views,
+                                clicks: stat.clicks,
+                                orders: stat.orders,
+                                ctr: stat.ctr,
+                                cpc: stat.cpc,
+                                spend: stat.spend,
+                                avgPos: stat.avgPos
+                            });
+                        });
+                    });
+
+                    // Сортируем по дате и просмотрам
+                    rows.sort((a, b) => {
+                        if (b.date !== a.date) return b.date.localeCompare(a.date);
+                        return b.views - a.views;
+                    });
+
+                    tbody.innerHTML = rows.map(row => `
+                        <tr>
+                            <td>${row.date}</td>
+                            <td>${row.query}</td>
+                            <td class="number">${row.views.toLocaleString()}</td>
+                            <td class="number">${row.clicks.toLocaleString()}</td>
+                            <td class="number">${row.orders.toLocaleString()}</td>
+                            <td class="number">${row.ctr.toFixed(2)}%</td>
+                            <td class="number">${row.cpc.toFixed(2)} ₽</td>
+                            <td class="number">${row.spend.toFixed(2)} ₽</td>
+                            <td class="number">${row.avgPos.toFixed(2)}</td>
+                        </tr>
+                    `).join('');
+                }
+
+                content.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error loading phrase stats:', error);
+                alert('Ошибка: ' + error.message);
+            } finally {
+                loading.style.display = 'none';
+            }
         }
 
         function formatDate(dateString) {

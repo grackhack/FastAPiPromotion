@@ -421,3 +421,43 @@ async def trigger_metrics_calculation(
         "task_id": task.task_id,
         "message": "Metrics calculation task queued"
     }
+
+
+# ==================== Phrase Daily Stats ====================
+
+@router.get("/phrase-daily-stats")
+async def get_phrase_daily_stats(
+    campaign_id: int,
+    nm_id: int,
+    from_date: str,
+    to_date: str,
+    user: User = Depends(get_current_user_from_session),
+    db: Session = Depends(get_db)
+):
+    """Получить статистику по фразам по дням"""
+    try:
+        # Получаем токен пользователя
+        stmt = select(UserApiToken).where(
+            UserApiToken.user_id == user.id,
+            UserApiToken.is_active == True
+        ).limit(1)
+        user_token = db.execute(stmt).scalar_one_or_none()
+        
+        if not user_token:
+            raise HTTPException(status_code=400, detail="No API token found")
+        
+        # Получаем статистику
+        wb_service = WBService(user_token.token)
+        stats = wb_service.get_normquery_daily_stats(
+            advert_id=campaign_id,
+            nm_id=nm_id,
+            from_date=from_date,
+            to_date=to_date
+        )
+        
+        return stats
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

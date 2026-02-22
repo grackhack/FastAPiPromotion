@@ -593,6 +593,46 @@ class WBPromotionClient:
             self.logger.error(f"Error in {error_context}: {str(e)}")
             raise
 
+    def get_normquery_daily_stats(
+        self,
+        advert_id: int,
+        nm_id: int,
+        from_date: str,
+        to_date: str
+    ) -> Dict[str, Any]:
+        """
+        Получить статистику по фразам по дням (API /adv/v1/normquery/stats)
+        
+        Args:
+            advert_id: ID кампании
+            nm_id: ID товара
+            from_date: Дата начала периода (YYYY-MM-DD)
+            to_date: Дата окончания периода (YYYY-MM-DD)
+        """
+        try:
+            url = f"{self.base_url}/adv/v1/normquery/stats"
+            payload = {
+                "advertId": advert_id,
+                "nmId": nm_id,
+                "fromDate": from_date,
+                "toDate": to_date
+            }
+            response = requests.post(url, json=payload, headers=self.headers)
+            
+            if response.status_code != 200:
+                try:
+                    error_data = response.json()
+                    error_msg = error_data.get('detail', str(error_data))
+                except:
+                    error_msg = response.text or f"HTTP {response.status_code}"
+                raise Exception(f"Ошибка API: {error_msg}")
+            
+            return response.json()
+        except Exception as e:
+            error_context = "get_normquery_daily_stats"
+            self.logger.error(f"Error in {error_context}: {str(e)}")
+            raise
+
     def get_full_stats(self, ids: List[int], from_date: str, to_date: str, nm_id: int = None) -> Dict[str, Any]:
         """
         Получить полную статистику по кампаниям
