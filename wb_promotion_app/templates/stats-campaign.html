@@ -166,16 +166,24 @@
                 <div>
                     <h1>Статистика кампании {{ campaign.id }}</h1>
                     <p style="color: #666; margin: 5px 0 0 0;">
-                        {{ campaign.name }} | Статус: 
+                        {{ campaign.name }} | Статус:
                         <span class="status-badge status-active">{{ campaign.status }}</span>
                     </p>
                 </div>
-                <form class="stats-dates" method="GET">
-                    <input type="date" name="from_date" value="{{ from_date }}" required>
-                    <span>—</span>
-                    <input type="date" name="to_date" value="{{ to_date }}" required>
-                    <button type="submit">Показать</button>
-                </form>
+                <div>
+                    <div class="date-range-buttons" style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+                        <button type="button" class="date-range-btn" onclick="setDateRange('today')">Сегодня</button>
+                        <button type="button" class="date-range-btn" onclick="setDateRange('yesterday')">Вчера</button>
+                        <button type="button" class="date-range-btn" onclick="setDateRange('7days')">7 дней</button>
+                        <button type="button" class="date-range-btn" onclick="setDateRange('30days')">30 дней</button>
+                    </div>
+                    <form class="stats-dates" method="GET">
+                        <input type="date" name="from_date" id="from_date" value="{{ from_date }}" required>
+                        <span>—</span>
+                        <input type="date" name="to_date" id="to_date" value="{{ to_date }}" required>
+                        <button type="submit">Показать</button>
+                    </form>
+                </div>
             </div>
 
             <div class="nav-tabs">
@@ -481,13 +489,53 @@
         // Навешиваем обработчики на чекбоксы
         document.addEventListener('DOMContentLoaded', function() {
             loadApiToken();
-            
+
             // Обработчики на индивидуальные чекбоксы
             document.querySelectorAll('.query-checkbox').forEach(cb => {
                 cb.addEventListener('change', updateSelectedCount);
             });
         });
 
+        // === Функции для выбора диапазона дат ===
+        
+        // Форматирование даты в YYYY-MM-DD
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Установка диапазона дат
+        function setDateRange(range) {
+            const today = new Date();
+            let fromDate, toDate = today;
+
+            switch(range) {
+                case 'today':
+                    fromDate = today;
+                    toDate = today;
+                    break;
+                case 'yesterday':
+                    fromDate = new Date(today);
+                    fromDate.setDate(today.getDate() - 1);
+                    toDate = fromDate;
+                    break;
+                case '7days':
+                    fromDate = new Date(today);
+                    fromDate.setDate(today.getDate() - 6);
+                    toDate = today;
+                    break;
+                case '30days':
+                    fromDate = new Date(today);
+                    fromDate.setDate(today.getDate() - 29);
+                    toDate = today;
+                    break;
+            }
+
+            document.getElementById('from_date').value = formatDate(fromDate);
+            document.getElementById('to_date').value = formatDate(toDate);
+        }
         
         // Расчёт эффективности запроса
         function calculateEfficiency(item) {
@@ -814,6 +862,30 @@
         }
         .btn-danger:hover {
             background-color: #b71c1c;
+        }
+        
+        /* Кнопки быстрого выбора дат */
+        .date-range-btn {
+            padding: 6px 12px;
+            background-color: #f5f5f5;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .date-range-btn:hover {
+            background-color: #0066FF;
+            color: white;
+            border-color: #0066FF;
+            transform: translateY(-1px);
+        }
+        
+        .date-range-btn:active {
+            transform: translateY(0);
         }
     </style>
 </body>
