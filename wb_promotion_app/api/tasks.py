@@ -440,7 +440,11 @@ async def get_phrase_daily_stats(
     logger = logging.getLogger(__name__)
     
     try:
-        logger.info(f"Loading phrase stats for user {user.id}, campaign {campaign_id}, nm {nm_id}")
+        logger.info(f"Loading phrase stats for user {user.id}, campaign {campaign_id}, nm {nm_id}, from {from_date}, to {to_date}")
+        
+        # Проверяем формат дат
+        if not from_date or not to_date:
+            raise HTTPException(status_code=400, detail="from_date и to_date обязательны")
         
         # Получаем токен пользователя
         stmt = select(UserApiToken).where(
@@ -449,29 +453,22 @@ async def get_phrase_daily_stats(
         ).limit(1)
         user_token = db.execute(stmt).scalar_one_or_none()
         
-        logger.info(f"User token found: {user_token is not None}")
-        
         if not user_token:
-            logger.error(f"No API token found for user {user.id}")
             raise HTTPException(status_code=400, detail="No API token found. Please add token in profile.")
         
         # Получаем статистику
         from ..api_client import WBPromotionClient
         from ..services.wb_service import WBService
         
-        logger.info(f"Creating WB client with token...")
         wb_client = WBPromotionClient(user_token.token)
-        wb_service = WBService(wb_client)
         
-        logger.info(f"Calling get_normquery_daily_stats...")
-        stats = wb_service.get_normquery_daily_stats(
+        # Вызываем напрямую API client, минуя WBService
+        stats = wb_client.get_normquery_daily_stats(
             advert_id=campaign_id,
             nm_id=nm_id,
             from_date=from_date,
             to_date=to_date
         )
-        
-        logger.info(f"Stats loaded successfully")
         
         return stats
         

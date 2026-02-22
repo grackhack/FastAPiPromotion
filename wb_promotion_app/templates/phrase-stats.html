@@ -206,8 +206,19 @@
         let campaignName = '';
         let nmName = '';
 
+        // Установка дат по умолчанию (последние 7 дней)
+        function setDefaultDates() {
+            const today = new Date();
+            const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            document.getElementById('fromDate').value = lastWeek.toISOString().split('T')[0];
+            document.getElementById('toDate').value = today.toISOString().split('T')[0];
+        }
+
         // Загрузка при инициализации
         document.addEventListener('DOMContentLoaded', function() {
+            // Устанавливаем даты по умолчанию
+            setDefaultDates();
+            
             // Проверяем параметры из URL
             const urlParams = new URLSearchParams(window.location.search);
             currentCampaignId = urlParams.get('campaign');
