@@ -152,7 +152,7 @@ class WBPromotionClient:
             adverts = []
             for camp in data.get("adverts", []):
                 nm_settings = []
-                for nm in camp.get("nm_settings", []):
+                for nm in camp.get("nm_settings", []) or []:
                     bids = nm.get("bids_kopecks", {})
                     nm_settings.append(
                         NMSettingItem(
